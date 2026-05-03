@@ -1,0 +1,56 @@
+# =============================================================================
+# Docker Compose para desarrollo local de IntellectClone
+# Levanta: PostgreSQL 16 + extensiones + Redis 7
+# NO incluye los servicios de aplicación (web, worker) — se corren con uv/pnpm
+# directamente en desarrollo para recarga rápida.
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 con pgvector, pg_trgm, unaccent, pgcrypto
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: intellectclone_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-intellectclone}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-intellectclone_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-intellectclone_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      # Script de inicialización: activa las extensiones requeridas
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-intellectclone} -d ${POSTGRES_DB:-intellectclone_dev}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # ---------------------------------------------------------------------------
+  # Redis 7 — broker de Celery y cache de sesiones JWT
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: intellectclone_redis_dev
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data_dev:
+    driver: local
+  redis_data_dev:
+    driver: local

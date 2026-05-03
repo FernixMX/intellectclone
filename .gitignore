@@ -25,6 +25,12 @@ out/
 dist/
 build/
 *.log
+htmlcov/
+.coverage
+coverage.xml
+
+# Alembic
+backend/alembic/versions/__pycache__/
 
 # OS
 .DS_Store

@@ -1,0 +1,10 @@
+Migraciones Alembic para IntellectClone.
+
+Comandos útiles:
+  uv run alembic revision --autogenerate -m "descripcion"
+  uv run alembic upgrade head
+  uv run alembic downgrade -1
+  uv run alembic current
+  uv run alembic history
+
+Las migraciones se generan en Fase B una vez definidos los modelos SQLAlchemy.
