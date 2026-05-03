@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IntellectClone — Red de colaboración</title>
+<link rel="stylesheet" href="screens.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js"></script>
+<style>
+html, body, #root { height: 100%; margin: 0; }
+.net-layout { display: flex; flex-direction: column; height: 100vh; }
+.net-body { flex: 1; display: flex; min-height: 0; }
+.net-canvas { flex: 1; position: relative; background: var(--bg-subtle); overflow: hidden; }
+.net-svg { width: 100%; height: 100%; }
+
+/* controls */
+.net-controls {
+  position: absolute; top: var(--sp-4); left: var(--sp-4);
+  display: flex; gap: var(--sp-2);
+}
+.ctrl-btn {
+  width: 32px; height: 32px; border-radius: var(--radius-md);
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-default);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-secondary); box-shadow: var(--shadow-sm);
+  transition: background 120ms, color 120ms;
+}
+.ctrl-btn:hover { background: var(--bg-subtle); color: var(--text-primary); }
+
+/* node tooltip */
+.node-tooltip {
+  position: absolute; pointer-events: none;
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-lg); padding: 10px 14px; box-shadow: var(--shadow-md);
+  min-width: 180px;
+}
+.tooltip-name { font-family: var(--font-sans); font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.tooltip-dep  { font-family: var(--font-sans); font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+.tooltip-stats { display: flex; gap: var(--sp-4); margin-top: var(--sp-2); }
+.tooltip-stat-val { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.tooltip-stat-lbl { font-family: var(--font-sans); font-size: 11px; color: var(--text-quaternary); }
+
+/* right panel */
+.net-panel {
+  width: 300px; flex-shrink: 0;
+  border-left: var(--border-width) solid var(--border-subtle);
+  background: var(--bg-surface);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.panel-section {
+  padding: var(--sp-5);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+.panel-section-title {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-quaternary);
+  margin-bottom: var(--sp-3);
+}
+.filter-row { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.filter-lbl { font-family: var(--font-sans); font-size: 12px; color: var(--text-secondary); margin-bottom: 2px; }
+.filter-sel {
+  width: 100%; height: 32px; padding: 0 28px 0 8px;
+  font-family: var(--font-sans); font-size: 12px;
+  color: var(--text-primary); background: var(--bg-surface);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md); appearance: none; outline: none; cursor: pointer;
+}
+.filter-sel:focus { border-color: var(--accent-primary); }
+
+/* legend */
+.legend-row { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-label { font-family: var(--font-sans); font-size: 12px; color: var(--text-secondary); }
+.size-legend { display: flex; align-items: center; gap: var(--sp-3); margin-top: var(--sp-3); }
+.size-demo { border-radius: 50%; background: var(--bg-muted); border: 1px solid var(--border-default); flex-shrink: 0; }
+
+/* selected person card */
+.person-card { display: flex; flex-direction: column; gap: var(--sp-3); }
+.person-name { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.person-dep  { font-family: var(--font-sans); font-size: 12px; color: var(--text-tertiary); }
+.person-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.p-stat { display: flex; flex-direction: column; gap: 2px; }
+.p-stat-val { font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--text-primary); }
+.p-stat-lbl { font-family: var(--font-sans); font-size: 11px; color: var(--text-quaternary); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+function Icon({ name, size = 16, strokeWidth = 1.5 }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current && window.lucide) {
+      ref.current.innerHTML = "";
+      const key = name.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join("");
+      const el = lucide.createElement(lucide[key]);
+      if (el) { el.setAttribute("width", size); el.setAttribute("height", size); el.setAttribute("stroke-width", strokeWidth); ref.current.appendChild(el); }
+    }
+  }, [name, size]);
+  return <span ref={ref} style={{ display: "inline-flex", alignItems: "center" }} />;
+}
+
+function ModeToggle({ theme, setTheme }) {
+  return (
+    <div className="mode-toggle-fixed">
+      <button className={`mt-btn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}><Icon name="sun" size={13} /></button>
+      <button className={`mt-btn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}><Icon name="moon" size={13} /></button>
+    </div>
+  );
+}
+
+const DEP_COLORS = {
+  "Ingeniería":  "#1E3A8A",
+  "Medicina":    "#0F6E56",
+  "UAMRR":       "#854F0B",
+  "Derecho":     "#6B6B68",
+  "Educación":   "#525250",
+  "Comercio":    "#B4B2A9",
+  "Mante":       "#A32D2D",
+};
+
+const RAW_NODES = [
+  { id: "MC", name: "Dra. María Elena Cárdenas", dep: "Ingeniería", papers: 84, citas: 1284, snii: "II" },
+  { id: "AV", name: "Dr. Arturo Velázquez",      dep: "Medicina",   papers: 51, citas: 723,  snii: "I"  },
+  { id: "SM", name: "Dra. Sofía Montoya",         dep: "UAMRR",      papers: 29, citas: 312,  snii: "C"  },
+  { id: "LG", name: "Dr. Luis Garza",             dep: "Derecho",    papers: 17, citas: 89,   snii: "—"  },
+  { id: "PR", name: "Dra. Patricia Rangel",       dep: "Ingeniería", papers: 62, citas: 940,  snii: "II" },
+  { id: "JH", name: "Dr. Jorge Hernández",        dep: "Medicina",   papers: 118, citas: 2341, snii: "III"},
+  { id: "CR", name: "Dra. Carmen Reyes",          dep: "Comercio",   papers: 34, citas: 421,  snii: "I"  },
+  { id: "DM", name: "Dr. Daniel Morales",         dep: "Mante",      papers: 22, citas: 178,  snii: "C"  },
+  { id: "EB", name: "Dra. Elena Bustamante",      dep: "Ingeniería", papers: 45, citas: 612,  snii: "I"  },
+  { id: "RV", name: "Dr. Rodrigo Vega",           dep: "UAMRR",      papers: 71, citas: 1023, snii: "II" },
+  { id: "IL", name: "Dra. Irma López",            dep: "Educación",  papers: 15, citas: 94,   snii: "C"  },
+  { id: "MT", name: "Dr. Miguel Torres",          dep: "Medicina",   papers: 88, citas: 1567, snii: "II" },
+  { id: "VS", name: "Dra. Valeria Soto",          dep: "Derecho",    papers: 28, citas: 203,  snii: "I"  },
+  { id: "EC", name: "Dr. Ernesto Chávez",         dep: "Ingeniería", papers: 134, citas: 3102, snii: "III"},
+  { id: "AM", name: "Dra. Adriana Medina",        dep: "Mante",      papers: 11, citas: 67,   snii: "C"  },
+  { id: "FA", name: "Dr. Fernando Acosta",        dep: "Comercio",   papers: 39, citas: 488,  snii: "I"  },
+  { id: "LQ", name: "Dra. Laura Quintero",        dep: "UAMRR",      papers: 56, citas: 876,  snii: "II" },
+  { id: "HR", name: "Dr. Héctor Robles",          dep: "Medicina",   papers: 43, citas: 534,  snii: "I"  },
+  { id: "GF", name: "Dra. Gabriela Flores",       dep: "Educación",  papers: 19, citas: 142,  snii: "C"  },
+  { id: "OP", name: "Dr. Oscar Pérez",            dep: "Ingeniería", papers: 77, citas: 1128, snii: "II" },
+  { id: "NS", name: "Dra. Norma Salinas",         dep: "Derecho",    papers: 24, citas: 198,  snii: "I"  },
+  { id: "RG", name: "Dr. Ricardo Gutiérrez",      dep: "Comercio",   papers: 14, citas: 89,   snii: "C"  },
+  { id: "BJ", name: "Dra. Beatriz Jiménez",       dep: "UAMRR",      papers: 102, citas: 2198, snii: "III"},
+  { id: "AR", name: "Dr. Alejandro Ruiz",         dep: "Mante",      papers: 33, citas: 287,  snii: "I"  },
+  { id: "PG", name: "Dr. Pablo González",         dep: "Ingeniería", papers: 58, citas: 712,  snii: "I"  },
+  { id: "MR", name: "Dra. Marta Ríos",            dep: "Medicina",   papers: 37, citas: 421,  snii: "C"  },
+  { id: "JL", name: "Dr. Javier Luna",            dep: "UAMRR",      papers: 44, citas: 598,  snii: "I"  },
+  { id: "TC", name: "Dra. Teresa Castro",         dep: "Educación",  papers: 21, citas: 167,  snii: "C"  },
+  { id: "EV", name: "Dr. Eduardo Vargas",         dep: "Comercio",   papers: 31, citas: 354,  snii: "I"  },
+  { id: "CP", name: "Dra. Clara Pacheco",         dep: "Derecho",    papers: 18, citas: 134,  snii: "C"  },
+];
+
+const RAW_EDGES = [
+  { source: "MC", target: "AV", weight: 4 },
+  { source: "MC", target: "PR", weight: 8 },
+  { source: "MC", target: "RV", weight: 5 },
+  { source: "MC", target: "EC", weight: 6 },
+  { source: "MC", target: "LQ", weight: 3 },
+  { source: "MC", target: "EB", weight: 7 },
+  { source: "MC", target: "SM", weight: 2 },
+  { source: "MC", target: "OP", weight: 4 },
+  { source: "MC", target: "JH", weight: 2 },
+  { source: "MC", target: "DM", weight: 1 },
+  { source: "AV", target: "JH", weight: 6 },
+  { source: "AV", target: "MT", weight: 5 },
+  { source: "AV", target: "HR", weight: 4 },
+  { source: "AV", target: "MR", weight: 3 },
+  { source: "JH", target: "MT", weight: 7 },
+  { source: "JH", target: "BJ", weight: 4 },
+  { source: "JH", target: "HR", weight: 5 },
+  { source: "PR", target: "OP", weight: 6 },
+  { source: "PR", target: "PG", weight: 5 },
+  { source: "PR", target: "EB", weight: 4 },
+  { source: "EC", target: "BJ", weight: 5 },
+  { source: "EC", target: "PG", weight: 6 },
+  { source: "EC", target: "RV", weight: 3 },
+  { source: "EC", target: "LQ", weight: 4 },
+  { source: "RV", target: "LQ", weight: 6 },
+  { source: "RV", target: "JL", weight: 4 },
+  { source: "RV", target: "SM", weight: 5 },
+  { source: "BJ", target: "LQ", weight: 5 },
+  { source: "BJ", target: "JL", weight: 3 },
+  { source: "SM", target: "IL", weight: 3 },
+  { source: "SM", target: "TC", weight: 2 },
+  { source: "LG", target: "VS", weight: 5 },
+  { source: "LG", target: "NS", weight: 4 },
+  { source: "VS", target: "NS", weight: 3 },
+  { source: "VS", target: "CP", weight: 2 },
+  { source: "CR", target: "FA", weight: 4 },
+  { source: "CR", target: "EV", weight: 5 },
+  { source: "CR", target: "RG", weight: 3 },
+  { source: "FA", target: "EV", weight: 4 },
+  { source: "IL", target: "GF", weight: 4 },
+  { source: "IL", target: "TC", weight: 3 },
+  { source: "DM", target: "AM", weight: 3 },
+  { source: "DM", target: "AR", weight: 4 },
+  { source: "AR", target: "AM", weight: 3 },
+  { source: "MT", target: "MR", weight: 4 },
+  { source: "OP", target: "PG", weight: 3 },
+];
+
+function NetworkGraph({ nodes, edges, selected, onSelect, theme }) {
+  const svgRef = useRef(null);
+  const simRef = useRef(null);
+  const zoomRef = useRef(null);
+
+  const isDark = theme === "dark";
+
+  const rScale = d3.scaleLinear()
+    .domain([d3.min(nodes, d => d.papers), d3.max(nodes, d => d.papers)])
+    .range([7, 22]);
+
+  const wScale = d3.scaleLinear()
+    .domain([1, 8]).range([0.5, 3.5]);
+
+  useEffect(() => {
+    if (!svgRef.current || !nodes.length) return;
+    const container = svgRef.current.parentElement;
+    const W = container.clientWidth;
+    const H = container.clientHeight;
+
+    d3.select(svgRef.current).selectAll("*").remove();
+
+    const svg = d3.select(svgRef.current)
+      .attr("width", W).attr("height", H);
+
+    const g = svg.append("g");
+
+    // Zoom
+    const zoom = d3.zoom()
+      .scaleExtent([0.3, 3])
+      .on("zoom", (event) => { g.attr("transform", event.transform); });
+    svg.call(zoom);
+    zoomRef.current = zoom;
+
+    // Edge color
+    const edgeColor = isDark ? "#3A3A37" : "#D4D2C9";
+    const nodeStroke = isDark ? "#3A3A37" : "#D4D2C9";
+    const textFill = isDark ? "#888780" : "#6B6B68";
+    const highlightFill = isDark ? "#1A2540" : "#E8EDF7";
+    const highlightStroke = isDark ? "#6B8FE0" : "#1E3A8A";
+
+    // Clone for simulation
+    const simNodes = nodes.map(d => ({ ...d }));
+    const nodeById = Object.fromEntries(simNodes.map(d => [d.id, d]));
+    const simEdges = edges.map(e => ({
+      source: nodeById[e.source] || e.source,
+      target: nodeById[e.target] || e.target,
+      weight: e.weight,
+    }));
+
+    // Simulation
+    const sim = d3.forceSimulation(simNodes)
+      .force("link", d3.forceLink(simEdges).id(d => d.id).distance(d => 60 + (rScale(d.source.papers || 30) + rScale(d.target.papers || 30)) * 2))
+      .force("charge", d3.forceManyBody().strength(-180))
+      .force("center", d3.forceCenter(W / 2, H / 2))
+      .force("collision", d3.forceCollide(d => rScale(d.papers) + 4));
+    simRef.current = sim;
+
+    // Edges
+    const link = g.append("g").selectAll("line")
+      .data(simEdges).join("line")
+      .attr("stroke", edgeColor)
+      .attr("stroke-width", d => wScale(d.weight))
+      .attr("stroke-opacity", 0.7);
+
+    // Nodes group
+    const node = g.append("g").selectAll("g")
+      .data(simNodes).join("g")
+      .attr("cursor", "pointer")
+      .call(d3.drag()
+        .on("start", (event, d) => { if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on("drag", (event, d) => { d.fx = event.x; d.fy = event.y; })
+        .on("end", (event, d) => { if (!event.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+      )
+      .on("click", (event, d) => { event.stopPropagation(); onSelect(d.id === selected ? null : d.id); });
+
+    node.append("circle")
+      .attr("r", d => rScale(d.papers))
+      .attr("fill", d => d.id === selected ? highlightFill : (isDark ? "#252522" : "#F4F3EE"))
+      .attr("stroke", d => d.id === selected ? highlightStroke : nodeStroke)
+      .attr("stroke-width", d => d.id === selected ? 2 : 1);
+
+    node.append("text")
+      .text(d => d.id)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", d => Math.max(7, rScale(d.papers) * 0.6))
+      .attr("font-family", "var(--font-sans)")
+      .attr("font-weight", "500")
+      .attr("fill", d => d.id === selected ? highlightStroke : textFill)
+      .attr("pointer-events", "none");
+
+    svg.on("click", () => onSelect(null));
+
+    sim.on("tick", () => {
+      link
+        .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+      node.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+    return () => { sim.stop(); };
+  }, [nodes, edges, theme]);
+
+  // Re-highlight selected node without re-running simulation
+  useEffect(() => {
+    if (!svgRef.current) return;
+    const isDark = theme === "dark";
+    const highlightFill = isDark ? "#1A2540" : "#E8EDF7";
+    const highlightStroke = isDark ? "#6B8FE0" : "#1E3A8A";
+    const normalFill = isDark ? "#252522" : "#F4F3EE";
+    const normalStroke = isDark ? "#3A3A37" : "#D4D2C9";
+    const normalText = isDark ? "#888780" : "#6B6B68";
+
+    d3.select(svgRef.current).selectAll("g g g").each(function(d) {
+      if (!d) return;
+      const isSelected = d.id === selected;
+      d3.select(this).select("circle")
+        .attr("fill", isSelected ? highlightFill : normalFill)
+        .attr("stroke", isSelected ? highlightStroke : normalStroke)
+        .attr("stroke-width", isSelected ? 2 : 1);
+      d3.select(this).select("text")
+        .attr("fill", isSelected ? highlightStroke : normalText);
+    });
+  }, [selected, theme]);
+
+  const handleZoomIn  = () => { if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().call(zoomRef.current.scaleBy, 1.4); };
+  const handleZoomOut = () => { if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().call(zoomRef.current.scaleBy, 0.7); };
+  const handleReset   = () => { if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().call(zoomRef.current.transform, d3.zoomIdentity); };
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <svg ref={svgRef} className="net-svg" />
+      <div className="net-controls">
+        <button className="ctrl-btn" onClick={handleZoomIn} title="Acercar"><Icon name="plus" size={14} /></button>
+        <button className="ctrl-btn" onClick={handleZoomOut} title="Alejar"><Icon name="minus" size={14} /></button>
+        <button className="ctrl-btn" onClick={handleReset} title="Restablecer vista"><Icon name="maximize-2" size={14} /></button>
+        <button className="ctrl-btn" title="Exportar"><Icon name="download" size={14} /></button>
+      </div>
+    </div>
+  );
+}
+
+function NetworkApp() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("ic-theme") || "light");
+  const [selected, setSelected] = useState("MC");
+  const [filterDep, setFilterDep] = useState("Todas");
+  const [filterArea, setFilterArea] = useState("Todas");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("ic-theme", theme);
+  }, [theme]);
+
+  const filteredNodes = filterDep === "Todas" ? RAW_NODES : RAW_NODES.filter(n => n.dep === filterDep);
+  const filteredIds = new Set(filteredNodes.map(n => n.id));
+  const filteredEdges = RAW_EDGES.filter(e => filteredIds.has(e.source) && filteredIds.has(e.target));
+
+  const selectedNode = RAW_NODES.find(n => n.id === selected);
+  const selectedEdges = RAW_EDGES.filter(e => e.source === selected || e.target === selected);
+  const collaboratorCount = selectedEdges.length;
+
+  const deps = ["Todas", ...Object.keys(DEP_COLORS)];
+
+  return (
+    <div className="net-layout">
+      <header className="topbar">
+        <a className="logo" href="Screen 1 - Home.html">
+          <span className="logo-uat">UAT</span>
+          <span className="logo-sub">IntellectClone</span>
+        </a>
+        <nav className="topbar-nav" style={{ marginLeft: "var(--sp-6)" }}>
+          {["Directorio", "Red de colaboración", "Acerca"].map((item, i) => (
+            <button key={item} className={`topbar-nav-item ${i === 1 ? "active" : ""}`}>{item}</button>
+          ))}
+        </nav>
+        <div className="topbar-actions">
+          <button className="btn btn-secondary btn-sm">Iniciar sesión</button>
+        </div>
+      </header>
+
+      <div className="net-body">
+        <div className="net-canvas">
+          <NetworkGraph
+            nodes={filteredNodes}
+            edges={filteredEdges}
+            selected={selected}
+            onSelect={setSelected}
+            theme={theme}
+          />
+        </div>
+
+        <aside className="net-panel">
+          {/* Filtros */}
+          <div className="panel-section">
+            <div className="panel-section-title">Filtros</div>
+            <div className="filter-row">
+              <div className="filter-lbl">Dependencia</div>
+              <div style={{ position: "relative" }}>
+                <select className="filter-sel" value={filterDep} onChange={e => setFilterDep(e.target.value)}>
+                  {deps.map(d => <option key={d}>{d}</option>)}
+                </select>
+                <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", color: "var(--text-quaternary)", pointerEvents: "none" }}><Icon name="chevron-down" size={12} /></span>
+              </div>
+            </div>
+            <div className="filter-row" style={{ marginBottom: 0 }}>
+              <div className="filter-lbl">Área de conocimiento</div>
+              <div style={{ position: "relative" }}>
+                <select className="filter-sel" value={filterArea} onChange={e => setFilterArea(e.target.value)}>
+                  {["Todas", "Machine learning", "Medicina", "Derecho", "Economía", "Educación"].map(a => <option key={a}>{a}</option>)}
+                </select>
+                <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", color: "var(--text-quaternary)", pointerEvents: "none" }}><Icon name="chevron-down" size={12} /></span>
+              </div>
+            </div>
+          </div>
+
+          {/* Leyenda */}
+          <div className="panel-section">
+            <div className="panel-section-title">Leyenda</div>
+            {Object.entries(DEP_COLORS).map(([dep, color]) => (
+              <div key={dep} className="legend-row">
+                <div className="legend-dot" style={{ background: dep === filterDep || filterDep === "Todas" ? color : "var(--bg-muted)" }} />
+                <div className="legend-label" style={{ color: dep === filterDep || filterDep === "Todas" ? "var(--text-secondary)" : "var(--text-quaternary)" }}>{dep}</div>
+              </div>
+            ))}
+            <div className="size-legend">
+              {[8, 14, 20].map(r => (
+                <div key={r} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <div className="size-demo" style={{ width: r * 2, height: r * 2 }} />
+                  <span style={{ fontFamily: "var(--font-sans)", fontSize: 10, color: "var(--text-quaternary)" }}>{r < 10 ? "< 30" : r < 16 ? "30–80" : "> 80"} papers</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Selected */}
+          <div className="panel-section" style={{ flex: 1 }}>
+            <div className="panel-section-title">
+              {selectedNode ? "Investigador seleccionado" : "Ningún nodo seleccionado"}
+            </div>
+            {selectedNode ? (
+              <div className="person-card">
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)" }}>
+                  <div className="avatar avatar-md" style={{ background: "var(--accent-subtle)", color: "var(--accent-text)" }}>{selectedNode.id}</div>
+                  <div>
+                    <div className="person-name">{selectedNode.name}</div>
+                    <div className="person-dep">{selectedNode.dep} · SNII {selectedNode.snii}</div>
+                  </div>
+                </div>
+                <div className="person-stats">
+                  <div className="p-stat">
+                    <div className="p-stat-val">{selectedNode.papers}</div>
+                    <div className="p-stat-lbl">publicaciones</div>
+                  </div>
+                  <div className="p-stat">
+                    <div className="p-stat-val">{selectedNode.citas.toLocaleString()}</div>
+                    <div className="p-stat-lbl">citas</div>
+                  </div>
+                  <div className="p-stat">
+                    <div className="p-stat-val">{collaboratorCount}</div>
+                    <div className="p-stat-lbl">coautores</div>
+                  </div>
+                  <div className="p-stat">
+                    <div className="p-stat-val" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <span className="twin-dot generated" />
+                      <span style={{ fontSize: 12, color: "var(--accent-primary)" }}>Gemelo</span>
+                    </div>
+                    <div className="p-stat-lbl">estado</div>
+                  </div>
+                </div>
+                <a href="Screen 3 - Perfil.html" className="btn btn-secondary btn-sm" style={{ textDecoration: "none", justifyContent: "center" }}>
+                  Ver perfil completo
+                  <Icon name="arrow-right" size={13} />
+                </a>
+              </div>
+            ) : (
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-quaternary)" }}>
+                Haz clic en un nodo para ver la información del investigador.
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      <ModeToggle theme={theme} setTheme={setTheme} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<NetworkApp />);
+</script>
+</body>
+</html>

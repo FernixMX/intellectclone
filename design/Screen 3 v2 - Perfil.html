@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>IntellectClone — Perfil</title>
+<link rel="stylesheet" href="screens-v2.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+.pub-header{position:fixed;top:0;left:0;right:0;height:60px;background:#14243c;display:flex;align-items:center;padding:0 var(--sp-8);gap:var(--sp-6);z-index:100;border-bottom:1px solid #1e3350;}
+.pub-nav-item{font-size:13px;color:#8da2b5;padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer;border:none;background:none;transition:background 120ms,color 120ms;}
+.pub-nav-item:hover{background:#1e3350;color:#fff;}
+.pub-nav-item.active{color:#fff;font-weight:500;}
+
+.profile-shell{max-width:1100px;margin:0 auto;padding:80px var(--sp-8) 80px;}
+
+/* Profile hero */
+.profile-hero{background:linear-gradient(135deg,#14243c 0%,#1a3350 100%);border-radius:var(--radius-xl);padding:var(--sp-8);margin-bottom:var(--sp-6);display:flex;align-items:center;gap:var(--sp-6);}
+.profile-avatar-ring{width:88px;height:88px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#fff;flex-shrink:0;border:3px solid rgba(255,255,255,0.15);}
+.profile-name{font-size:26px;font-weight:700;color:#fff;margin-bottom:4px;}
+.profile-sub{font-size:14px;color:#8da2b5;margin-bottom:10px;}
+.profile-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.profile-hero-actions{margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+
+/* Stats */
+.stats-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-4);margin-bottom:var(--sp-6);}
+.stat-mini{background:var(--bg-card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border-light);padding:var(--sp-4) var(--sp-5);display:flex;align-items:center;gap:var(--sp-3);}
+.stat-mini-icon{width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.stat-mini-val{font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--text-primary);line-height:1;}
+.stat-mini-lbl{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.stat-mini-delta{font-size:11px;font-weight:500;color:var(--green);margin-top:2px;display:flex;align-items:center;gap:3px;}
+
+/* Two-col */
+.profile-grid{display:grid;grid-template-columns:1fr 320px;gap:var(--sp-5);}
+.section-card{background:var(--bg-card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border-light);margin-bottom:var(--sp-4);}
+.section-card-header{padding:var(--sp-4) var(--sp-5);border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;}
+.section-card-title{font-size:15px;font-weight:600;color:var(--text-primary);}
+.section-card-body{padding:var(--sp-5);}
+
+/* Pub */
+.pub-item{padding:var(--sp-3) 0;border-bottom:1px solid var(--border-light);display:flex;flex-direction:column;gap:4px;}
+.pub-item:last-child{border-bottom:none;}
+.pub-title{font-size:14px;font-weight:500;color:var(--text-primary);line-height:1.4;cursor:pointer;transition:color 120ms;}
+.pub-title:hover{color:var(--blue);}
+.pub-meta{font-size:12px;color:var(--text-muted);display:flex;gap:12px;}
+.pub-citas{font-family:var(--font-mono);font-size:12px;color:var(--blue);}
+
+/* Coauthors */
+.coauthor-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--sp-3);}
+.coauthor-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:var(--sp-2);border-radius:var(--radius-sm);transition:background 120ms;}
+.coauthor-item:hover{background:var(--bg-hover);}
+.coauthor-name{font-size:10px;color:var(--text-muted);text-align:center;line-height:1.3;}
+
+/* Twin card */
+.twin-card{background:var(--bg-card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border-light);overflow:hidden;}
+.twin-card-header{background:linear-gradient(135deg,#14243c,#1a3350);padding:var(--sp-5);display:flex;align-items:center;justify-content:space-between;}
+.twin-card-title{font-size:14px;font-weight:600;color:#fff;}
+.twin-card-body{padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-3);}
+
+/* Trait */
+.trait-row{display:flex;align-items:center;gap:var(--sp-3);}
+.trait-name{font-size:12px;color:var(--text-muted);width:130px;flex-shrink:0;}
+.trait-track{flex:1;height:5px;background:var(--bg-muted);border-radius:3px;overflow:hidden;}
+.trait-fill{height:100%;background:var(--blue);border-radius:3px;}
+.trait-val{font-family:var(--font-mono);font-size:11px;color:var(--text-light);width:26px;text-align:right;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+function Icon({name,size=16,sw=1.5}){
+  const ref=useRef(null);
+  useEffect(()=>{
+    if(!ref.current||!window.lucide)return;
+    ref.current.innerHTML="";
+    const k=name.split("-").map(w=>w[0].toUpperCase()+w.slice(1)).join("");
+    const el=lucide.createElement(lucide[k]);
+    if(el){el.setAttribute("width",size);el.setAttribute("height",size);el.setAttribute("stroke-width",sw);ref.current.appendChild(el);}
+  },[name,size]);
+  return <span ref={ref} style={{display:"inline-flex",alignItems:"center"}}/>;
+}
+const PUBS=[
+  {title:"Recurrent neural networks for time-series prediction in complex biological systems",journal:"Neural Computing & Applications",year:2024,citas:143},
+  {title:"Graph-based collaborative filtering with heterogeneous academic networks",journal:"Information Sciences",year:2023,citas:89},
+  {title:"Federated learning for IoT anomaly detection in resource-constrained environments",journal:"IEEE Internet of Things Journal",year:2023,citas:212},
+  {title:"Transfer learning applied to Mexican Spanish sentiment analysis corpora",journal:"Expert Systems with Applications",year:2022,citas:67},
+  {title:"Co-authorship network dynamics in Latin American computer science research",journal:"Scientometrics",year:2022,citas:45},
+];
+const COAUTHORS=[
+  {init:"AV",c:"green"},{init:"PR",c:"red"},{init:"RV",c:"orange"},{init:"EC",c:"purple"},
+  {init:"LQ",c:"teal"},{init:"JH",c:"green"},{init:"EB",c:"blue"},{init:"SM",c:"orange"},
+  {init:"OP",c:"purple"},{init:"DM",c:"red"},
+];
+const TRAITS=[
+  {name:"Rigor metodológico",val:91},
+  {name:"Apertura interdiscipl.",val:74},
+  {name:"Sesgo cuantitativo",val:88},
+  {name:"Orientación práctica",val:62},
+  {name:"Nivel de consenso",val:55},
+];
+
+function TwinModal({onClose}){
+  return(
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:500}}>
+        <div className="modal-header">
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div className="avatar avatar-md" style={{background:"var(--blue)",color:"#fff"}}>MC</div>
+            <div>
+              <div className="modal-title">Perfil cognitivo del gemelo</div>
+              <div style={{fontSize:12,color:"var(--text-muted)",marginTop:2}}>Dra. María Elena Cárdenas Ruiz</div>
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose}><Icon name="x" size={14}/></button>
+        </div>
+        <div className="modal-body">
+          <div style={{fontSize:11,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",color:"var(--text-muted)",marginBottom:8}}>Descripción del agente</div>
+          <div style={{fontSize:13,lineHeight:1.6,marginBottom:20}}>Investigadora con fuerte orientación a la aplicación práctica de machine learning en redes y sistemas embebidos. Prioriza la reproducibilidad metodológica y tiende hacia enfoques cuantitativos. Historial de colaboración amplio dentro de la UAT.</div>
+          <div style={{fontSize:11,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",color:"var(--text-muted)",marginBottom:12}}>Rasgos cognitivos calibrados</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {TRAITS.map(t=>(
+              <div key={t.name} className="trait-row">
+                <div className="trait-name">{t.name}</div>
+                <div className="trait-track"><div className="trait-fill" style={{width:`${t.val}%`}}/></div>
+                <div className="trait-val">{t.val}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-outline btn-sm" onClick={onClose}>Cerrar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Perfil(){
+  const [showAll,setShowAll]=useState(false);
+  const [twinModal,setTwinModal]=useState(false);
+  const visiblePubs=showAll?PUBS:PUBS.slice(0,3);
+  const AREAS=["Machine learning","Redes de computadoras","PLN","IoT","Aprendizaje federado","Series temporales","Bioinformática computacional"];
+
+  return(
+    <div style={{background:"var(--bg-body)",minHeight:"100vh"}}>
+      <header className="pub-header">
+        <div style={{display:"flex",flexDirection:"column",gap:1}}>
+          <span style={{fontSize:15,fontWeight:700,color:"#fff",letterSpacing:"0.06em"}}>UAT</span>
+          <span style={{fontSize:10,color:"#8da2b5",letterSpacing:"0.04em",textTransform:"uppercase"}}>IntellectClone</span>
+        </div>
+        <nav style={{display:"flex",gap:4,marginLeft:24}}>
+          {["Directorio","Red de colaboración","Acerca"].map((n,i)=>(
+            <button key={n} className={`pub-nav-item ${i===0?"active":""}`}>{n}</button>
+          ))}
+        </nav>
+        <div style={{marginLeft:"auto"}}>
+          <button className="btn btn-outline btn-sm" style={{borderColor:"#2a4060",color:"#8da2b5"}}>Iniciar sesión</button>
+        </div>
+      </header>
+
+      <div className="profile-shell" style={{paddingTop:80}}>
+        {/* Breadcrumb */}
+        <div className="breadcrumb" style={{marginBottom:"var(--sp-4)"}}>
+          <a href="Screen 2 v2 - Directorio.html">Directorio</a>
+          <span className="breadcrumb-sep"><Icon name="chevron-right" size={12}/></span>
+          <span className="breadcrumb-current">Dra. María Elena Cárdenas Ruiz</span>
+        </div>
+
+        {/* Hero */}
+        <div className="profile-hero">
+          <div className="profile-avatar-ring">MC</div>
+          <div>
+            <div className="profile-name">Dra. María Elena Cárdenas Ruiz</div>
+            <div className="profile-sub">Facultad de Ingeniería · Cuerpo Académico: Redes de Computadoras y Sistemas Inteligentes</div>
+            <div className="profile-badges">
+              <span className="badge badge-blue">SNII Nivel II</span>
+              <span className="badge badge-green">Cuerpo Consolidado</span>
+              <span className="badge" style={{background:"rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.8)"}}>Perfil activo</span>
+            </div>
+          </div>
+          <div className="profile-hero-actions">
+            <button className="btn btn-primary btn-md"><Icon name="cpu" size={14}/>Incluir en simulación</button>
+            <button className="btn btn-outline btn-sm" style={{borderColor:"rgba(255,255,255,0.15)",color:"rgba(255,255,255,0.5)"}}>
+              <Icon name="flag" size={12}/>Solicitar corrección
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="stats-row-4">
+          {[
+            {icon:"file-text",color:"blue",bg:"var(--blue-light)",val:"84",lbl:"Publicaciones",delta:"+6 en 2024"},
+            {icon:"quote",color:"green",bg:"var(--green-light)",val:"1,284",lbl:"Citas totales",delta:"+143 en 2024"},
+            {icon:"trending-up",color:"orange",bg:"var(--orange-light)",val:"21",lbl:"Índice h",delta:null},
+            {icon:"users",color:"purple",bg:"var(--purple-light)",val:"37",lbl:"Coautores UAT",delta:"+3 nuevos"},
+          ].map(s=>(
+            <div key={s.lbl} className="stat-mini">
+              <div className="stat-mini-icon" style={{background:s.bg,color:`var(--${s.color})`}}>
+                <Icon name={s.icon} size={20} sw={1.5}/>
+              </div>
+              <div>
+                <div className="stat-mini-val">{s.val}</div>
+                <div className="stat-mini-lbl">{s.lbl}</div>
+                {s.delta&&<div className="stat-mini-delta"><Icon name="trending-up" size={10}/>{s.delta}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Grid */}
+        <div className="profile-grid">
+          <div>
+            {/* Areas */}
+            <div className="section-card">
+              <div className="section-card-header">
+                <div className="section-card-title">Áreas de especialización</div>
+              </div>
+              <div className="section-card-body" style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {AREAS.map(a=><span key={a} className="badge badge-muted">{a}</span>)}
+              </div>
+            </div>
+            {/* Publications */}
+            <div className="section-card">
+              <div className="section-card-header">
+                <div className="section-card-title">Publicaciones</div>
+                <span style={{fontFamily:"var(--font-mono)",fontSize:12,color:"var(--text-muted)"}}>84 total</span>
+              </div>
+              <div className="section-card-body" style={{padding:"var(--sp-4) var(--sp-5)"}}>
+                {visiblePubs.map(p=>(
+                  <div key={p.title} className="pub-item">
+                    <div className="pub-title">{p.title}</div>
+                    <div className="pub-meta">
+                      <span>{p.journal}</span>
+                      <span style={{fontFamily:"var(--font-mono)"}}>{p.year}</span>
+                      <span className="pub-citas"><Icon name="quote" size={10}/> {p.citas} citas</span>
+                    </div>
+                  </div>
+                ))}
+                {!showAll&&(
+                  <button className="btn btn-ghost btn-sm" style={{color:"var(--blue)",marginTop:8}} onClick={()=>setShowAll(true)}>
+                    Ver todas (84) <Icon name="chevron-down" size={13}/>
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* Coauthors */}
+            <div className="section-card">
+              <div className="section-card-header">
+                <div className="section-card-title">Red de colaboración</div>
+                <a href="Screen 4 v2 - Red.html" className="btn btn-ghost btn-sm" style={{color:"var(--blue)"}}>
+                  Ver red completa <Icon name="arrow-right" size={13}/>
+                </a>
+              </div>
+              <div className="section-card-body">
+                <div className="coauthor-grid">
+                  {COAUTHORS.map(c=>(
+                    <div key={c.init} className="coauthor-item">
+                      <div className={`avatar avatar-md avatar-${c.c}`}>{c.init}</div>
+                      <div className="coauthor-name">{c.init}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right sidebar */}
+          <div>
+            <div className="twin-card" style={{marginBottom:"var(--sp-4)"}}>
+              <div className="twin-card-header">
+                <div className="twin-card-title">Gemelo digital</div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span className="twin-dot generated"/>
+                  <span style={{fontSize:12,color:"#6b8fe0",fontWeight:500}}>Generado</span>
+                </div>
+              </div>
+              <div className="twin-card-body">
+                <div style={{fontSize:11,fontFamily:"var(--font-mono)",color:"var(--text-muted)"}}>Última actualización: 28 abr 2025</div>
+                <div style={{fontSize:13,color:"var(--text-secondary)",lineHeight:1.55}}>Agente reconstruido a partir de 84 publicaciones, red de coautoría y datos de adscripción. Calibrado para simulaciones de prospectiva académica.</div>
+                <button className="btn btn-primary btn-sm" style={{width:"100%",justifyContent:"center"}} onClick={()=>setTwinModal(true)}>
+                  <Icon name="cpu" size={13}/>Ver perfil cognitivo
+                </button>
+              </div>
+            </div>
+            {/* Quick actions */}
+            <div className="section-card">
+              <div className="section-card-header"><div className="section-card-title">Acciones</div></div>
+              <div className="section-card-body" style={{display:"flex",flexDirection:"column",gap:8}}>
+                <button className="btn btn-outline btn-sm" style={{justifyContent:"flex-start"}}>
+                  <Icon name="edit-3" size={13}/>Solicitar corrección de datos
+                </button>
+                <button className="btn btn-ghost btn-sm" style={{justifyContent:"flex-start",color:"var(--red)"}}>
+                  <Icon name="user-x" size={13}/>Solicitar baja del sistema
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {twinModal&&<TwinModal onClose={()=>setTwinModal(false)}/>}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Perfil/>);
+</script>
+</body>
+</html>

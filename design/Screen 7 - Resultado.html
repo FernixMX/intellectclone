@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IntellectClone — Resultado de simulación</title>
+<link rel="stylesheet" href="screens.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+.result-shell { max-width: 1100px; margin: 0 auto; padding: 40px var(--sp-8) 96px; }
+
+/* Sim header */
+.sim-header-card {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-xl); padding: var(--sp-6);
+  margin-bottom: var(--sp-6);
+  display: grid; grid-template-columns: 1fr auto; gap: var(--sp-6); align-items: start;
+}
+.sim-scenario-text {
+  font-family: var(--font-sans); font-size: 15px; font-weight: 500;
+  color: var(--text-primary); line-height: 1.5; margin-bottom: var(--sp-3);
+}
+.sim-meta { display: flex; flex-wrap: wrap; gap: var(--sp-4); }
+.sim-meta-item { display: flex; align-items: center; gap: 5px; font-family: var(--font-sans); font-size: 12px; color: var(--text-quaternary); }
+.sim-meta-val { font-family: var(--font-mono); color: var(--text-secondary); }
+.sim-actions-header { display: flex; gap: var(--sp-2); flex-shrink: 0; }
+
+/* Tabs */
+.tabs-bar {
+  display: flex; border-bottom: var(--border-width) solid var(--border-subtle);
+  margin-bottom: var(--sp-6);
+}
+.tab-btn {
+  padding: var(--sp-2) var(--sp-4);
+  font-family: var(--font-sans); font-size: 13px; color: var(--text-tertiary);
+  cursor: pointer; border: none; background: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color 120ms, border-color 120ms;
+}
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--text-primary); border-bottom-color: var(--accent-primary); font-weight: 500; }
+
+/* Synthesis tab */
+.posture-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-4); margin-bottom: var(--sp-8); }
+.posture-card {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-lg); padding: var(--sp-5);
+}
+.posture-label { font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-quaternary); margin-bottom: var(--sp-2); }
+.posture-pct { font-family: var(--font-mono); font-size: 36px; font-weight: 600; line-height: 1; margin-bottom: var(--sp-2); }
+.posture-bar { height: 4px; background: var(--bg-muted); border-radius: 2px; overflow: hidden; margin-bottom: var(--sp-3); }
+.posture-fill { height: 100%; border-radius: 2px; }
+.posture-desc { font-family: var(--font-sans); font-size: 12px; color: var(--text-tertiary); line-height: 1.5; }
+
+.section-head { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: var(--sp-4); letter-spacing: -0.005em; }
+
+.arg-list { display: flex; flex-direction: column; gap: var(--sp-3); margin-bottom: var(--sp-8); }
+.arg-item {
+  display: flex; align-items: flex-start; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.arg-count { font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--accent-primary); width: 36px; flex-shrink: 0; }
+.arg-text { font-family: var(--font-sans); font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+.dissent-row {
+  display: grid; grid-template-columns: 160px 1fr 60px;
+  align-items: center; gap: var(--sp-4); padding: var(--sp-2) 0;
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+.dissent-dep { font-family: var(--font-sans); font-size: 13px; color: var(--text-secondary); }
+.dissent-bar { height: 6px; background: var(--bg-muted); border-radius: 3px; overflow: hidden; }
+.dissent-fill { height: 100%; border-radius: 3px; background: var(--accent-primary); }
+.dissent-pct { font-family: var(--font-mono); font-size: 12px; color: var(--text-quaternary); text-align: right; }
+
+.quote-block {
+  border-left: 2px solid var(--accent-primary);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-subtle);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin-bottom: var(--sp-3);
+}
+.quote-text { font-family: var(--font-sans); font-size: 14px; color: var(--text-primary); line-height: 1.6; font-style: italic; }
+.quote-source { font-family: var(--font-sans); font-size: 11px; color: var(--text-quaternary); margin-top: var(--sp-2); }
+
+/* Grouped tab */
+.posture-group { margin-bottom: var(--sp-8); }
+.pg-header {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--bg-subtle); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border: var(--border-width) solid var(--border-subtle);
+}
+.pg-label { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.pg-count { font-family: var(--font-mono); font-size: 13px; color: var(--text-tertiary); }
+.pg-responses { border: var(--border-width) solid var(--border-subtle); border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; }
+.pg-response {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+.pg-response:last-child { border-bottom: none; }
+.pg-researcher { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.pg-res-name { font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.pg-res-dep  { font-family: var(--font-sans); font-size: 12px; color: var(--text-quaternary); }
+.pg-text { font-family: var(--font-sans); font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
+
+/* Individual tab */
+.ind-table { width: 100%; border-collapse: collapse; }
+.ind-th {
+  padding: 10px var(--sp-3); text-align: left;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500; color: var(--text-tertiary);
+  background: var(--bg-subtle); border-bottom: var(--border-width) solid var(--border-subtle);
+  white-space: nowrap;
+}
+.ind-tr { border-bottom: var(--border-width) solid var(--border-subtle); transition: background 80ms; }
+.ind-tr:hover { background: var(--bg-subtle); }
+.ind-td { padding: 0 var(--sp-3); height: 48px; font-family: var(--font-sans); font-size: 13px; color: var(--text-secondary); vertical-align: middle; }
+.ind-td.strong { font-weight: 500; color: var(--text-primary); }
+.ind-td.mono { font-family: var(--font-mono); font-size: 12px; }
+.intensity-bar { height: 4px; width: 60px; background: var(--bg-muted); border-radius: 2px; overflow: hidden; }
+.intensity-fill { height: 100%; border-radius: 2px; }
+.snippet { font-size: 12px; color: var(--text-tertiary); max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+function Icon({ name, size = 16, strokeWidth = 1.5 }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current && window.lucide) {
+      ref.current.innerHTML = "";
+      const key = name.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join("");
+      const el = lucide.createElement(lucide[key]);
+      if (el) { el.setAttribute("width", size); el.setAttribute("height", size); el.setAttribute("stroke-width", strokeWidth); ref.current.appendChild(el); }
+    }
+  }, [name, size]);
+  return <span ref={ref} style={{ display: "inline-flex", alignItems: "center" }} />;
+}
+
+function ModeToggle({ theme, setTheme }) {
+  return (
+    <div className="mode-toggle-fixed">
+      <button className={`mt-btn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}><Icon name="sun" size={13} /></button>
+      <button className={`mt-btn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}><Icon name="moon" size={13} /></button>
+    </div>
+  );
+}
+
+const POSTURAS = [
+  { label: "A favor", pct: 41, color: "var(--success)", desc: "Apoyan la transición a modelo híbrido, destacando flexibilidad y alcance territorial de la UAT." },
+  { label: "En contra", pct: 28, color: "var(--danger)", desc: "Señalan riesgos en calidad educativa, brechas tecnológicas y pérdida de interacción presencial." },
+  { label: "Postura matizada", pct: 31, color: "var(--accent-primary)", desc: "Condicionan el apoyo a inversión en infraestructura, capacitación y programas piloto por área." },
+];
+
+const ARGS = [
+  { count: 187, text: "La educación híbrida ampliaría el acceso para estudiantes en municipios alejados de los campus principales." },
+  { count: 143, text: "Se requiere inversión previa en conectividad y equipo antes de escalar el modelo a toda la universidad." },
+  { count: 112, text: "Las disciplinas con laboratorio o práctica clínica no pueden adoptar el modelo sin rediseño curricular profundo." },
+  { count: 89, text: "Existe evidencia empírica de que la modalidad híbrida bien implementada no reduce la calidad de aprendizaje." },
+];
+
+const DISSENT = [
+  { dep: "Ingeniería", pct: 62 },
+  { dep: "Medicina", pct: 71 },
+  { dep: "Educación", pct: 38 },
+  { dep: "Derecho", pct: 29 },
+  { dep: "Comercio", pct: 44 },
+  { dep: "UAMRR", pct: 55 },
+];
+
+const QUOTES = [
+  { text: "«El potencial de la hibridez no está en reducir costos sino en ampliar cobertura con calidad. Eso requiere diseño instruccional serio, no solo plataformas.»", source: "Gemelo de Dr. Jorge Hernández · Medicina · SNII III" },
+  { text: "«Nuestros estudiantes de ingeniería necesitan el laboratorio. Sin acceso físico, la formación práctica se fragmenta y los egresados pierden competitividad.»", source: "Gemelo de Dra. Patricia Rangel · Ingeniería · SNII II" },
+];
+
+const GROUPS = [
+  {
+    label: "A favor",
+    color: "var(--success)",
+    count: 251,
+    responses: [
+      { init: "JH", name: "Dr. Jorge Hernández", dep: "Medicina", text: "La modalidad híbrida tiene potencial real para ampliar cobertura en una universidad del tamaño de la UAT. El reto está en la implementación, no en el modelo." },
+      { init: "LQ", name: "Dra. Laura Quintero", dep: "UAMRR", text: "Desde la UAMRR vemos con buenos ojos la hibridez: nos acercaría recursos y docentes que hoy no tenemos capacidad de atraer en modalidad presencial." },
+    ]
+  },
+  {
+    label: "En contra",
+    color: "var(--danger)",
+    count: 171,
+    responses: [
+      { init: "MC", name: "Dra. María Elena Cárdenas", dep: "Ingeniería", text: "Los programas de ingeniería tienen componentes de laboratorio que no se pueden trasladar en línea sin pérdida de calidad formativa. El modelo no es aplicable de forma universal." },
+      { init: "PR", name: "Dra. Patricia Rangel", dep: "Ingeniería", text: "La inversión tecnológica necesaria no está contemplada en el PDI actual. Sin ella, la hibridez aumenta las desigualdades entre alumnos." },
+    ]
+  },
+  {
+    label: "Postura matizada",
+    color: "var(--accent-primary)",
+    count: 190,
+    responses: [
+      { init: "BJ", name: "Dra. Beatriz Jiménez", dep: "UAMRR", text: "Un piloto por áreas disciplinares, con evaluación rigurosa antes de escalar, es la vía más responsable. No se puede generalizar sin evidencia propia de la UAT." },
+      { init: "EC", name: "Dr. Ernesto Chávez", dep: "Ingeniería", text: "Apoyo el modelo híbrido para cursos teóricos y de formación general. Para los de especialidad, la presencialidad debe mantenerse como estándar." },
+    ]
+  },
+];
+
+const IND_ROWS = [
+  { init: "JH", name: "Dr. Jorge Hernández",   dep: "Medicina",   postura: "A favor",   intensity: 82, snippet: "La hibridez tiene potencial real para ampliar cobertura…" },
+  { init: "MC", name: "Dra. María E. Cárdenas", dep: "Ingeniería", postura: "En contra",  intensity: 75, snippet: "Los programas de ingeniería tienen componentes de lab…" },
+  { init: "BJ", name: "Dra. Beatriz Jiménez",   dep: "UAMRR",      postura: "Matizada",   intensity: 61, snippet: "Un piloto por áreas disciplinares, con evaluación…" },
+  { init: "EC", name: "Dr. Ernesto Chávez",     dep: "Ingeniería", postura: "Matizada",   intensity: 58, snippet: "Apoyo el modelo híbrido para cursos teóricos…" },
+  { init: "LQ", name: "Dra. Laura Quintero",    dep: "UAMRR",      postura: "A favor",    intensity: 77, snippet: "Desde la UAMRR vemos con buenos ojos la hibridez…" },
+  { init: "PR", name: "Dra. Patricia Rangel",   dep: "Ingeniería", postura: "En contra",  intensity: 88, snippet: "La inversión tecnológica necesaria no está contemplada…" },
+  { init: "RV", name: "Dr. Rodrigo Vega",       dep: "UAMRR",      postura: "A favor",    intensity: 64, snippet: "El acceso a docentes especializados mejoraría…" },
+  { init: "MT", name: "Dr. Miguel Torres",      dep: "Medicina",   postura: "A favor",    intensity: 71, snippet: "La evidencia internacional apoya la hibridez bien…" },
+  { init: "AV", name: "Dr. Arturo Velázquez",   dep: "Medicina",   postura: "Matizada",   intensity: 55, snippet: "En Medicina la presencialidad clínica es indispensable…" },
+  { init: "OP", name: "Dr. Oscar Pérez",        dep: "Ingeniería", postura: "En contra",  intensity: 69, snippet: "Las prácticas de laboratorio no pueden digitalizarse…" },
+];
+
+const POSTURA_COLOR = { "A favor": "var(--success)", "En contra": "var(--danger)", "Matizada": "var(--accent-primary)" };
+const POSTURA_BG = { "A favor": "var(--success-subtle)", "En contra": "var(--danger-subtle)", "Matizada": "var(--accent-subtle)" };
+
+function Resultado() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("ic-theme") || "light");
+  const [tab, setTab] = useState(0);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("ic-theme", theme);
+  }, [theme]);
+
+  return (
+    <div className="page">
+      <header className="topbar">
+        <a className="logo" href="Screen 1 - Home.html">
+          <span className="logo-uat">UAT</span>
+          <span className="logo-sub">IntellectClone</span>
+        </a>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", marginLeft: "var(--sp-6)" }}>
+          <a href="Screen 6 - Simulador.html" style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-quaternary)", textDecoration: "none" }}>Simulador</a>
+          <Icon name="chevron-right" size={13} />
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>SIM-2025-0047</span>
+        </div>
+        <div className="topbar-actions">
+          <div className="avatar avatar-sm avatar-self">RC</div>
+        </div>
+      </header>
+
+      <main>
+        <div className="result-shell">
+          {/* Header card */}
+          <div className="sim-header-card">
+            <div>
+              <div className="sim-scenario-text">
+                «La Universidad está considerando adoptar un modelo de educación híbrida permanente para todos los programas de licenciatura a partir de 2026.»
+              </div>
+              <div className="sim-meta">
+                {[
+                  { icon: "users", label: "Cohorte", val: "612 gemelos · UAT completa" },
+                  { icon: "calendar", label: "Fecha", val: "2 may 2025 · 14:37" },
+                  { icon: "zap", label: "Costo real", val: "$7.96 USD" },
+                  { icon: "clock", label: "Duración", val: "11 min 23 s" },
+                ].map(m => (
+                  <div key={m.label} className="sim-meta-item">
+                    <Icon name={m.icon} size={12} />
+                    <span>{m.label}:</span>
+                    <span className="sim-meta-val">{m.val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="sim-actions-header">
+              <button className="btn btn-secondary btn-sm">
+                <Icon name="download" size={13} />
+                Exportar PDF
+              </button>
+              <button className="btn btn-ghost btn-sm">
+                <Icon name="share-2" size={13} />
+                Compartir
+              </button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="tabs-bar">
+            {["Síntesis ejecutiva", "Agrupado por postura", "Respuestas individuales"].map((t, i) => (
+              <button key={t} className={`tab-btn ${tab === i ? "active" : ""}`} onClick={() => setTab(i)}>{t}</button>
+            ))}
+          </div>
+
+          {/* Tab 0: Synthesis */}
+          {tab === 0 && (
+            <div>
+              <div className="posture-grid">
+                {POSTURAS.map(p => (
+                  <div key={p.label} className="posture-card">
+                    <div className="posture-label">{p.label}</div>
+                    <div className="posture-pct" style={{ color: p.color }}>{p.pct}%</div>
+                    <div className="posture-bar">
+                      <div className="posture-fill" style={{ width: `${p.pct}%`, background: p.color }} />
+                    </div>
+                    <div className="posture-desc">{p.desc}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="section-head">Argumentos más repetidos</div>
+              <div className="arg-list">
+                {ARGS.map((a, i) => (
+                  <div key={i} className="arg-item">
+                    <div className="arg-count">{a.count}</div>
+                    <div className="arg-text">{a.text}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="section-head">Áreas con mayor disenso</div>
+              <div style={{ marginBottom: "var(--sp-8)" }}>
+                {DISSENT.map(d => (
+                  <div key={d.dep} className="dissent-row">
+                    <div className="dissent-dep">{d.dep}</div>
+                    <div className="dissent-bar"><div className="dissent-fill" style={{ width: `${d.pct}%` }} /></div>
+                    <div className="dissent-pct">{d.pct}%</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="section-head">Citas representativas</div>
+              {QUOTES.map((q, i) => (
+                <div key={i} className="quote-block">
+                  <div className="quote-text">{q.text}</div>
+                  <div className="quote-source">{q.source}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Tab 1: Grouped */}
+          {tab === 1 && (
+            <div>
+              {GROUPS.map(g => (
+                <div key={g.label} className="posture-group">
+                  <div className="pg-header">
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: g.color, flexShrink: 0 }} />
+                    <div className="pg-label">{g.label}</div>
+                    <div className="pg-count">{g.count} gemelos</div>
+                  </div>
+                  <div className="pg-responses">
+                    {g.responses.map((r, i) => (
+                      <div key={i} className="pg-response">
+                        <div className="pg-researcher">
+                          <div className="avatar avatar-xs">{r.init}</div>
+                          <span className="pg-res-name">{r.name}</span>
+                          <span className="pg-res-dep">· {r.dep}</span>
+                        </div>
+                        <div className="pg-text">{r.text}</div>
+                      </div>
+                    ))}
+                    <div style={{ padding: "var(--sp-3) var(--sp-5)" }}>
+                      <button className="btn btn-ghost btn-sm" style={{ color: "var(--accent-primary)" }}>
+                        Ver las {g.count} respuestas
+                        <Icon name="chevron-down" size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Tab 2: Individual */}
+          {tab === 2 && (
+            <div style={{ background: "var(--bg-surface)", border: "var(--border-width) solid var(--border-subtle)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
+              <table className="ind-table">
+                <thead>
+                  <tr>
+                    <th className="ind-th">Gemelo</th>
+                    <th className="ind-th">Dependencia</th>
+                    <th className="ind-th">Postura</th>
+                    <th className="ind-th">Intensidad</th>
+                    <th className="ind-th">Respuesta</th>
+                    <th className="ind-th"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {IND_ROWS.map((r, i) => (
+                    <tr key={i} className="ind-tr">
+                      <td className="ind-td strong">
+                        <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)" }}>
+                          <div className="avatar avatar-xs">{r.init}</div>
+                          {r.name}
+                        </div>
+                      </td>
+                      <td className="ind-td">{r.dep}</td>
+                      <td className="ind-td">
+                        <span className="tag" style={{ color: POSTURA_COLOR[r.postura], borderColor: POSTURA_COLOR[r.postura], background: POSTURA_BG[r.postura] }}>
+                          {r.postura}
+                        </span>
+                      </td>
+                      <td className="ind-td">
+                        <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)" }}>
+                          <div className="intensity-bar">
+                            <div className="intensity-fill" style={{ width: `${r.intensity}%`, background: POSTURA_COLOR[r.postura] }} />
+                          </div>
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-quaternary)" }}>{r.intensity}</span>
+                        </div>
+                      </td>
+                      <td className="ind-td"><div className="snippet">{r.snippet}</div></td>
+                      <td className="ind-td">
+                        <button className="btn btn-ghost btn-sm"><Icon name="eye" size={13} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </main>
+
+      <ModeToggle theme={theme} setTheme={setTheme} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<Resultado />);
+</script>
+</body>
+</html>

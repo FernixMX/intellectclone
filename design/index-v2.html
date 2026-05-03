@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>IntellectClone v2 — Design Handoff</title>
+<link rel="stylesheet" href="tokens-v2.css"/>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+body{font-family:var(--font-sans);background:var(--bg-body);color:var(--text-secondary);margin:0;padding:0;}
+.shell{max-width:1040px;margin:0 auto;padding:56px 48px 96px;}
+.top-bar{background:#14243c;padding:0 48px;height:56px;display:flex;align-items:center;gap:24px;position:sticky;top:0;z-index:10;}
+.top-logo-uat{font-size:14px;font-weight:700;color:#fff;letter-spacing:0.08em;}
+.top-logo-sub{font-size:10px;color:#8da2b5;letter-spacing:0.04em;text-transform:uppercase;}
+.top-badge{margin-left:auto;background:rgba(13,110,253,0.2);color:#6b9fff;border:1px solid rgba(13,110,253,0.3);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;}
+
+.page-eyebrow{font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--blue);margin-bottom:8px;margin-top:40px;}
+.page-title{font-size:28px;font-weight:700;color:var(--text-primary);margin-bottom:6px;}
+.page-desc{font-size:14px;color:var(--text-muted);max-width:540px;line-height:1.55;margin-bottom:36px;}
+
+.section-label{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border-color);}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;margin-bottom:36px;}
+
+.card{display:block;text-decoration:none;background:var(--bg-card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border-light);padding:20px;transition:box-shadow 150ms,transform 150ms;}
+.card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.card-num{font-family:var(--font-mono);font-size:11px;color:var(--text-light);margin-bottom:6px;}
+.card-title{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px;}
+.card-desc{font-size:12px;color:var(--text-muted);line-height:1.45;}
+.card-badge{display:inline-flex;align-items:center;gap:4px;margin-top:10px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-pub{background:var(--green-light);color:var(--green);}
+.badge-priv{background:var(--blue-light);color:var(--blue);}
+
+.ds-card{display:flex;align-items:center;gap:16px;text-decoration:none;background:var(--bg-card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border-light);padding:16px 20px;transition:box-shadow 150ms,border-color 150ms;margin-bottom:36px;}
+.ds-card:hover{box-shadow:var(--shadow-md);border-color:var(--blue);}
+.ds-icon{width:44px;height:44px;background:var(--blue-light);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--blue);}
+.ds-title{font-size:14px;font-weight:600;color:var(--text-primary);}
+.ds-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
+
+.version-bar{background:var(--bg-card);border:1px solid var(--border-light);border-radius:var(--radius-md);padding:14px 20px;margin-bottom:24px;display:flex;align-items:center;gap:16px;}
+.version-badge{background:var(--blue-light);color:var(--blue);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;}
+.version-text{font-size:13px;color:var(--text-muted);}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div style="display:flex;flex-direction:column;gap:1px;">
+    <div class="top-logo-uat">UAT</div>
+    <div class="top-logo-sub">IntellectClone</div>
+  </div>
+  <div class="top-badge">Design Handoff v2</div>
+</div>
+
+<div class="shell">
+  <div class="page-eyebrow">Universidad Autónoma de Tamaulipas</div>
+  <div class="page-title">IntellectClone — Design Handoff v2</div>
+  <div class="page-desc">Rediseño completo en estilo Syndron: sidebar oscuro, header con acciones, stat cards con íconos de color, bordes redondeados, paleta azul/verde/naranja/rojo/púrpura. 9 pantallas + design system.</div>
+
+  <div class="version-bar">
+    <div class="version-badge">v2 — Syndron style</div>
+    <div class="version-text">Sidebar #14243c · Header blanco · Background #f0f4f8 · Roboto + JetBrains Mono · Cards con box-shadow · Colores vivos</div>
+    <a href="index.html" style="margin-left:auto;font-size:12px;color:var(--text-muted);text-decoration:none;">← Ver versión 1 (Quirúrgico)</a>
+  </div>
+
+  <div class="section-label">Design System</div>
+  <a class="ds-card" href="Design System.html">
+    <div class="ds-icon" id="ds-icon"></div>
+    <div>
+      <div class="ds-title">Design System v1 (base)</div>
+      <div class="ds-desc">Tokens de color, tipografía, espaciado · Componentes con variantes · Modo claro y oscuro</div>
+    </div>
+  </a>
+
+  <div class="section-label">Pantallas públicas (sin autenticación)</div>
+  <div class="grid" id="pub-grid"></div>
+
+  <div class="section-label">Pantallas privadas (con autenticación · sidebar oscuro)</div>
+  <div class="grid" id="priv-grid"></div>
+</div>
+
+<script>
+const PUB=[
+  {num:"01",title:"Home / Landing",desc:"Hero oscuro con lista de investigadores, stats strip azul, feature cards, endorsed section.",href:"Screen 1 v2 - Home.html"},
+  {num:"02",title:"Directorio de personas",desc:"Header oscuro, sidebar de filtros, grid de researcher cards con métricas, paginación.",href:"Screen 2 v2 - Directorio.html"},
+  {num:"03",title:"Perfil individual",desc:"Hero degradado oscuro, stat cards con íconos de color, publicaciones, gemelo digital.",href:"Screen 3 v2 - Perfil.html"},
+  {num:"04",title:"Explorador de red (D3)",desc:"Grafo force-directed interactivo con nodos por dependencia, filtros laterales.",href:"Screen 4 v2 - Red.html"},
+  {num:"05",title:"Acerca del proyecto",desc:"Layout editorial con TOC flotante, fuentes, privacidad, contacto.",href:"Screen 5 v2 - Acerca.html"},
+];
+const PRIV=[
+  {num:"06",title:"Simulador — composición",desc:"Sidebar, contador de cohorte en card azul gradiente, opciones, estimación de costo.",href:"Screen 6 v2 - Simulador.html"},
+  {num:"07",title:"Resultado de simulación",desc:"3 tabs: distribución de posturas con barras de color, argumentos, tabla individual.",href:"Screen 7 v2 - Resultado.html"},
+  {num:"08",title:"Histórico de simulaciones",desc:"Tabla densa con filtros laterales, badges de estado, summary bar de costos.",href:"Screen 8 v2 - Historico.html"},
+  {num:"09",title:"Panel de administración",desc:"4 tabs: Usuarios, Cosechas (harvesters con pulso animado), Gemelos, Configuración con toggles.",href:"Screen 9 v2 - Admin.html"},
+];
+
+function renderCards(items,id,badgeClass,badgeLabel){
+  document.getElementById(id).innerHTML=items.map(s=>`
+    <a href="${s.href}" class="card">
+      <div class="card-num">${s.num}</div>
+      <div class="card-title">${s.title}</div>
+      <div class="card-desc">${s.desc}</div>
+      <div class="card-badge ${badgeClass}">${badgeLabel}</div>
+    </a>
+  `).join("");
+}
+renderCards(PUB,"pub-grid","badge-pub","Pública");
+renderCards(PRIV,"priv-grid","badge-priv","Privada · sidebar");
+
+if(window.lucide){
+  const el=document.getElementById("ds-icon");
+  const icon=lucide.createElement(lucide.Layers);
+  if(icon){icon.setAttribute("width",20);icon.setAttribute("height",20);icon.setAttribute("stroke-width",1.5);el.appendChild(icon);}
+}
+</script>
+</body>
+</html>

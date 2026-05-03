@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IntellectClone — Design Handoff</title>
+<link rel="stylesheet" href="tokens.css" />
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+body { font-family: var(--font-sans); background: var(--bg-base); color: var(--text-secondary); margin: 0; padding: 0; }
+.shell { max-width: 1000px; margin: 0 auto; padding: 64px 48px 96px; }
+.header { margin-bottom: 64px; }
+.eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-quaternary); margin-bottom: 12px; }
+.title { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 8px; line-height: 1.15; }
+.subtitle { font-size: 15px; color: var(--text-tertiary); max-width: 520px; line-height: 1.55; }
+.section { margin-bottom: 48px; }
+.section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-quaternary); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.card {
+  display: block; text-decoration: none;
+  background: var(--bg-surface); border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 20px 20px 16px;
+  transition: border-color 150ms, box-shadow 120ms;
+}
+.card:hover { border-color: var(--border-strong); box-shadow: 0 2px 8px rgba(10,10,10,0.04); }
+.card-num { font-family: var(--font-mono); font-size: 11px; color: var(--text-quaternary); margin-bottom: 6px; }
+.card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; letter-spacing: -0.005em; }
+.card-desc { font-size: 12px; color: var(--text-tertiary); line-height: 1.45; }
+.card-badge { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 500; border: 1px solid; }
+.badge-public  { color: var(--success); border-color: var(--success); background: var(--success-subtle); }
+.badge-private { color: var(--accent-text); border-color: var(--accent-primary); background: var(--accent-subtle); }
+.ds-card {
+  display: flex; align-items: center; gap: 16px; text-decoration: none;
+  background: var(--bg-surface); border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 16px 20px;
+  transition: border-color 150ms;
+}
+.ds-card:hover { border-color: var(--accent-primary); }
+.ds-icon { width: 40px; height: 40px; background: var(--accent-subtle); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-primary); }
+.ds-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.ds-desc  { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+.mode-toggle { position: fixed; top: 20px; right: 20px; display: flex; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 6px; padding: 3px; gap: 2px; box-shadow: 0 1px 4px rgba(10,10,10,0.06); }
+.mt { width: 28px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; border: none; background: none; color: var(--text-quaternary); transition: background 120ms, color 120ms; }
+.mt.on { background: var(--bg-subtle); color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="header">
+    <div class="eyebrow">Universidad Autónoma de Tamaulipas</div>
+    <div class="title">IntellectClone — Design Handoff</div>
+    <div class="subtitle">Design system completo + 9 pantallas en alta fidelidad. Paleta Quirúrgico, tipografía Visby/Geist, iconografía Lucide, modo claro y oscuro en todas las pantallas.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Design System</div>
+    <a class="ds-card" href="Design System.html">
+      <div class="ds-icon" id="ds-icon"></div>
+      <div>
+        <div class="ds-title">Design System v1</div>
+        <div class="ds-desc">Tokens de color, tipografía, espaciado · Botones, inputs, tags, avatares, cards, navegación, tablas, modales, estados, microcomponentes</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Pantallas públicas (sin autenticación)</div>
+    <div class="grid" id="public-grid"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Pantallas privadas (con autenticación)</div>
+    <div class="grid" id="private-grid"></div>
+  </div>
+</div>
+
+<div class="mode-toggle">
+  <button class="mt" id="btn-light" onclick="setTheme('light')">☀</button>
+  <button class="mt" id="btn-dark" onclick="setTheme('dark')">☽</button>
+</div>
+
+<script>
+function setTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("ic-theme", t);
+  document.getElementById("btn-light").className = "mt" + (t === "light" ? " on" : "");
+  document.getElementById("btn-dark").className  = "mt" + (t === "dark"  ? " on" : "");
+}
+setTheme(localStorage.getItem("ic-theme") || "light");
+
+const PUBLIC = [
+  { num: "01", title: "Home / Landing", desc: "Hero, métricas globales, accesos a las tres caras públicas de la plataforma.", href: "Screen 1 - Home.html" },
+  { num: "02", title: "Directorio de personas", desc: "Filtros por área, dependencia y SNII. Grid de cards con métricas, paginación.", href: "Screen 2 - Directorio.html" },
+  { num: "03", title: "Perfil individual", desc: "Dra. María Elena Cárdenas Ruiz. Stats, publicaciones, coautores, gemelo digital.", href: "Screen 3 - Perfil.html" },
+  { num: "04", title: "Explorador de red (D3)", desc: "Grafo force-directed interactivo. 30 nodos UAT. Filtros, leyenda, detalle lateral.", href: "Screen 4 - Red.html" },
+  { num: "05", title: "Acerca del proyecto", desc: "Layout editorial de columna. TOC flotante, fuentes, privacidad, baja, contacto.", href: "Screen 5 - Acerca.html" },
+];
+
+const PRIVATE = [
+  { num: "06", title: "Simulador — composición", desc: "Editor de escenario, opciones avanzadas, selector de cohorte, estimación de costo.", href: "Screen 6 - Simulador.html" },
+  { num: "07", title: "Resultado de simulación", desc: "Tres tabs: síntesis ejecutiva, agrupado por postura, respuestas individuales.", href: "Screen 7 - Resultado.html" },
+  { num: "08", title: "Histórico de simulaciones", desc: "Tabla densa. Filtros laterales. Resumen de costos y consultas totales.", href: "Screen 8 - Historico.html" },
+  { num: "09", title: "Panel de administración", desc: "4 tabs: Usuarios, Cosechas (harvesters), Gemelos, Configuración.", href: "Screen 9 - Admin.html" },
+];
+
+function renderCards(items, containerId, badge) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.map(s => `
+    <a href="${s.href}" class="card">
+      <div class="card-num">${s.num}</div>
+      <div class="card-title">${s.title}</div>
+      <div class="card-desc">${s.desc}</div>
+      <div class="card-badge ${badge}">${badge === "badge-public" ? "Pública" : "Privada"}</div>
+    </a>
+  `).join("");
+}
+
+renderCards(PUBLIC,  "public-grid",  "badge-public");
+renderCards(PRIVATE, "private-grid", "badge-private");
+
+// DS icon via lucide
+if (window.lucide) {
+  const el = document.getElementById("ds-icon");
+  const icon = lucide.createElement(lucide.Layers);
+  if (icon) { icon.setAttribute("width", 20); icon.setAttribute("height", 20); icon.setAttribute("stroke-width", 1.5); el.appendChild(icon); }
+}
+</script>
+</body>
+</html>

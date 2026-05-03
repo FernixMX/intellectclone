@@ -1,0 +1,141 @@
+/* ============================================================
+   IntellectClone Design System — CSS Tokens
+   Personalidad: Quirúrgico
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Manrope:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Backgrounds ── */
+  --bg-base:        #FAFAF9;
+  --bg-surface:     #FFFFFF;
+  --bg-subtle:      #F4F3EE;
+  --bg-muted:       #ECEAE3;
+
+  /* ── Borders ── */
+  --border-subtle:  #E8E6DF;
+  --border-default: #D4D2C9;
+  --border-strong:  #B4B2A9;
+
+  /* ── Text ── */
+  --text-primary:    #0A0A0A;
+  --text-secondary:  #2C2C2A;
+  --text-tertiary:   #6B6B68;
+  --text-quaternary: #A8A6A0;
+
+  /* ── Accent (Cobalt) ── */
+  --accent-primary: #1E3A8A;
+  --accent-hover:   #1A3175;
+  --accent-subtle:  #E8EDF7;
+  --accent-text:    #1E3A8A;
+
+  /* ── Semantic ── */
+  --success:        #0F6E56;
+  --success-subtle: #E1F5EE;
+  --warning:        #854F0B;
+  --warning-subtle: #FAEEDA;
+  --danger:         #A32D2D;
+  --danger-subtle:  #FCEBEB;
+
+  /* ── Typography ── */
+  --font-sans: "Visby Round CF", "Geist", "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", ui-monospace, monospace;
+
+  /* ── Type Scale ── */
+  --text-display: 600 48px/1.05 var(--font-sans);
+  --text-h1:      600 32px/1.15 var(--font-sans);
+  --text-h2:      600 24px/1.2  var(--font-sans);
+  --text-h3:      600 18px/1.3  var(--font-sans);
+  --text-h4:      600 16px/1.4  var(--font-sans);
+  --text-body-l:  400 16px/1.55 var(--font-sans);
+  --text-body:    400 14px/1.5  var(--font-sans);
+  --text-body-s:  400 13px/1.45 var(--font-sans);
+  --text-caption: 500 12px/1.4  var(--font-sans);
+  --text-mono-l:  500 14px/1.4  var(--font-mono);
+  --text-mono:    400 13px/1.4  var(--font-mono);
+
+  /* ── Spacing ── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+  --sp-24: 96px;
+
+  /* ── Radii ── */
+  --radius-none: 0px;
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   8px;
+  --radius-xl:   12px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-none:  none;
+  --shadow-sm:    0 1px 2px rgba(10,10,10,0.04);
+  --shadow-md:    0 4px 12px rgba(10,10,10,0.06);
+  --shadow-lg:    0 12px 32px rgba(10,10,10,0.08);
+  --shadow-focus: 0 0 0 3px rgba(30,58,138,0.15);
+
+  /* ── Border width ── */
+  --border-width: 1px;
+}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  :root { --border-width: 0.5px; }
+}
+
+/* ── Dark Mode ── */
+[data-theme="dark"] {
+  --bg-base:        #0A0A0A;
+  --bg-surface:     #141413;
+  --bg-subtle:      #1C1C1A;
+  --bg-muted:       #252522;
+
+  --border-subtle:  #2A2A28;
+  --border-default: #3A3A37;
+  --border-strong:  #525250;
+
+  --text-primary:    #FAFAF9;
+  --text-secondary:  #D4D2C9;
+  --text-tertiary:   #888780;
+  --text-quaternary: #5F5E5A;
+
+  --accent-primary: #6B8FE0;
+  --accent-hover:   #8AA8E8;
+  --accent-subtle:  #1A2540;
+  --accent-text:    #B5C7EE;
+
+  --success:        #5DCAA5;
+  --success-subtle: #08503D;
+  --warning:        #EF9F27;
+  --warning-subtle: #4A2A06;
+  --danger:         #F09595;
+  --danger-subtle:  #4A1818;
+
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.3);
+  --shadow-lg:  0 12px 32px rgba(0,0,0,0.4);
+}
+
+/* ── Global Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font: var(--text-body);
+  color: var(--text-secondary);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1 { font: var(--text-h1); letter-spacing: -0.02em; color: var(--text-primary); }
+h2 { font: var(--text-h2); letter-spacing: -0.015em; color: var(--text-primary); }
+h3 { font: var(--text-h3); letter-spacing: -0.01em; color: var(--text-primary); }
+h4 { font: var(--text-h4); letter-spacing: -0.005em; color: var(--text-primary); }

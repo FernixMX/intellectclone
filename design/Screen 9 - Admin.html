@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IntellectClone — Admin</title>
+<link rel="stylesheet" href="screens.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+.admin-layout { display: flex; min-height: calc(100vh - 56px); }
+.admin-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.admin-tabs-bar {
+  padding: 0 var(--sp-6);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+  background: var(--bg-base);
+  display: flex; gap: 0;
+}
+.admin-tab {
+  padding: var(--sp-3) var(--sp-5);
+  font-family: var(--font-sans); font-size: 13px; color: var(--text-tertiary);
+  cursor: pointer; border: none; background: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color 120ms, border-color 120ms; white-space: nowrap;
+}
+.admin-tab:hover { color: var(--text-primary); }
+.admin-tab.active { color: var(--text-primary); border-bottom-color: var(--accent-primary); font-weight: 500; }
+.admin-body { flex: 1; overflow-y: auto; padding: var(--sp-6); background: var(--bg-base); }
+
+/* Harvest tab */
+.harvest-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-4); }
+.harvester-card {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-lg); padding: var(--sp-5);
+  display: flex; flex-direction: column; gap: var(--sp-4);
+}
+.harvester-header { display: flex; align-items: flex-start; justify-content: space-between; }
+.harvester-name { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.harvester-desc { font-family: var(--font-sans); font-size: 12px; color: var(--text-quaternary); margin-top: 2px; }
+.harvester-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-3); }
+.hstat { display: flex; flex-direction: column; gap: 2px; }
+.hstat-val { font-family: var(--font-mono); font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.hstat-lbl { font-family: var(--font-sans); font-size: 11px; color: var(--text-quaternary); }
+.harvester-timeline {
+  border-top: var(--border-width) solid var(--border-subtle);
+  padding-top: var(--sp-3);
+  display: flex; flex-direction: column; gap: var(--sp-1);
+}
+.timeline-row { display: flex; justify-content: space-between; align-items: center; }
+.timeline-label { font-family: var(--font-sans); font-size: 12px; color: var(--text-tertiary); }
+.timeline-val { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+.harvester-footer { display: flex; align-items: center; justify-content: space-between; }
+
+/* Progress bar */
+.prog-track { height: 3px; background: var(--bg-muted); border-radius: 2px; overflow: hidden; flex: 1; }
+.prog-fill { height: 100%; border-radius: 2px; }
+
+/* Twins tab */
+.twins-stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+.twin-stat-card {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-lg); padding: var(--sp-4) var(--sp-5);
+}
+
+/* Users tab */
+.users-table-wrap { background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; }
+
+/* Config tab */
+.config-section { max-width: 560px; margin-bottom: var(--sp-8); }
+.config-title { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: var(--sp-4); }
+.config-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--sp-3) 0; border-bottom: var(--border-width) solid var(--border-subtle);
+}
+.config-row:last-child { border-bottom: none; }
+.config-key { font-family: var(--font-sans); font-size: 13px; color: var(--text-secondary); }
+.config-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); }
+.config-input {
+  width: 100px; height: 28px; padding: 0 8px;
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-primary); background: var(--bg-surface);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-sm); outline: none; text-align: right;
+}
+.config-input:focus { border-color: var(--accent-primary); }
+
+/* Toggle */
+.tog {
+  width: 36px; height: 20px; border-radius: 10px; border: none; cursor: pointer;
+  position: relative; transition: background 200ms; flex-shrink: 0;
+}
+.tog.on { background: var(--accent-primary); }
+.tog.off { background: var(--bg-muted); }
+.tog-knob {
+  position: absolute; top: 2px;
+  width: 16px; height: 16px; border-radius: 50%; background: white;
+  transition: left 200ms; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.tog.on .tog-knob { left: 18px; }
+.tog.off .tog-knob { left: 2px; }
+
+/* Running pulse */
+.pulse { display: inline-block; width: 7px; height: 7px; border-radius: 50%; animation: pulse-anim 1.2s ease-in-out infinite; }
+@keyframes pulse-anim { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+function Icon({ name, size = 16, strokeWidth = 1.5 }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current && window.lucide) {
+      ref.current.innerHTML = "";
+      const key = name.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join("");
+      const el = lucide.createElement(lucide[key]);
+      if (el) { el.setAttribute("width", size); el.setAttribute("height", size); el.setAttribute("stroke-width", strokeWidth); ref.current.appendChild(el); }
+    }
+  }, [name, size]);
+  return <span ref={ref} style={{ display: "inline-flex", alignItems: "center" }} />;
+}
+
+function ModeToggle({ theme, setTheme }) {
+  return (
+    <div className="mode-toggle-fixed">
+      <button className={`mt-btn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}><Icon name="sun" size={13} /></button>
+      <button className={`mt-btn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}><Icon name="moon" size={13} /></button>
+    </div>
+  );
+}
+
+function Toggle({ on, onClick }) {
+  return (
+    <button className={`tog ${on ? "on" : "off"}`} onClick={onClick}>
+      <div className="tog-knob" />
+    </button>
+  );
+}
+
+const HARVESTERS = [
+  {
+    id: "openalex", name: "OpenAlex", desc: "Índice académico global · API v3",
+    status: "ok", lastRun: "02/05/25 03:00", nextRun: "03/05/25 03:00",
+    records: 14830, new: 47, errors: 0, progress: 100,
+  },
+  {
+    id: "vufind", name: "VuFind UAT", desc: "Catálogo de biblioteca universitaria",
+    status: "ok", lastRun: "01/05/25 22:00", nextRun: "02/05/25 22:00",
+    records: 3241, new: 12, errors: 0, progress: 100,
+  },
+  {
+    id: "riuat", name: "RIUAT", desc: "Repositorio institucional UAT",
+    status: "running", lastRun: "02/05/25 14:00", nextRun: "02/05/25 20:00",
+    records: 1892, new: 8, errors: 2, progress: 64,
+  },
+  {
+    id: "snii", name: "SNII — Conacyt", desc: "Datos públicos del Sistema Nacional de Investigadores",
+    status: "warning", lastRun: "28/04/25 08:00", nextRun: "05/05/25 08:00",
+    records: 612, new: 0, errors: 14, progress: 100,
+  },
+];
+
+const USERS = [
+  { name: "Dr. Roberto Castillo", email: "rcastillo@uat.edu.mx", role: "Rectoría", status: "activo", lastLogin: "02/05/25 14:37" },
+  { name: "Lic. Ana Fuentes", email: "afuentes@uat.edu.mx", role: "Oficina Asesores", status: "activo", lastLogin: "29/04/25 09:12" },
+  { name: "Dr. Carlos Méndez", email: "cmendez@uat.edu.mx", role: "Sec. Académica", status: "activo", lastLogin: "25/04/25 16:45" },
+  { name: "Lic. Laura Vega", email: "lvega@uat.edu.mx", role: "Admin técnico", status: "activo", lastLogin: "02/05/25 12:00" },
+  { name: "Dr. Pedro Ramos", email: "pramos@uat.edu.mx", role: "Sec. Académica", status: "inactivo", lastLogin: "10/03/25 11:20" },
+];
+
+const STATUS_INFO = {
+  ok:      { color: "var(--success)", label: "Activo",       bg: "var(--success-subtle)" },
+  running: { color: "var(--accent-primary)", label: "Ejecutando",  bg: "var(--accent-subtle)" },
+  warning: { color: "var(--warning)", label: "Advertencia",  bg: "var(--warning-subtle)" },
+  error:   { color: "var(--danger)",  label: "Error",        bg: "var(--danger-subtle)" },
+};
+
+function HarvestTab() {
+  const [running, setRunning] = useState({});
+  const triggerRun = (id) => {
+    setRunning(r => ({ ...r, [id]: true }));
+    setTimeout(() => setRunning(r => { const n = { ...r }; delete n[id]; return n; }), 3000);
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--sp-5)" }}>
+        <div>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, color: "var(--text-primary)" }}>Cosechas de datos</div>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-tertiary)", marginTop: 2 }}>Estado en tiempo real de los harvesters activos</div>
+        </div>
+        <button className="btn btn-secondary btn-sm">
+          <Icon name="refresh-cw" size={13} />
+          Actualizar estado
+        </button>
+      </div>
+      <div className="harvest-grid">
+        {HARVESTERS.map(h => {
+          const si = STATUS_INFO[running[h.id] ? "running" : h.status];
+          const isRunning = running[h.id] || h.status === "running";
+          return (
+            <div key={h.id} className="harvester-card">
+              <div className="harvester-header">
+                <div>
+                  <div className="harvester-name">{h.name}</div>
+                  <div className="harvester-desc">{h.desc}</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {isRunning && <span className="pulse" style={{ background: si.color }} />}
+                  <span className="tag" style={{ color: si.color, borderColor: si.color, background: si.bg, fontSize: 11 }}>
+                    {isRunning ? "Ejecutando" : si.label}
+                  </span>
+                </div>
+              </div>
+
+              <div className="harvester-stats">
+                <div className="hstat">
+                  <div className="hstat-val">{h.records.toLocaleString()}</div>
+                  <div className="hstat-lbl">registros</div>
+                </div>
+                <div className="hstat">
+                  <div className="hstat-val" style={{ color: "var(--success)" }}>+{h.new}</div>
+                  <div className="hstat-lbl">nuevos</div>
+                </div>
+                <div className="hstat">
+                  <div className="hstat-val" style={{ color: h.errors > 0 ? "var(--danger)" : "var(--text-quaternary)" }}>{h.errors}</div>
+                  <div className="hstat-lbl">errores</div>
+                </div>
+              </div>
+
+              {isRunning && (
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--text-quaternary)" }}>Progreso</span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>{running[h.id] ? 0 : h.progress}%</span>
+                  </div>
+                  <div className="prog-track">
+                    <div className="prog-fill" style={{ width: `${running[h.id] ? 5 : h.progress}%`, background: "var(--accent-primary)" }} />
+                  </div>
+                </div>
+              )}
+
+              <div className="harvester-timeline">
+                <div className="timeline-row">
+                  <span className="timeline-label">Última corrida</span>
+                  <span className="timeline-val">{h.lastRun}</span>
+                </div>
+                <div className="timeline-row">
+                  <span className="timeline-label">Próxima corrida</span>
+                  <span className="timeline-val">{h.nextRun}</span>
+                </div>
+              </div>
+
+              <div className="harvester-footer">
+                <button className="btn btn-ghost btn-sm" style={{ fontSize: 11, color: "var(--text-quaternary)" }}>
+                  <Icon name="file-text" size={12} />
+                  Ver logs
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={() => triggerRun(h.id)} disabled={!!running[h.id]}>
+                  <Icon name="play" size={12} />
+                  {running[h.id] ? "Ejecutando…" : "Forzar cosecha"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TwinsTab() {
+  const stats = [
+    { eyebrow: "Total generados", val: "612", delta: "+47 esta semana", color: "var(--text-primary)" },
+    { eyebrow: "Validados", val: "489", delta: "79.8% del total", color: "var(--success)" },
+    { eyebrow: "Pendientes validación", val: "98", delta: "16.0% del total", color: "var(--warning)" },
+    { eyebrow: "Con error", val: "25", delta: "4.1% del total", color: "var(--danger)" },
+  ];
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--sp-5)" }}>
+        <div style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, color: "var(--text-primary)" }}>Gemelos digitales</div>
+        <div style={{ display: "flex", gap: "var(--sp-2)" }}>
+          <button className="btn btn-ghost btn-sm"><Icon name="check-circle" size={13} />Validar pendientes</button>
+          <button className="btn btn-ghost btn-sm"><Icon name="refresh-cw" size={13} />Regenerar con error</button>
+        </div>
+      </div>
+      <div className="twins-stats-row">
+        {stats.map(s => (
+          <div key={s.eyebrow} className="twin-stat-card">
+            <div style={{ fontFamily: "var(--font-sans)", fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-quaternary)", marginBottom: 4 }}>{s.eyebrow}</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 28, fontWeight: 600, color: s.color, lineHeight: 1, marginBottom: 4 }}>{s.val}</div>
+            <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--text-quaternary)" }}>{s.delta}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Twin table */}
+      <div style={{ background: "var(--bg-surface)", border: "var(--border-width) solid var(--border-subtle)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {["Investigador", "Dependencia", "SNII", "Estado", "Última actualización", "Fuente", ""].map(h => (
+                <th key={h} style={{ padding: "9px 12px", textAlign: "left", fontFamily: "var(--font-sans)", fontSize: 11, fontWeight: 500, color: "var(--text-tertiary)", background: "var(--bg-subtle)", borderBottom: "var(--border-width) solid var(--border-subtle)", whiteSpace: "nowrap" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { name: "Dra. María Elena Cárdenas", dep: "Ingeniería", snii: "II", status: "validated", updated: "28/04/25", source: "OpenAlex" },
+              { name: "Dr. Arturo Velázquez Ríos", dep: "Medicina", snii: "I", status: "validated", updated: "28/04/25", source: "OpenAlex" },
+              { name: "Dra. Sofía Montoya Perales", dep: "UAMRR", snii: "C", status: "generated", updated: "29/04/25", source: "RIUAT" },
+              { name: "Dr. Luis Felipe Garza Torres", dep: "Derecho", snii: "—", status: "pending", updated: "01/05/25", source: "VuFind" },
+              { name: "Dra. Patricia Rangel Herrera", dep: "Ingeniería", snii: "II", status: "validated", updated: "28/04/25", source: "OpenAlex" },
+              { name: "Dr. Daniel Morales Fuentes", dep: "Mante", snii: "C", status: "outdated", updated: "15/03/25", source: "RIUAT" },
+            ].map((r, i) => {
+              const DOT_CLS = { validated: "validated", generated: "generated", pending: "pending", outdated: "outdated" };
+              const DOT_LABEL = { validated: "Validado", generated: "Generado", pending: "Pendiente", outdated: "Desactualizado" };
+              return (
+                <tr key={i} style={{ borderBottom: "var(--border-width) solid var(--border-subtle)", transition: "background 80ms", cursor: "default" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "var(--bg-subtle)"}
+                  onMouseLeave={e => e.currentTarget.style.background = ""}>
+                  <td style={{ padding: "0 12px", height: 40, fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>{r.name}</td>
+                  <td style={{ padding: "0 12px", fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--text-tertiary)" }}>{r.dep}</td>
+                  <td style={{ padding: "0 12px" }}><span className="tag tag-info" style={{ fontSize: 11 }}>{r.snii}</span></td>
+                  <td style={{ padding: "0 12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span className={`twin-dot ${DOT_CLS[r.status]}`} />
+                      <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--text-secondary)" }}>{DOT_LABEL[r.status]}</span>
+                    </div>
+                  </td>
+                  <td style={{ padding: "0 12px", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-quaternary)" }}>{r.updated}</td>
+                  <td style={{ padding: "0 12px", fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--text-tertiary)" }}>{r.source}</td>
+                  <td style={{ padding: "0 12px" }}>
+                    <div style={{ display: "flex", gap: 3, justifyContent: "flex-end" }}>
+                      <button className="btn btn-ghost btn-sm"><Icon name="refresh-cw" size={12} /></button>
+                      <button className="btn btn-ghost btn-sm"><Icon name="eye" size={12} /></button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function UsersTab() {
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--sp-5)" }}>
+        <div style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, color: "var(--text-primary)" }}>Usuarios con acceso</div>
+        <button className="btn btn-primary btn-sm"><Icon name="user-plus" size={13} />Agregar usuario</button>
+      </div>
+      <div className="users-table-wrap">
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {["Usuario", "Correo", "Rol", "Último acceso", "Estado", ""].map(h => (
+                <th key={h} style={{ padding: "9px 12px", textAlign: "left", fontFamily: "var(--font-sans)", fontSize: 11, fontWeight: 500, color: "var(--text-tertiary)", background: "var(--bg-subtle)", borderBottom: "var(--border-width) solid var(--border-subtle)", whiteSpace: "nowrap" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {USERS.map((u, i) => (
+              <tr key={i} style={{ borderBottom: "var(--border-width) solid var(--border-subtle)", transition: "background 80ms" }}
+                onMouseEnter={e => e.currentTarget.style.background = "var(--bg-subtle)"}
+                onMouseLeave={e => e.currentTarget.style.background = ""}>
+                <td style={{ padding: "0 12px", height: 44 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div className={`avatar avatar-sm ${u.role === "Rectoría" ? "avatar-self" : ""}`}>{u.name.split(" ").map(w => w[0]).slice(0,2).join("")}</div>
+                    <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>{u.name}</span>
+                  </div>
+                </td>
+                <td style={{ padding: "0 12px", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>{u.email}</td>
+                <td style={{ padding: "0 12px" }}><span className="tag tag-neutral" style={{ fontSize: 11 }}>{u.role}</span></td>
+                <td style={{ padding: "0 12px", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-quaternary)" }}>{u.lastLogin}</td>
+                <td style={{ padding: "0 12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: u.status === "activo" ? "var(--success)" : "var(--text-quaternary)", display: "inline-block" }} />
+                    <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: u.status === "activo" ? "var(--success)" : "var(--text-quaternary)" }}>{u.status}</span>
+                  </div>
+                </td>
+                <td style={{ padding: "0 12px" }}>
+                  <div style={{ display: "flex", gap: 3, justifyContent: "flex-end" }}>
+                    <button className="btn btn-ghost btn-sm"><Icon name="edit-2" size={12} /></button>
+                    <button className="btn btn-ghost btn-sm"><Icon name="trash-2" size={12} /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function ConfigTab() {
+  const [costThreshold, setCostThreshold] = useState("5.00");
+  const [autoHarvest, setAutoHarvest] = useState(true);
+  const [publicDir, setPublicDir] = useState(true);
+  const [publicNet, setPublicNet] = useState(true);
+  const [emailAlerts, setEmailAlerts] = useState(true);
+
+  return (
+    <div>
+      <div style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: "var(--sp-6)" }}>Configuración del sistema</div>
+      <div className="config-section">
+        <div className="config-title">Simulador</div>
+        <div style={{ background: "var(--bg-surface)", border: "var(--border-width) solid var(--border-subtle)", borderRadius: "var(--radius-lg)", padding: "0 var(--sp-5)" }}>
+          {[
+            { key: "Umbral de confirmación (USD)", component: <input className="config-input" value={costThreshold} onChange={e => setCostThreshold(e.target.value)} /> },
+            { key: "Modelo LLM activo", component: <span className="config-val">claude-haiku-4-5</span> },
+            { key: "Versión de gemelos", component: <span className="config-val">v1.2.0</span> },
+          ].map(r => (
+            <div key={r.key} className="config-row">
+              <span className="config-key">{r.key}</span>
+              {r.component}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="config-section">
+        <div className="config-title">Acceso público</div>
+        <div style={{ background: "var(--bg-surface)", border: "var(--border-width) solid var(--border-subtle)", borderRadius: "var(--radius-lg)", padding: "0 var(--sp-5)" }}>
+          {[
+            { key: "Directorio público visible", state: publicDir, set: setPublicDir },
+            { key: "Red de colaboración pública", state: publicNet, set: setPublicNet },
+          ].map(r => (
+            <div key={r.key} className="config-row">
+              <span className="config-key">{r.key}</span>
+              <Toggle on={r.state} onClick={() => r.set(v => !v)} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="config-section">
+        <div className="config-title">Sistema</div>
+        <div style={{ background: "var(--bg-surface)", border: "var(--border-width) solid var(--border-subtle)", borderRadius: "var(--radius-lg)", padding: "0 var(--sp-5)" }}>
+          {[
+            { key: "Cosechas automáticas", state: autoHarvest, set: setAutoHarvest },
+            { key: "Alertas por correo (errores)", state: emailAlerts, set: setEmailAlerts },
+          ].map(r => (
+            <div key={r.key} className="config-row">
+              <span className="config-key">{r.key}</span>
+              <Toggle on={r.state} onClick={() => r.set(v => !v)} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <button className="btn btn-primary btn-md">Guardar configuración</button>
+    </div>
+  );
+}
+
+function Admin() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("ic-theme") || "light");
+  const [tab, setTab] = useState(1);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("ic-theme", theme);
+  }, [theme]);
+
+  const TABS = ["Usuarios", "Cosechas", "Gemelos", "Configuración"];
+
+  return (
+    <div className="page" style={{ minHeight: "100vh" }}>
+      <header className="topbar">
+        <a className="logo" href="Screen 1 - Home.html">
+          <span className="logo-uat">UAT</span>
+          <span className="logo-sub">IntellectClone</span>
+        </a>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", marginLeft: "var(--sp-6)" }}>
+          <Icon name="shield" size={14} />
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>Panel de administración</span>
+        </div>
+        <div className="topbar-actions">
+          <div className="avatar avatar-sm avatar-self">LV</div>
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-secondary)" }}>Admin técnico</span>
+        </div>
+      </header>
+
+      <div className="admin-content">
+        <div className="admin-tabs-bar">
+          {TABS.map((t, i) => (
+            <button key={t} className={`admin-tab ${tab === i ? "active" : ""}`} onClick={() => setTab(i)}>{t}</button>
+          ))}
+        </div>
+        <div className="admin-body">
+          {tab === 0 && <UsersTab />}
+          {tab === 1 && <HarvestTab />}
+          {tab === 2 && <TwinsTab />}
+          {tab === 3 && <ConfigTab />}
+        </div>
+      </div>
+
+      <ModeToggle theme={theme} setTheme={setTheme} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<Admin />);
+</script>
+</body>
+</html>

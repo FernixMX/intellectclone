@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>IntellectClone — Histórico</title>
+<link rel="stylesheet" href="screens-v2.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+.hist-layout{display:flex;height:calc(100vh - var(--header-height));overflow:hidden;}
+.hist-sidebar{width:220px;flex-shrink:0;background:var(--bg-card);border-right:1px solid var(--border-color);padding:var(--sp-5) var(--sp-4);overflow-y:auto;display:flex;flex-direction:column;gap:var(--sp-5);}
+.hist-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.hist-toolbar{padding:var(--sp-4) var(--sp-6);background:var(--bg-card);border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:var(--sp-4);}
+.hist-table-wrap{flex:1;overflow:auto;padding:var(--sp-5) var(--sp-6);}
+.hist-summary{padding:var(--sp-4) var(--sp-6);background:var(--bg-card);border-top:1px solid var(--border-color);display:flex;align-items:center;gap:var(--sp-8);}
+.summary-stat{display:flex;flex-direction:column;gap:2px;}
+.summary-val{font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--text-primary);line-height:1;}
+.summary-lbl{font-size:12px;color:var(--text-muted);}
+.filter-title{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
+.fchip{padding:3px 10px;border-radius:var(--radius-full);font-size:11px;font-weight:500;border:1px solid var(--border-color);color:var(--text-muted);cursor:pointer;background:transparent;transition:all 120ms;display:inline-block;margin:2px;}
+.fchip:hover{background:var(--bg-hover);}
+.fchip.active{background:var(--blue-light);border-color:var(--blue);color:var(--blue);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo}=React;
+function Icon({name,size=16,sw=1.5}){
+  const ref=useRef(null);
+  useEffect(()=>{
+    if(!ref.current||!window.lucide)return;
+    ref.current.innerHTML="";
+    const k=name.split("-").map(w=>w[0].toUpperCase()+w.slice(1)).join("");
+    const el=lucide.createElement(lucide[k]);
+    if(el){el.setAttribute("width",size);el.setAttribute("height",size);el.setAttribute("stroke-width",sw);ref.current.appendChild(el);}
+  },[name,size]);
+  return <span ref={ref} style={{display:"inline-flex",alignItems:"center"}}/>;
+}
+
+const SIMS=[
+  {id:"SIM-2025-0047",fecha:"02/05/25 14:37",autor:"Rectoría",cohorte:"UAT completa",pregunta:"La Universidad está considerando adoptar un modelo de educación híbrida permanente…",gemelos:612,costo:7.96,dur:"11:23",estado:"completada"},
+  {id:"SIM-2025-0046",fecha:"29/04/25 09:12",autor:"Oficina Asesores",cohorte:"Ingeniería + Medicina",pregunta:"¿Cómo reaccionaría la comunidad ante una política de publicación en acceso abierto…",gemelos:260,costo:3.38,dur:"05:44",estado:"completada"},
+  {id:"SIM-2025-0045",fecha:"25/04/25 16:45",autor:"Rectoría",cohorte:"SNII I, II, III",pregunta:"Ante la posible reducción del 15% en el presupuesto de investigación para 2026…",gemelos:381,costo:4.95,dur:"08:17",estado:"completada"},
+  {id:"SIM-2025-0044",fecha:"22/04/25 11:30",autor:"Sec. Académica",cohorte:"Educación + Comercio",pregunta:"¿Qué piensan los investigadores sobre la creación de un nuevo programa de doctorado…",gemelos:116,costo:1.51,dur:"02:38",estado:"completada"},
+  {id:"SIM-2025-0043",fecha:"18/04/25 14:02",autor:"Oficina Asesores",cohorte:"UAT completa",pregunta:"Escenario de fusión de dos dependencias académicas con bajo desempeño…",gemelos:612,costo:7.96,dur:"—",estado:"error"},
+  {id:"SIM-2025-0042",fecha:"15/04/25 09:55",autor:"Rectoría",cohorte:"Cuerpos Consolidados",pregunta:"¿Cuál sería la postura de los cuerpos académicos consolidados ante la evaluación…",gemelos:204,costo:2.65,dur:"04:11",estado:"completada"},
+  {id:"SIM-2025-0041",fecha:"10/04/25 17:22",autor:"Sec. Académica",cohorte:"UAMRR + Mante",pregunta:"Propuesta de integrar los campus foráneos a un esquema de campus virtual…",gemelos:162,costo:2.11,dur:"03:29",estado:"completada"},
+  {id:"SIM-2025-0040",fecha:"07/04/25 13:18",autor:"Rectoría",cohorte:"Medicina + Ingeniería",pregunta:"Implementación de un sistema de transferencia de créditos con universidades extranjeras…",gemelos:260,costo:3.38,dur:"05:52",estado:"completada"},
+  {id:"SIM-2025-0039",fecha:"02/04/25 10:44",autor:"Oficina Asesores",cohorte:"Derecho + Educación",pregunta:"¿Cuál sería la recepción a una política de idioma extranjero obligatorio…",gemelos:135,costo:1.76,dur:"02:54",estado:"completada"},
+  {id:"SIM-2025-0038",fecha:"28/03/25 16:30",autor:"Rectoría",cohorte:"UAT completa",pregunta:"La propuesta de crear un fondo de riesgo para proyectos de investigación aplicada…",gemelos:612,costo:7.96,dur:"11:44",estado:"completada"},
+];
+const SC={completada:{color:"var(--green)",bg:"var(--green-light)",lbl:"Completada"},error:{color:"var(--red)",bg:"var(--red-light)",lbl:"Error"},en_proceso:{color:"var(--orange)",bg:"var(--orange-light)",lbl:"En proceso"}};
+
+function Historico(){
+  const [filterAutor,setFilterAutor]=useState("Todos");
+  const [filterEstado,setFilterEstado]=useState("Todos");
+
+  const filtered=useMemo(()=>{
+    let r=SIMS;
+    if(filterAutor!=="Todos") r=r.filter(s=>s.autor===filterAutor);
+    if(filterEstado!=="Todos") r=r.filter(s=>s.estado===filterEstado.toLowerCase());
+    return r;
+  },[filterAutor,filterEstado]);
+
+  const totalCost=filtered.reduce((a,s)=>a+s.costo,0);
+  const totalGemelos=filtered.reduce((a,s)=>a+s.gemelos,0);
+
+  return(
+    <div style={{minHeight:"100vh",background:"var(--bg-body)"}}>
+      <div className="sidebar">
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon"><span>IC</span></div>
+          <div className="sidebar-logo-text">
+            <div className="sidebar-logo-uat">UAT</div>
+            <div className="sidebar-logo-sub">IntellectClone</div>
+          </div>
+        </div>
+        {[{icon:"play-circle",lbl:"Nueva simulación"},{icon:"clock",lbl:"Historial",active:true},{icon:"bookmark",lbl:"Guardados"}].map(item=>(
+          <button key={item.lbl} className={`sidebar-item ${item.active?"active":""}`}>
+            <div className="sidebar-item-icon"><Icon name={item.icon} size={16}/></div>{item.lbl}
+          </button>
+        ))}
+      </div>
+      <div className="header">
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <Icon name="cpu" size={16}/>
+          <span style={{fontSize:15,fontWeight:600,color:"var(--text-primary)"}}>Simulador</span>
+          <span style={{color:"var(--text-light)",fontSize:16}}>/</span>
+          <span style={{fontSize:14,color:"var(--text-muted)",fontWeight:500}}>Histórico</span>
+        </div>
+        <div className="header-spacer"/>
+        <div className="header-actions">
+          <a href="Screen 6 v2 - Simulador.html" className="btn btn-primary btn-sm" style={{textDecoration:"none"}}><Icon name="plus" size={13}/>Nueva simulación</a>
+          <div className="header-avatar">RC</div>
+        </div>
+      </div>
+      <div style={{marginLeft:"var(--sidebar-width)",marginTop:"var(--header-height)",height:"calc(100vh - var(--header-height))",display:"flex",flexDirection:"column"}}>
+        <div className="hist-layout">
+          {/* Filter sidebar */}
+          <aside className="hist-sidebar">
+            <div style={{fontWeight:600,fontSize:14,color:"var(--text-primary)"}}>Filtros</div>
+            <div>
+              <div className="filter-title">Autor</div>
+              <div style={{position:"relative"}}>
+                <select className="form-control form-select" value={filterAutor} onChange={e=>setFilterAutor(e.target.value)} style={{height:34,fontSize:12}}>
+                  {["Todos","Rectoría","Oficina Asesores","Sec. Académica"].map(o=><option key={o}>{o}</option>)}
+                </select>
+                <span className="select-chevron"><Icon name="chevron-down" size={12}/></span>
+              </div>
+            </div>
+            <div>
+              <div className="filter-title">Período</div>
+              <div style={{position:"relative"}}>
+                <select className="form-control form-select" style={{height:34,fontSize:12}}>
+                  {["Todo","Este mes","Últimos 3 meses","Este año"].map(o=><option key={o}>{o}</option>)}
+                </select>
+                <span className="select-chevron"><Icon name="chevron-down" size={12}/></span>
+              </div>
+            </div>
+            <div>
+              <div className="filter-title">Estado</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                {["Todos","completada","error"].map(s=>(
+                  <button key={s} className={`fchip ${filterEstado===s?"active":""}`} onClick={()=>setFilterEstado(s)}>{s==="completada"?"Completada":s==="error"?"Error":"Todos"}</button>
+                ))}
+              </div>
+            </div>
+          </aside>
+          {/* Table */}
+          <div className="hist-main">
+            <div className="hist-toolbar">
+              <div style={{fontSize:15,fontWeight:600,color:"var(--text-primary)"}}>Simulaciones</div>
+              <span style={{fontFamily:"var(--font-mono)",fontSize:12,color:"var(--text-muted)"}}>{filtered.length} registros</span>
+              <div style={{marginLeft:"auto"}}>
+                <button className="btn btn-ghost btn-sm"><Icon name="download" size={13}/>Exportar CSV</button>
+              </div>
+            </div>
+            <div className="hist-table-wrap">
+              <div className="card" style={{overflow:"hidden"}}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      {["ID","Fecha","Autor","Cohorte","Pregunta","Gemelos","Costo","Dur.","Estado",""].map(h=>(
+                        <th key={h} className={`table-th${h==="Gemelos"||h==="Costo"||h==="Dur."?" r":""}`}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(s=>{
+                      const st=SC[s.estado]||SC.completada;
+                      return(
+                        <tr key={s.id} className="table-tr" style={{cursor:"pointer"}} onClick={()=>window.location.href="Screen 7 v2 - Resultado.html"}>
+                          <td className="table-td mono" style={{fontSize:11}}>{s.id}</td>
+                          <td className="table-td mono" style={{fontSize:11}}>{s.fecha}</td>
+                          <td className="table-td">{s.autor}</td>
+                          <td className="table-td" style={{color:"var(--text-muted)",fontSize:12}}>{s.cohorte}</td>
+                          <td className="table-td" style={{maxWidth:240,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",fontWeight:500,color:"var(--text-primary)"}}>{s.pregunta}</td>
+                          <td className="table-td mono r">{s.gemelos.toLocaleString()}</td>
+                          <td className="table-td mono r">${s.costo.toFixed(2)}</td>
+                          <td className="table-td mono r">{s.dur}</td>
+                          <td className="table-td">
+                            <span className="badge" style={{color:st.color,background:st.bg}}>{st.lbl}</span>
+                          </td>
+                          <td className="table-td">
+                            <div className="row-actions" onClick={e=>e.stopPropagation()}>
+                              <button className="btn btn-ghost btn-sm"><Icon name="eye" size={13}/></button>
+                              <button className="btn btn-ghost btn-sm"><Icon name="copy" size={13}/></button>
+                              <button className="btn btn-ghost btn-sm"><Icon name="download" size={13}/></button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="hist-summary">
+              <div className="summary-stat"><div className="summary-val">{filtered.length}</div><div className="summary-lbl">simulaciones</div></div>
+              <div style={{width:1,height:36,background:"var(--border-color)"}}/>
+              <div className="summary-stat"><div className="summary-val">${totalCost.toFixed(2)}</div><div className="summary-lbl">costo total USD</div></div>
+              <div style={{width:1,height:36,background:"var(--border-color)"}}/>
+              <div className="summary-stat"><div className="summary-val">{totalGemelos.toLocaleString()}</div><div className="summary-lbl">consultas a gemelos</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Historico/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IntellectClone — Histórico de simulaciones</title>
+<link rel="stylesheet" href="screens.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+.hist-layout { display: flex; min-height: calc(100vh - 56px); }
+
+/* Sidebar filters */
+.hist-sidebar {
+  width: 220px; flex-shrink: 0;
+  border-right: var(--border-width) solid var(--border-subtle);
+  padding: var(--sp-5) var(--sp-4);
+  background: var(--bg-surface);
+  display: flex; flex-direction: column; gap: var(--sp-5);
+  position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto;
+}
+.hist-filter-label {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-quaternary);
+  margin-bottom: var(--sp-2);
+}
+.hist-filter-sel {
+  width: 100%; height: 32px; padding: 0 28px 0 8px;
+  font-family: var(--font-sans); font-size: 12px;
+  color: var(--text-primary); background: var(--bg-surface);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md); appearance: none; outline: none; cursor: pointer;
+}
+.hist-filter-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.hfchip {
+  padding: 3px 8px; border-radius: var(--radius-sm);
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  border: var(--border-width) solid var(--border-default);
+  color: var(--text-tertiary); cursor: pointer; background: transparent;
+  transition: background 120ms, border-color 120ms, color 120ms;
+}
+.hfchip:hover { background: var(--bg-subtle); color: var(--text-primary); }
+.hfchip.active { background: var(--accent-subtle); border-color: var(--accent-primary); color: var(--accent-text); }
+
+/* Main */
+.hist-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.hist-header {
+  padding: var(--sp-4) var(--sp-6);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+  background: var(--bg-base);
+  display: flex; align-items: center; gap: var(--sp-4);
+}
+.hist-title { font-family: var(--font-sans); font-size: 16px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.005em; }
+.hist-count { font-family: var(--font-mono); font-size: 12px; color: var(--text-quaternary); margin-left: var(--sp-2); }
+
+/* Table */
+.hist-table-wrap { flex: 1; overflow-x: auto; }
+.hist-table { width: 100%; border-collapse: collapse; }
+.hist-th {
+  padding: 9px var(--sp-3); text-align: left;
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  color: var(--text-tertiary); background: var(--bg-subtle);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+  white-space: nowrap; cursor: pointer; user-select: none;
+}
+.hist-th:hover { color: var(--text-primary); }
+.hist-th.r { text-align: right; }
+.hist-tr { border-bottom: var(--border-width) solid var(--border-subtle); transition: background 80ms; cursor: pointer; }
+.hist-tr:hover { background: var(--bg-subtle); }
+.hist-tr:hover .hist-row-act { opacity: 1; }
+.hist-td { padding: 0 var(--sp-3); height: 44px; font-family: var(--font-sans); font-size: 12px; color: var(--text-secondary); vertical-align: middle; }
+.hist-td.mono { font-family: var(--font-mono); font-size: 11px; color: var(--text-primary); }
+.hist-td.r { text-align: right; }
+.question-cell { max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; color: var(--text-primary); }
+.hist-row-act { opacity: 0; display: flex; align-items: center; gap: 3px; justify-content: flex-end; transition: opacity 100ms; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+/* Summary bar */
+.summary-bar {
+  padding: var(--sp-4) var(--sp-6);
+  border-top: var(--border-width) solid var(--border-subtle);
+  background: var(--bg-base);
+  display: flex; align-items: center; gap: var(--sp-6);
+}
+.summary-item { display: flex; flex-direction: column; gap: 2px; }
+.summary-val { font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--text-primary); }
+.summary-lbl { font-family: var(--font-sans); font-size: 11px; color: var(--text-quaternary); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useMemo } = React;
+
+function Icon({ name, size = 16, strokeWidth = 1.5 }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current && window.lucide) {
+      ref.current.innerHTML = "";
+      const key = name.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join("");
+      const el = lucide.createElement(lucide[key]);
+      if (el) { el.setAttribute("width", size); el.setAttribute("height", size); el.setAttribute("stroke-width", strokeWidth); ref.current.appendChild(el); }
+    }
+  }, [name, size]);
+  return <span ref={ref} style={{ display: "inline-flex", alignItems: "center" }} />;
+}
+
+function ModeToggle({ theme, setTheme }) {
+  return (
+    <div className="mode-toggle-fixed">
+      <button className={`mt-btn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}><Icon name="sun" size={13} /></button>
+      <button className={`mt-btn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}><Icon name="moon" size={13} /></button>
+    </div>
+  );
+}
+
+const SIMS = [
+  { id: "SIM-2025-0047", fecha: "02/05/25 14:37", autor: "Rectoría", cohorte: "UAT completa", pregunta: "La Universidad está considerando adoptar un modelo de educación híbrida permanente para todos los programas…", gemelos: 612, costo: 7.96, duracion: "11:23", estado: "completada" },
+  { id: "SIM-2025-0046", fecha: "29/04/25 09:12", autor: "Oficina Asesores", cohorte: "Ingeniería + Medicina", pregunta: "¿Cómo reaccionaría la comunidad ante una política de publicación en acceso abierto obligatorio para todos los…", gemelos: 260, costo: 3.38, duracion: "05:44", estado: "completada" },
+  { id: "SIM-2025-0045", fecha: "25/04/25 16:45", autor: "Rectoría", cohorte: "SNII I, II, III", pregunta: "Ante la posible reducción del 15% en el presupuesto de investigación para el ejercicio 2026, ¿cuáles serían…", gemelos: 381, costo: 4.95, duracion: "08:17", estado: "completada" },
+  { id: "SIM-2025-0044", fecha: "22/04/25 11:30", autor: "Sec. Académica", cohorte: "Educación + Comercio", pregunta: "¿Qué piensan los investigadores sobre la creación de un nuevo programa de doctorado interdisciplinario en…", gemelos: 116, costo: 1.51, duracion: "02:38", estado: "completada" },
+  { id: "SIM-2025-0043", fecha: "18/04/25 14:02", autor: "Oficina Asesores", cohorte: "UAT completa", pregunta: "Escenario de fusión de dos dependencias académicas con bajo desempeño en indicadores de productividad…", gemelos: 612, costo: 7.96, duracion: "—", estado: "error" },
+  { id: "SIM-2025-0042", fecha: "15/04/25 09:55", autor: "Rectoría", cohorte: "Cuerpos Consolidados", pregunta: "¿Cuál sería la postura de los cuerpos académicos consolidados ante la implementación de evaluación por…", gemelos: 204, costo: 2.65, duracion: "04:11", estado: "completada" },
+  { id: "SIM-2025-0041", fecha: "10/04/25 17:22", autor: "Sec. Académica", cohorte: "UAMRR + Mante", pregunta: "Propuesta de integrar los campus foráneos a un esquema de campus virtual con sede administrativa…", gemelos: 162, costo: 2.11, duracion: "03:29", estado: "completada" },
+  { id: "SIM-2025-0040", fecha: "07/04/25 13:18", autor: "Rectoría", cohorte: "Medicina + Ingeniería", pregunta: "Implementación de un sistema de transferencia de créditos con universidades extranjeras y su impacto…", gemelos: 260, costo: 3.38, duracion: "05:52", estado: "completada" },
+  { id: "SIM-2025-0039", fecha: "02/04/25 10:44", autor: "Oficina Asesores", cohorte: "Derecho + Educación", pregunta: "¿Cuál sería la recepción a una política de idioma extranjero obligatorio en todos los programas de…", gemelos: 135, costo: 1.76, duracion: "02:54", estado: "completada" },
+  { id: "SIM-2025-0038", fecha: "28/03/25 15:30", autor: "Rectoría", cohorte: "UAT completa", pregunta: "La propuesta de crear un fondo de riesgo para proyectos de investigación aplicada y vinculación con sector…", gemelos: 612, costo: 7.96, duracion: "11:44", estado: "completada" },
+];
+
+const STATUS_COLOR = { completada: "var(--success)", error: "var(--danger)", en_proceso: "var(--warning)" };
+const STATUS_LABEL = { completada: "Completada", error: "Error", en_proceso: "En proceso" };
+
+function Historico() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("ic-theme") || "light");
+  const [filterAutor, setFilterAutor] = useState("Todos");
+  const [filterEstado, setFilterEstado] = useState("Todos");
+  const [filterFecha, setFilterFecha] = useState("Todo");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("ic-theme", theme);
+  }, [theme]);
+
+  const filtered = useMemo(() => {
+    let r = SIMS;
+    if (filterAutor !== "Todos") r = r.filter(s => s.autor === filterAutor);
+    if (filterEstado !== "Todos") r = r.filter(s => s.estado === filterEstado.toLowerCase().replace(" ", "_"));
+    return r;
+  }, [filterAutor, filterEstado]);
+
+  const totalCost = filtered.reduce((acc, s) => acc + s.costo, 0);
+  const totalGemelos = filtered.reduce((acc, s) => acc + s.gemelos, 0);
+
+  return (
+    <div className="page">
+      <header className="topbar">
+        <a className="logo" href="Screen 1 - Home.html">
+          <span className="logo-uat">UAT</span>
+          <span className="logo-sub">IntellectClone</span>
+        </a>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", marginLeft: "var(--sp-6)" }}>
+          <Icon name="cpu" size={14} />
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>Simulador</span>
+          <span style={{ color: "var(--border-strong)", fontSize: 16 }}>/</span>
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>Histórico</span>
+        </div>
+        <div className="topbar-actions">
+          <a href="Screen 6 - Simulador.html" className="btn btn-primary btn-sm" style={{ textDecoration: "none" }}>
+            <Icon name="plus" size={13} />
+            Nueva simulación
+          </a>
+          <div className="avatar avatar-sm avatar-self">RC</div>
+        </div>
+      </header>
+
+      <div className="hist-layout">
+        {/* Sidebar */}
+        <aside className="hist-sidebar">
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>Filtros</div>
+          <div>
+            <div className="hist-filter-label">Autor</div>
+            <div style={{ position: "relative" }}>
+              <select className="hist-filter-sel" value={filterAutor} onChange={e => setFilterAutor(e.target.value)}>
+                {["Todos", "Rectoría", "Oficina Asesores", "Sec. Académica"].map(o => <option key={o}>{o}</option>)}
+              </select>
+              <span style={{ position: "absolute", right: 7, top: "50%", transform: "translateY(-50%)", color: "var(--text-quaternary)", pointerEvents: "none" }}><Icon name="chevron-down" size={11} /></span>
+            </div>
+          </div>
+          <div>
+            <div className="hist-filter-label">Período</div>
+            <div style={{ position: "relative" }}>
+              <select className="hist-filter-sel" value={filterFecha} onChange={e => setFilterFecha(e.target.value)}>
+                {["Todo", "Este mes", "Últimos 3 meses", "Este año"].map(o => <option key={o}>{o}</option>)}
+              </select>
+              <span style={{ position: "absolute", right: 7, top: "50%", transform: "translateY(-50%)", color: "var(--text-quaternary)", pointerEvents: "none" }}><Icon name="chevron-down" size={11} /></span>
+            </div>
+          </div>
+          <div>
+            <div className="hist-filter-label">Estado</div>
+            <div className="hist-filter-chips">
+              {["Todos", "Completada", "Error"].map(s => (
+                <button key={s} className={`hfchip ${filterEstado === s ? "active" : ""}`} onClick={() => setFilterEstado(s)}>{s}</button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="hist-filter-label">Cohorte</div>
+            <div className="hist-filter-chips">
+              {["Todas", "UAT completa", "SNII I+", "Por dep."].map(s => (
+                <button key={s} className="hfchip">{s}</button>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        {/* Main table */}
+        <div className="hist-main">
+          <div className="hist-header">
+            <div className="hist-title">Simulaciones</div>
+            <span className="hist-count">{filtered.length} registros</span>
+          </div>
+
+          <div className="hist-table-wrap">
+            <table className="hist-table">
+              <thead>
+                <tr>
+                  <th className="hist-th">ID</th>
+                  <th className="hist-th">Fecha</th>
+                  <th className="hist-th">Autor</th>
+                  <th className="hist-th">Cohorte</th>
+                  <th className="hist-th">Pregunta</th>
+                  <th className="hist-th r">Gemelos</th>
+                  <th className="hist-th r">Costo</th>
+                  <th className="hist-th r">Duración</th>
+                  <th className="hist-th">Estado</th>
+                  <th className="hist-th" style={{ width: 80 }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(s => (
+                  <tr key={s.id} className="hist-tr" onClick={() => window.location.href = "Screen 7 - Resultado.html"}>
+                    <td className="hist-td mono">{s.id}</td>
+                    <td className="hist-td mono">{s.fecha}</td>
+                    <td className="hist-td">{s.autor}</td>
+                    <td className="hist-td" style={{ color: "var(--text-tertiary)" }}>{s.cohorte}</td>
+                    <td className="hist-td"><div className="question-cell">{s.pregunta}</div></td>
+                    <td className="hist-td mono r">{s.gemelos.toLocaleString()}</td>
+                    <td className="hist-td mono r">${s.costo.toFixed(2)}</td>
+                    <td className="hist-td mono r">{s.duracion}</td>
+                    <td className="hist-td">
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <span className="status-dot" style={{ background: STATUS_COLOR[s.estado] }} />
+                        <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: STATUS_COLOR[s.estado] }}>{STATUS_LABEL[s.estado]}</span>
+                      </div>
+                    </td>
+                    <td className="hist-td">
+                      <div className="hist-row-act" onClick={e => e.stopPropagation()}>
+                        <button className="btn btn-ghost btn-sm" title="Ver resultado"><Icon name="eye" size={13} /></button>
+                        <button className="btn btn-ghost btn-sm" title="Duplicar"><Icon name="copy" size={13} /></button>
+                        <button className="btn btn-ghost btn-sm" title="Exportar"><Icon name="download" size={13} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Summary */}
+          <div className="summary-bar">
+            <div className="summary-item">
+              <div className="summary-val">{filtered.length}</div>
+              <div className="summary-lbl">simulaciones</div>
+            </div>
+            <div style={{ width: 1, height: 32, background: "var(--border-subtle)" }} />
+            <div className="summary-item">
+              <div className="summary-val">${totalCost.toFixed(2)}</div>
+              <div className="summary-lbl">costo total USD</div>
+            </div>
+            <div style={{ width: 1, height: 32, background: "var(--border-subtle)" }} />
+            <div className="summary-item">
+              <div className="summary-val">{totalGemelos.toLocaleString()}</div>
+              <div className="summary-lbl">consultas a gemelos</div>
+            </div>
+            <div style={{ marginLeft: "auto" }}>
+              <button className="btn btn-ghost btn-sm">
+                <Icon name="download" size={13} />
+                Exportar CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ModeToggle theme={theme} setTheme={setTheme} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<Historico />);
+</script>
+</body>
+</html>

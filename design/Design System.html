@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IntellectClone — Design System</title>
+<link rel="stylesheet" href="tokens.css" />
+<link rel="stylesheet" href="https://unpkg.com/lucide-static@0.469.0/font/lucide.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+/* ── DS Shell ── */
+.ds-shell { display: flex; min-height: 100vh; background: var(--bg-base); }
+.ds-sidebar {
+  width: 220px; flex-shrink: 0; position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; border-right: var(--border-width) solid var(--border-subtle);
+  background: var(--bg-surface); padding: var(--sp-6) 0;
+}
+.ds-sidebar-logo {
+  padding: 0 var(--sp-4) var(--sp-6);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+  margin-bottom: var(--sp-4);
+}
+.ds-sidebar-logo-mark {
+  width: 28px; height: 28px; background: var(--accent-primary);
+  border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+  margin-bottom: var(--sp-2);
+}
+.ds-sidebar-logo-mark span { color: #fff; font: 600 13px/1 var(--font-sans); }
+.ds-sidebar-name { font: 600 13px/1 var(--font-sans); color: var(--text-primary); }
+.ds-sidebar-sub { font: var(--text-caption); color: var(--text-quaternary); margin-top: 2px; }
+.ds-nav-section { padding: var(--sp-2) var(--sp-4) var(--sp-1); }
+.ds-nav-section-label {
+  font: 500 11px/1 var(--font-sans); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-quaternary);
+}
+.ds-nav-item {
+  display: flex; align-items: center; gap: var(--sp-2); padding: 6px var(--sp-3);
+  margin: 1px var(--sp-2); border-radius: var(--radius-md); cursor: pointer;
+  font: var(--text-body-s); color: var(--text-tertiary);
+  text-decoration: none; transition: background 120ms, color 120ms;
+  border: none; background: none; width: calc(100% - 16px); text-align: left;
+}
+.ds-nav-item:hover { background: var(--bg-subtle); color: var(--text-primary); }
+.ds-nav-item.active {
+  background: var(--bg-subtle); color: var(--text-primary);
+  border-left: 2px solid var(--accent-primary); padding-left: calc(var(--sp-3) - 2px);
+}
+.ds-content { flex: 1; overflow-y: auto; }
+.ds-section { padding: var(--sp-16) var(--sp-12); max-width: 960px; }
+.ds-section + .ds-section { border-top: var(--border-width) solid var(--border-subtle); }
+.ds-section-eyebrow {
+  font: 500 11px/1 var(--font-sans); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-quaternary); margin-bottom: var(--sp-2);
+}
+.ds-section-title { font: var(--text-h2); letter-spacing: -0.015em; color: var(--text-primary); margin-bottom: var(--sp-2); }
+.ds-section-desc { font: var(--text-body); color: var(--text-tertiary); margin-bottom: var(--sp-8); max-width: 560px; }
+.ds-row { display: flex; align-items: flex-start; gap: var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-8); }
+.ds-row-label { font: var(--text-caption); color: var(--text-quaternary); margin-bottom: var(--sp-3); }
+.ds-group { display: flex; flex-direction: column; gap: var(--sp-3); }
+.ds-divider { height: var(--border-width); background: var(--border-subtle); margin: var(--sp-8) 0; }
+
+/* Mode toggle */
+.mode-toggle {
+  position: fixed; top: var(--sp-4); right: var(--sp-4);
+  display: flex; align-items: center; gap: var(--sp-1);
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md); padding: 3px; z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.mode-toggle-btn {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; cursor: pointer; border: none; background: none;
+  color: var(--text-quaternary); transition: background 120ms, color 120ms;
+}
+.mode-toggle-btn.active { background: var(--bg-subtle); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+
+/* ── TOKENS ── */
+.color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--sp-3); }
+.color-swatch {
+  border-radius: var(--radius-md); overflow: hidden;
+  border: var(--border-width) solid var(--border-subtle);
+}
+.color-swatch-block { height: 48px; }
+.color-swatch-info { padding: var(--sp-2) var(--sp-3); background: var(--bg-surface); }
+.color-swatch-name { font: var(--text-caption); color: var(--text-primary); }
+.color-swatch-hex { font: var(--text-mono); color: var(--text-quaternary); }
+
+/* ── TYPE SCALE ── */
+.type-specimen-row {
+  display: grid; grid-template-columns: 100px 1fr; gap: var(--sp-4);
+  align-items: baseline; padding: var(--sp-3) 0;
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+.type-specimen-meta { font: var(--text-mono); color: var(--text-quaternary); font-size: 11px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  border: none; cursor: pointer; font: var(--text-caption);
+  font-family: var(--font-sans); font-weight: 500; font-size: 13px;
+  border-radius: var(--radius-md); transition: background 120ms, color 120ms, border-color 120ms, transform 80ms, box-shadow 120ms;
+  white-space: nowrap; text-decoration: none; outline: none; position: relative;
+}
+.btn:focus-visible { box-shadow: var(--shadow-focus); }
+.btn:active { transform: scale(0.98); }
+
+/* Sizes */
+.btn-sm  { height: 32px; padding: 0 var(--sp-3); font-size: 12px; }
+.btn-md  { height: 38px; padding: 0 var(--sp-4); }
+.btn-lg  { height: 44px; padding: 0 var(--sp-5); font-size: 14px; }
+
+/* Variants */
+.btn-primary { background: var(--accent-primary); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+
+.btn-secondary {
+  background: transparent; color: var(--text-primary);
+  border: var(--border-width) solid var(--border-default);
+}
+.btn-secondary:hover:not(:disabled) { background: var(--bg-subtle); }
+
+.btn-ghost { background: transparent; color: var(--text-secondary); border: none; }
+.btn-ghost:hover:not(:disabled) { background: var(--bg-subtle); color: var(--text-primary); }
+
+.btn-destructive { background: var(--danger); color: #fff; }
+.btn-destructive:hover:not(:disabled) { background: #8a2424; }
+
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+.btn-loading { pointer-events: none; }
+
+.btn-spinner {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white; border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+.btn-secondary .btn-spinner, .btn-ghost .btn-spinner {
+  border-color: rgba(0,0,0,0.15); border-top-color: var(--text-primary);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── INPUTS ── */
+.input-group { display: flex; flex-direction: column; gap: var(--sp-1); }
+.input-label {
+  font: 500 11px/1 var(--font-sans); letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-tertiary);
+}
+.input-wrap { position: relative; display: flex; align-items: center; }
+.input {
+  width: 100%; height: 38px; padding: 0 var(--sp-3);
+  font: var(--text-body); font-family: var(--font-sans);
+  color: var(--text-primary); background: var(--bg-surface);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md); outline: none;
+  transition: border-color 120ms, box-shadow 120ms;
+}
+.input::placeholder { color: var(--text-quaternary); }
+.input:hover:not(:disabled) { border-color: var(--border-strong); }
+.input:focus { border-color: var(--accent-primary); box-shadow: var(--shadow-focus); }
+.input:disabled { opacity: 0.5; cursor: not-allowed; background: var(--bg-subtle); }
+.input-error { border-color: var(--danger) !important; }
+.input-error:focus { box-shadow: 0 0 0 3px rgba(163,45,45,0.15) !important; }
+.input-helper { font: var(--text-caption); color: var(--text-tertiary); margin-top: var(--sp-1); }
+.input-helper.error { color: var(--danger); }
+
+.input-with-icon { padding-left: 36px; }
+.input-icon-left {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: var(--text-quaternary); pointer-events: none;
+}
+.input-clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm); cursor: pointer; color: var(--text-quaternary);
+  border: none; background: none;
+  transition: color 120ms, background 120ms;
+}
+.input-clear:hover { color: var(--text-primary); background: var(--bg-subtle); }
+
+.textarea {
+  width: 100%; min-height: 80px; padding: var(--sp-2) var(--sp-3);
+  font: var(--text-body); font-family: var(--font-sans); resize: vertical;
+  color: var(--text-primary); background: var(--bg-surface);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md); outline: none;
+  transition: border-color 120ms, box-shadow 120ms;
+}
+.textarea:focus { border-color: var(--accent-primary); box-shadow: var(--shadow-focus); }
+
+.select {
+  appearance: none; padding-right: 32px; cursor: pointer;
+  background-image: none;
+}
+.select-wrap { position: relative; }
+.select-chevron {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  color: var(--text-quaternary); pointer-events: none;
+}
+
+/* ── TAGS ── */
+.tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px var(--sp-2); border-radius: var(--radius-sm);
+  font: var(--text-caption); border: var(--border-width) solid;
+  white-space: nowrap; line-height: 1;
+}
+.tag-neutral { color: var(--text-secondary); border-color: var(--border-default); background: transparent; }
+.tag-info { color: var(--accent-text); border-color: var(--accent-primary); background: var(--accent-subtle); }
+.tag-success { color: var(--success); border-color: var(--success); background: var(--success-subtle); }
+.tag-warning { color: var(--warning); border-color: var(--warning); background: var(--warning-subtle); }
+.tag-danger { color: var(--danger); border-color: var(--danger); background: var(--danger-subtle); }
+
+.pill { border-radius: var(--radius-full) !important; }
+
+.tag-dot {
+  width: 6px; height: 6px; border-radius: var(--radius-full); flex-shrink: 0;
+}
+
+/* ── AVATARS ── */
+.avatar {
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-full); background: var(--bg-subtle);
+  color: var(--text-secondary); font-family: var(--font-sans);
+  font-weight: 500; flex-shrink: 0; overflow: hidden; position: relative;
+  border: var(--border-width) solid var(--border-subtle);
+}
+.avatar-xs { width: 24px; height: 24px; font-size: 9px; }
+.avatar-sm { width: 32px; height: 32px; font-size: 11px; }
+.avatar-md { width: 40px; height: 40px; font-size: 14px; }
+.avatar-lg { width: 56px; height: 56px; font-size: 18px; }
+.avatar-xl { width: 80px; height: 80px; font-size: 26px; }
+.avatar-self { background: var(--accent-subtle); color: var(--accent-text); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+.card-subtle { background: var(--bg-subtle); border: none; border-radius: var(--radius-lg); }
+.card-highlighted {
+  background: var(--bg-surface); border: var(--border-width) solid var(--accent-primary);
+  border-radius: var(--radius-lg);
+}
+.card-stat { display: flex; flex-direction: column; gap: var(--sp-1); }
+.card-stat-eyebrow {
+  font: 500 11px/1 var(--font-sans); letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-quaternary);
+}
+.card-stat-value { font: var(--text-mono-l); color: var(--text-primary); font-size: 28px; font-weight: 600; }
+.card-stat-delta {
+  display: inline-flex; align-items: center; gap: 3px;
+  font: var(--text-caption); color: var(--success);
+}
+.card-stat-delta.negative { color: var(--danger); }
+
+/* ── NAVIGATION ── */
+.topbar {
+  height: 56px; background: var(--bg-base);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+  display: flex; align-items: center; padding: 0 var(--sp-6);
+  gap: var(--sp-6);
+}
+.topbar-logo { display: flex; align-items: center; gap: var(--sp-2); text-decoration: none; }
+.topbar-logo-mark {
+  width: 24px; height: 24px; background: var(--accent-primary);
+  border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
+}
+.topbar-logo-mark span { color: #fff; font: 600 10px/1 var(--font-sans); }
+.topbar-logo-name { font: 600 14px/1 var(--font-sans); color: var(--text-primary); letter-spacing: -0.01em; }
+.topbar-nav { display: flex; align-items: center; gap: var(--sp-1); flex: 1; }
+.topbar-nav-item {
+  height: 32px; padding: 0 var(--sp-3); display: flex; align-items: center;
+  font: var(--text-body-s); color: var(--text-tertiary); border-radius: var(--radius-md);
+  cursor: pointer; transition: background 120ms, color 120ms; text-decoration: none;
+  border: none; background: none;
+}
+.topbar-nav-item:hover { background: var(--bg-subtle); color: var(--text-primary); }
+.topbar-nav-item.active { color: var(--text-primary); }
+.topbar-actions { display: flex; align-items: center; gap: var(--sp-2); margin-left: auto; }
+
+.sidenav {
+  width: 240px; background: var(--bg-subtle);
+  border-right: var(--border-width) solid var(--border-subtle);
+  padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1);
+}
+.sidenav-item {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3); margin: 1px var(--sp-2);
+  border-radius: var(--radius-md); cursor: pointer;
+  font: var(--text-body-s); color: var(--text-tertiary);
+  transition: background 120ms, color 120ms; border: none; background: none;
+  width: calc(100% - 16px); text-align: left;
+}
+.sidenav-item:hover { background: var(--bg-surface); color: var(--text-primary); }
+.sidenav-item.active {
+  background: var(--bg-surface); color: var(--text-primary);
+  border-left: 2px solid var(--accent-primary);
+  padding-left: calc(var(--sp-3) - 2px); border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+.sidenav-label {
+  font: 500 11px/1 var(--font-sans); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-quaternary); padding: var(--sp-3) var(--sp-5) var(--sp-1);
+}
+
+.breadcrumbs { display: flex; align-items: center; gap: 4px; }
+.breadcrumb-item { font: var(--text-body-s); color: var(--text-tertiary); text-decoration: none; }
+.breadcrumb-item:last-child { color: var(--text-primary); }
+.breadcrumb-sep { color: var(--text-quaternary); display: flex; align-items: center; }
+
+.tabs { display: flex; align-items: center; border-bottom: var(--border-width) solid var(--border-subtle); gap: 0; }
+.tab-item {
+  padding: var(--sp-2) var(--sp-4); font: var(--text-body-s);
+  color: var(--text-tertiary); cursor: pointer; border: none; background: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color 120ms, border-color 120ms;
+}
+.tab-item:hover { color: var(--text-primary); }
+.tab-item.active { color: var(--text-primary); border-bottom-color: var(--accent-primary); font-weight: 500; }
+
+/* ── TABLES ── */
+.table { width: 100%; border-collapse: collapse; }
+.table-head { background: var(--bg-subtle); }
+.table-th {
+  padding: 10px var(--sp-3); text-align: left;
+  font: var(--text-caption); color: var(--text-tertiary);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+  white-space: nowrap;
+}
+.table-th.right { text-align: right; }
+.table-tr { border-bottom: var(--border-width) solid var(--border-subtle); }
+.table-tr:hover { background: var(--bg-subtle); }
+.table-tr:hover .row-actions { opacity: 1; }
+.table-td { padding: 0 var(--sp-3); height: 40px; font: var(--text-body-s); color: var(--text-secondary); }
+.table-td.mono { font: var(--text-mono); text-align: right; color: var(--text-primary); }
+.row-actions { opacity: 0; display: flex; align-items: center; gap: var(--sp-1); transition: opacity 120ms; justify-content: flex-end; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(10,10,10,0.6);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+.modal {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-xl); padding: var(--sp-8); width: 100%; max-width: 520px;
+  box-shadow: var(--shadow-lg); position: relative;
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-4); }
+.modal-title { font: var(--text-h3); letter-spacing: -0.01em; color: var(--text-primary); }
+.modal-close {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); cursor: pointer; border: none; background: none;
+  color: var(--text-quaternary); transition: background 120ms, color 120ms;
+}
+.modal-close:hover { background: var(--bg-subtle); color: var(--text-primary); }
+.modal-body { font: var(--text-body); color: var(--text-secondary); margin-bottom: var(--sp-8); line-height: 1.55; }
+.modal-footer { display: flex; justify-content: flex-end; gap: var(--sp-2); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: var(--sp-16) var(--sp-8); text-align: center; gap: var(--sp-3);
+}
+.empty-state-icon { color: var(--text-quaternary); margin-bottom: var(--sp-1); }
+.empty-state-title { font: var(--text-h4); color: var(--text-primary); }
+.empty-state-desc { font: var(--text-body-s); color: var(--text-tertiary); max-width: 280px; }
+
+/* ── SKELETON ── */
+.skeleton {
+  background: var(--bg-muted); border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── MICROCOMPONENTS ── */
+.theme-toggle {
+  display: flex; align-items: center;
+  background: var(--bg-subtle); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-md); padding: 2px; gap: 2px;
+}
+.theme-toggle-opt {
+  width: 30px; height: 26px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm); cursor: pointer; border: none; background: none;
+  color: var(--text-quaternary); transition: background 120ms, color 120ms, box-shadow 120ms;
+}
+.theme-toggle-opt.active {
+  background: var(--bg-surface); color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.twin-status {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: var(--text-body-s);
+}
+.twin-status-dot { width: 6px; height: 6px; border-radius: var(--radius-full); flex-shrink: 0; }
+.twin-status-dot.generated { background: var(--accent-primary); }
+.twin-status-dot.validated { background: var(--success); }
+.twin-status-dot.pending { background: var(--text-quaternary); }
+.twin-status-dot.outdated { background: var(--warning); }
+
+.sim-cost {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  padding: 4px var(--sp-2); border-radius: var(--radius-full);
+  background: var(--bg-subtle); border: var(--border-width) solid var(--border-subtle);
+  font: var(--text-mono); font-size: 12px; color: var(--text-secondary);
+  cursor: default; position: relative;
+}
+.sim-cost-icon { color: var(--accent-primary); }
+
+/* ── SECTION HIGHLIGHT (left accent) ── */
+.accent-left {
+  border-left: 2px solid var(--accent-primary); padding-left: var(--sp-3);
+}
+
+/* ── MISC ── */
+.demo-surface { background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle); border-radius: var(--radius-lg); padding: var(--sp-6); }
+.ds-token-row { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-2) 0; border-bottom: var(--border-width) solid var(--border-subtle); }
+.ds-token-name { font: var(--text-mono); font-size: 12px; color: var(--text-tertiary); width: 180px; flex-shrink: 0; }
+.ds-token-value { font: var(--text-mono); font-size: 12px; color: var(--text-primary); flex: 1; }
+.ds-token-preview { flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ── Icon helper ──
+function Icon({ name, size = 16, strokeWidth = 1.5, style = {}, className = "" }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current && window.lucide) {
+      ref.current.innerHTML = "";
+      const icon = lucide.createElement(lucide[toPascalCase(name)]);
+      if (icon) {
+        icon.setAttribute("width", size);
+        icon.setAttribute("height", size);
+        icon.setAttribute("stroke-width", strokeWidth);
+        ref.current.appendChild(icon);
+      }
+    }
+  }, [name, size, strokeWidth]);
+  return <span ref={ref} style={{ display: "inline-flex", alignItems: "center", ...style }} className={className} />;
+}
+function toPascalCase(str) {
+  return str.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join("");
+}
+
+// ── Mode Toggle ──
+function ModeToggle({ theme, setTheme }) {
+  return (
+    <div className="mode-toggle">
+      <button className={`mode-toggle-btn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}>
+        <Icon name="sun" size={14} />
+      </button>
+      <button className={`mode-toggle-btn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>
+        <Icon name="moon" size={14} />
+      </button>
+    </div>
+  );
+}
+
+// ── Button ──
+function Btn({ variant = "primary", size = "md", disabled, loading, icon, children }) {
+  return (
+    <button className={`btn btn-${variant} btn-${size} ${loading ? "btn-loading" : ""}`} disabled={disabled || loading}>
+      {loading ? <span className="btn-spinner" /> : icon ? <Icon name={icon} size={size === "sm" ? 12 : size === "lg" ? 16 : 14} /> : null}
+      {children}
+    </button>
+  );
+}
+
+// ── Input ──
+function InputDemo() {
+  const [val, setVal] = useState("");
+  const [search, setSearch] = useState("Redes neuronales");
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-5)", maxWidth: 400 }}>
+      <div className="input-group">
+        <label className="input-label">Nombre</label>
+        <input className="input" placeholder="Dra. María Elena Cárdenas" value={val} onChange={e => setVal(e.target.value)} />
+      </div>
+      <div className="input-group">
+        <label className="input-label">Buscar investigador</label>
+        <div className="input-wrap">
+          <span className="input-icon-left"><Icon name="search" size={14} /></span>
+          <input className="input input-with-icon" placeholder="Nombre, área, dependencia…" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingRight: search ? 36 : 12 }} />
+          {search && (
+            <button className="input-clear" onClick={() => setSearch("")}>
+              <Icon name="x" size={12} />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="input-group">
+        <label className="input-label">Dependencia</label>
+        <div className="input-wrap select-wrap">
+          <select className="input select">
+            <option>Facultad de Ingeniería</option>
+            <option>Facultad de Medicina</option>
+            <option>UAMRR</option>
+          </select>
+          <span className="select-chevron"><Icon name="chevron-down" size={14} /></span>
+        </div>
+      </div>
+      <div className="input-group">
+        <label className="input-label">Escenario</label>
+        <textarea className="textarea" placeholder="Describe el escenario para la simulación…" rows={3} />
+      </div>
+      <div className="input-group">
+        <label className="input-label">Email (error)</label>
+        <input className="input input-error" defaultValue="correo-invalido" />
+        <span className="input-helper error">Ingresa una dirección de correo válida.</span>
+      </div>
+      <div className="input-group">
+        <label className="input-label" style={{ opacity: 0.4 }}>Deshabilitado</label>
+        <input className="input" disabled placeholder="No disponible" />
+      </div>
+    </div>
+  );
+}
+
+// ── Tags ──
+function TagsDemo() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+      <div>
+        <div className="ds-row-label">Tags rectangulares</div>
+        <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap" }}>
+          <span className="tag tag-neutral">Neutral</span>
+          <span className="tag tag-info">Informativo</span>
+          <span className="tag tag-success">Confirmado</span>
+          <span className="tag tag-warning">Advertencia</span>
+          <span className="tag tag-danger">Error</span>
+        </div>
+      </div>
+      <div>
+        <div className="ds-row-label">Pills (full radius)</div>
+        <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap" }}>
+          <span className="tag tag-neutral pill">Ciencias Exactas</span>
+          <span className="tag tag-info pill">SNII Nivel II</span>
+          <span className="tag tag-success pill">Activo</span>
+          <span className="tag tag-warning pill">Por revisar</span>
+          <span className="tag tag-danger pill">Inactivo</span>
+        </div>
+      </div>
+      <div>
+        <div className="ds-row-label">Tags con dot</div>
+        <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap" }}>
+          {[
+            { label: "Generado", cls: "tag-info", dotColor: "var(--accent-primary)" },
+            { label: "Validado", cls: "tag-success", dotColor: "var(--success)" },
+            { label: "Pendiente", cls: "tag-neutral", dotColor: "var(--text-quaternary)" },
+            { label: "Desactualizado", cls: "tag-warning", dotColor: "var(--warning)" },
+          ].map(({ label, cls, dotColor }) => (
+            <span key={label} className={`tag ${cls}`}>
+              <span className="tag-dot" style={{ background: dotColor }} />
+              {label}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="ds-row-label">Áreas de investigación (uso en perfiles)</div>
+        <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap" }}>
+          {["Machine learning", "Redes de computadoras", "Procesamiento de lenguaje natural", "IoT", "Bioinformática"].map(a => (
+            <span key={a} className="tag tag-neutral pill">{a}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Avatars ──
+function AvatarComp({ size, initial, self }) {
+  return (
+    <div className={`avatar avatar-${size} ${self ? "avatar-self" : ""}`}>
+      {initial}
+    </div>
+  );
+}
+
+// ── Stat Card ──
+function StatCard({ eyebrow, value, delta, positive = true }) {
+  return (
+    <div className="card" style={{ padding: "var(--sp-5)" }}>
+      <div className="card-stat">
+        <div className="card-stat-eyebrow">{eyebrow}</div>
+        <div className="card-stat-value">{value}</div>
+        {delta && (
+          <div className={`card-stat-delta ${positive ? "" : "negative"}`}>
+            <Icon name={positive ? "trending-up" : "trending-down"} size={12} />
+            {delta}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Table ──
+function TableDemo() {
+  const rows = [
+    { name: "Dra. María Elena Cárdenas", dep: "Ingeniería", snii: "II", papers: 84, citas: 1284 },
+    { name: "Dr. Arturo Velázquez Ríos", dep: "Medicina", snii: "I", papers: 51, citas: 723 },
+    { name: "Dra. Sofía Montoya Perales", dep: "UAMRR", snii: "C", papers: 29, citas: 312 },
+    { name: "Dr. Luis Felipe Garza Torres", dep: "Derecho", snii: "—", papers: 17, citas: 89 },
+  ];
+  return (
+    <div className="demo-surface" style={{ padding: 0, overflow: "hidden" }}>
+      <table className="table">
+        <thead className="table-head">
+          <tr>
+            <th className="table-th">Investigador</th>
+            <th className="table-th">Dependencia</th>
+            <th className="table-th">SNII</th>
+            <th className="table-th right">Papers</th>
+            <th className="table-th right">Citas</th>
+            <th className="table-th right" style={{ width: 80 }}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.name} className="table-tr">
+              <td className="table-td" style={{ fontWeight: 500, color: "var(--text-primary)" }}>{r.name}</td>
+              <td className="table-td">{r.dep}</td>
+              <td className="table-td">
+                <span className="tag tag-info" style={{ fontSize: 11 }}>{r.snii}</span>
+              </td>
+              <td className="table-td mono">{r.papers}</td>
+              <td className="table-td mono">{r.citas.toLocaleString()}</td>
+              <td className="table-td">
+                <div className="row-actions">
+                  <button className="btn btn-ghost btn-sm"><Icon name="eye" size={13} /></button>
+                  <button className="btn btn-ghost btn-sm"><Icon name="more-horizontal" size={13} /></button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── Modal ──
+function ModalDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Btn variant="secondary" icon="layout" onClick={() => setOpen(true)}>Ver modal</Btn>
+      {open && (
+        <div className="modal-overlay" onClick={() => setOpen(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Confirmar simulación</h3>
+              <button className="modal-close" onClick={() => setOpen(false)}>
+                <Icon name="x" size={14} />
+              </button>
+            </div>
+            <div className="modal-body">
+              Esta simulación incluye <strong style={{ color: "var(--text-primary)" }}>187 gemelos</strong> y tiene un costo estimado de <span style={{ fontFamily: "var(--font-mono)", fontWeight: 500 }}>$2.40 USD</span>. ¿Deseas continuar?
+            </div>
+            <div className="modal-footer">
+              <Btn variant="ghost" onClick={() => setOpen(false)}>Cancelar</Btn>
+              <Btn variant="primary" icon="zap">Lanzar simulación</Btn>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ── Microcomponents ──
+function MicroDemo() {
+  const [mode, setMode] = useState("light");
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", mode);
+  }, [mode]);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-5)" }}>
+      <div>
+        <div className="ds-row-label">Toggle modo claro / oscuro</div>
+        <div className="theme-toggle">
+          <button className={`theme-toggle-opt ${mode === "light" ? "active" : ""}`} onClick={() => setMode("light")}>
+            <Icon name="sun" size={14} />
+          </button>
+          <button className={`theme-toggle-opt ${mode === "dark" ? "active" : ""}`} onClick={() => setMode("dark")}>
+            <Icon name="moon" size={14} />
+          </button>
+        </div>
+      </div>
+      <div>
+        <div className="ds-row-label">Indicador de estado del gemelo digital</div>
+        <div style={{ display: "flex", gap: "var(--sp-4)", flexWrap: "wrap" }}>
+          {[
+            { label: "Generado", cls: "generated" },
+            { label: "Validado", cls: "validated" },
+            { label: "Pendiente", cls: "pending" },
+            { label: "Desactualizado", cls: "outdated" },
+          ].map(({ label, cls }) => (
+            <div key={label} className="twin-status">
+              <span className={`twin-status-dot ${cls}`} />
+              <span style={{ color: "var(--text-secondary)", fontFamily: "var(--font-sans)", fontSize: 13 }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="ds-row-label">Costo estimado de simulación</div>
+        <div className="sim-cost">
+          <span className="sim-cost-icon"><Icon name="zap" size={12} /></span>
+          <span>$2.40 USD</span>
+          <span style={{ color: "var(--text-quaternary)" }}>·</span>
+          <span style={{ color: "var(--text-quaternary)" }}>~3 min</span>
+        </div>
+      </div>
+      <div>
+        <div className="ds-row-label">Breadcrumbs</div>
+        <div className="breadcrumbs">
+          <a className="breadcrumb-item" href="#">IntellectClone</a>
+          <span className="breadcrumb-sep"><Icon name="chevron-right" size={12} /></span>
+          <a className="breadcrumb-item" href="#">Directorio</a>
+          <span className="breadcrumb-sep"><Icon name="chevron-right" size={12} /></span>
+          <span className="breadcrumb-item">Dra. María Elena Cárdenas</span>
+        </div>
+      </div>
+      <div>
+        <div className="ds-row-label">Tabs</div>
+        <TabsDemo />
+      </div>
+      <div>
+        <div className="ds-row-label">Acento izquierdo (elemento destacado)</div>
+        <div className="accent-left" style={{ padding: "var(--sp-3) var(--sp-4)", background: "var(--bg-subtle)", borderRadius: "0 var(--radius-md) var(--radius-md) 0" }}>
+          <div style={{ font: "var(--text-body-s)", color: "var(--text-primary)", fontWeight: 500 }}>
+            «El desarrollo de redes neuronales recurrentes aplicadas a la predicción de series temporales en sistemas biológicos complejos.»
+          </div>
+          <div style={{ font: "var(--text-caption)", color: "var(--text-quaternary)", marginTop: 4 }}>Cita representativa · Gemelo de Dra. Cárdenas</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabsDemo() {
+  const [active, setActive] = useState(0);
+  const tabs = ["Síntesis ejecutiva", "Agrupado por postura", "Respuestas individuales"];
+  return (
+    <div className="tabs">
+      {tabs.map((t, i) => (
+        <button key={t} className={`tab-item ${active === i ? "active" : ""}`} onClick={() => setActive(i)}>{t}</button>
+      ))}
+    </div>
+  );
+}
+
+// ── Navigation ──
+function NavDemo() {
+  const [activeNav, setActiveNav] = useState(0);
+  const navItems = ["Directorio", "Red de colaboración", "Simulador"];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
+      <div>
+        <div className="ds-row-label">Top bar</div>
+        <div className="demo-surface" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="topbar">
+            <a className="topbar-logo" href="#">
+              <div className="topbar-logo-mark"><span>IC</span></div>
+              <span className="topbar-logo-name">IntellectClone</span>
+            </a>
+            <nav className="topbar-nav">
+              {navItems.map((item, i) => (
+                <button key={item} className={`topbar-nav-item ${activeNav === i ? "active" : ""}`} onClick={() => setActiveNav(i)}>
+                  {item}
+                </button>
+              ))}
+            </nav>
+            <div className="topbar-actions">
+              <div className="avatar avatar-sm avatar-self">RC</div>
+              <button className="btn btn-ghost btn-sm"><Icon name="moon" size={14} /></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div className="ds-row-label">Side nav (zonas privadas)</div>
+        <div className="demo-surface" style={{ padding: 0, overflow: "hidden", display: "flex", height: 280 }}>
+          <div className="sidenav">
+            <div className="sidenav-label">Simulador</div>
+            {[
+              { icon: "play-circle", label: "Nueva simulación" },
+              { icon: "clock", label: "Historial" },
+              { icon: "bookmark", label: "Guardados" },
+            ].map((item, i) => (
+              <button key={item.label} className={`sidenav-item ${i === 0 ? "active" : ""}`}>
+                <Icon name={item.icon} size={15} />
+                {item.label}
+              </button>
+            ))}
+            <div className="sidenav-label" style={{ marginTop: "var(--sp-3)" }}>Admin</div>
+            {[
+              { icon: "users", label: "Usuarios" },
+              { icon: "refresh-cw", label: "Cosechas" },
+              { icon: "cpu", label: "Gemelos" },
+              { icon: "settings", label: "Configuración" },
+            ].map((item) => (
+              <button key={item.label} className="sidenav-item">
+                <Icon name={item.icon} size={15} />
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ flex: 1, padding: "var(--sp-6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ font: "var(--text-caption)", color: "var(--text-quaternary)" }}>Contenido principal</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Empty / Skeleton ──
+function StatesDemo() {
+  return (
+    <div style={{ display: "flex", gap: "var(--sp-6)", flexWrap: "wrap", alignItems: "flex-start" }}>
+      <div style={{ flex: 1, minWidth: 280 }}>
+        <div className="ds-row-label">Empty state</div>
+        <div className="demo-surface">
+          <div className="empty-state">
+            <div className="empty-state-icon"><Icon name="search" size={32} strokeWidth={1.25} /></div>
+            <div className="empty-state-title">Sin resultados</div>
+            <div className="empty-state-desc">No encontramos investigadores con los filtros seleccionados. Intenta ampliar la búsqueda.</div>
+            <Btn variant="secondary" size="sm" icon="refresh-cw">Limpiar filtros</Btn>
+          </div>
+        </div>
+      </div>
+      <div style={{ flex: 1, minWidth: 280 }}>
+        <div className="ds-row-label">Skeleton loading</div>
+        <div className="demo-surface">
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
+            <div style={{ display: "flex", gap: "var(--sp-3)", alignItems: "center" }}>
+              <div className="skeleton" style={{ width: 40, height: 40, borderRadius: "50%" }} />
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                <div className="skeleton" style={{ height: 14, width: "60%", borderRadius: 4 }} />
+                <div className="skeleton" style={{ height: 11, width: "40%", borderRadius: 4 }} />
+              </div>
+            </div>
+            <div className="skeleton" style={{ height: 11, width: "100%", borderRadius: 4 }} />
+            <div className="skeleton" style={{ height: 11, width: "80%", borderRadius: 4 }} />
+            <div className="skeleton" style={{ height: 11, width: "90%", borderRadius: 4 }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Color Tokens ──
+const COLORS_LIGHT = [
+  { name: "bg-base", val: "#FAFAF9" },
+  { name: "bg-surface", val: "#FFFFFF" },
+  { name: "bg-subtle", val: "#F4F3EE" },
+  { name: "bg-muted", val: "#ECEAE3" },
+  { name: "border-subtle", val: "#E8E6DF" },
+  { name: "border-default", val: "#D4D2C9" },
+  { name: "border-strong", val: "#B4B2A9" },
+  { name: "text-primary", val: "#0A0A0A" },
+  { name: "text-secondary", val: "#2C2C2A" },
+  { name: "text-tertiary", val: "#6B6B68" },
+  { name: "text-quaternary", val: "#A8A6A0" },
+  { name: "accent-primary", val: "#1E3A8A" },
+  { name: "accent-hover", val: "#1A3175" },
+  { name: "accent-subtle", val: "#E8EDF7" },
+  { name: "success", val: "#0F6E56" },
+  { name: "success-subtle", val: "#E1F5EE" },
+  { name: "warning", val: "#854F0B" },
+  { name: "warning-subtle", val: "#FAEEDA" },
+  { name: "danger", val: "#A32D2D" },
+  { name: "danger-subtle", val: "#FCEBEB" },
+];
+
+// ── Spacing Tokens ──
+const SPACING = [4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96];
+
+// ── Main App ──
+function DesignSystem() {
+  const [theme, setTheme] = useState("light");
+  const [section, setSection] = useState("tokens-color");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  const NAV = [
+    { id: "tokens-color", label: "Colores", group: "Tokens" },
+    { id: "tokens-type", label: "Tipografía", group: "Tokens" },
+    { id: "tokens-spacing", label: "Espaciado", group: "Tokens" },
+    { id: "comp-buttons", label: "Botones", group: "Componentes" },
+    { id: "comp-inputs", label: "Inputs", group: "Componentes" },
+    { id: "comp-tags", label: "Tags & Pills", group: "Componentes" },
+    { id: "comp-avatars", label: "Avatares", group: "Componentes" },
+    { id: "comp-cards", label: "Cards", group: "Componentes" },
+    { id: "comp-nav", label: "Navegación", group: "Componentes" },
+    { id: "comp-tables", label: "Tablas", group: "Componentes" },
+    { id: "comp-modals", label: "Modales", group: "Componentes" },
+    { id: "comp-states", label: "Estados", group: "Componentes" },
+    { id: "comp-micro", label: "Microcomponentes", group: "Componentes" },
+  ];
+
+  const groups = [...new Set(NAV.map(n => n.group))];
+
+  return (
+    <div className="ds-shell">
+      <aside className="ds-sidebar">
+        <div className="ds-sidebar-logo">
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)" }}>
+            <div className="ds-sidebar-logo-mark"><span>IC</span></div>
+            <div>
+              <div className="ds-sidebar-name">IntellectClone</div>
+              <div className="ds-sidebar-sub">Design System v1</div>
+            </div>
+          </div>
+        </div>
+        {groups.map(g => (
+          <div key={g} className="ds-nav-section">
+            <div className="ds-nav-section-label">{g}</div>
+            {NAV.filter(n => n.group === g).map(n => (
+              <button key={n.id} className={`ds-nav-item ${section === n.id ? "active" : ""}`} onClick={() => setSection(n.id)}>
+                {n.label}
+              </button>
+            ))}
+          </div>
+        ))}
+      </aside>
+
+      <main className="ds-content">
+        {/* TOKENS: COLOR */}
+        {section === "tokens-color" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Tokens</div>
+            <h2 className="ds-section-title">Paleta de colores</h2>
+            <p className="ds-section-desc">Sistema restringido: una familia neutra cálida + un único acento cobalto. Semánticos solo para feedback del sistema.</p>
+            <div>
+              <div className="ds-row-label">Modo claro</div>
+              <div className="color-grid">
+                {COLORS_LIGHT.map(c => (
+                  <div key={c.name} className="color-swatch">
+                    <div className="color-swatch-block" style={{ background: c.val, border: c.val === "#FFFFFF" ? "none" : undefined }} />
+                    <div className="color-swatch-info">
+                      <div className="color-swatch-name">{c.name}</div>
+                      <div className="color-swatch-hex">{c.val}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TOKENS: TYPOGRAPHY */}
+        {section === "tokens-type" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Tokens</div>
+            <h2 className="ds-section-title">Tipografía</h2>
+            <p className="ds-section-desc">Cascada: Visby Round CF → Geist → Manrope. Números siempre en JetBrains Mono. Sin pesos superiores a 600.</p>
+            <div>
+              {[
+                { name: "Display", size: "48px", weight: "600", ls: "-0.025em", lh: "1.05", sample: "La UAT se transforma" },
+                { name: "H1", size: "32px", weight: "600", ls: "-0.02em", lh: "1.15", sample: "Directorio de investigadores" },
+                { name: "H2", size: "24px", weight: "600", ls: "-0.015em", lh: "1.2", sample: "Áreas de especialización" },
+                { name: "H3", size: "18px", weight: "600", ls: "-0.01em", lh: "1.3", sample: "Publicaciones recientes" },
+                { name: "H4", size: "16px", weight: "600", ls: "-0.005em", lh: "1.4", sample: "Coautores UAT" },
+                { name: "Body L", size: "16px", weight: "400", ls: "0", lh: "1.55", sample: "IntellectClone construye réplicas digitales de la comunidad académica." },
+                { name: "Body", size: "14px", weight: "400", ls: "0", lh: "1.5", sample: "Texto general de interfaz. Labels, descripciones, metadatos de navegación." },
+                { name: "Body S", size: "13px", weight: "400", ls: "0", lh: "1.45", sample: "Metadatos, descripciones auxiliares, información de tabla." },
+                { name: "Caption", size: "12px", weight: "500", ls: "0", lh: "1.4", sample: "Labels, badges, encabezados de columna" },
+                { name: "Eyebrow", size: "11px", weight: "500", ls: "0.12em", lh: "1.4", sample: "SECCIÓN DE PORTADA", upper: true },
+                { name: "Mono L", size: "14px", weight: "500", ls: "0", lh: "1.4", sample: "1,284 citas · índice h: 21", mono: true },
+                { name: "Mono", size: "13px", weight: "400", ls: "0", lh: "1.4", sample: "INV-2024-0047 · 84 papers", mono: true },
+              ].map(t => (
+                <div key={t.name} className="type-specimen-row">
+                  <div>
+                    <div className="type-specimen-meta">{t.name}</div>
+                    <div className="type-specimen-meta">{t.size} / {t.weight}</div>
+                  </div>
+                  <div style={{
+                    fontSize: t.size, fontWeight: t.weight, letterSpacing: t.ls, lineHeight: t.lh,
+                    fontFamily: t.mono ? "var(--font-mono)" : "var(--font-sans)",
+                    textTransform: t.upper ? "uppercase" : "none",
+                    color: "var(--text-primary)",
+                  }}>
+                    {t.sample}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TOKENS: SPACING */}
+        {section === "tokens-spacing" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Tokens</div>
+            <h2 className="ds-section-title">Espaciado & radios</h2>
+            <p className="ds-section-desc">Múltiplos de 4px. Radios pequeños: Quirúrgico es preciso, no redondeado.</p>
+            <div>
+              <div className="ds-row-label">Escala de espaciado</div>
+              {SPACING.map(s => (
+                <div key={s} className="ds-token-row">
+                  <div className="ds-token-name">--sp-{s/4 < 1 ? s : s/4 >= 10 ? s/4 * 4 : s/4}</div>
+                  <div className="ds-token-value">{s}px</div>
+                  <div className="ds-token-preview">
+                    <div style={{ height: 8, width: s, background: "var(--accent-primary)", borderRadius: 2 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="ds-divider" />
+            <div>
+              <div className="ds-row-label">Radios</div>
+              {[
+                { name: "radius-none", val: "0px" },
+                { name: "radius-sm", val: "4px" },
+                { name: "radius-md", val: "6px" },
+                { name: "radius-lg", val: "8px" },
+                { name: "radius-xl", val: "12px" },
+                { name: "radius-full", val: "9999px" },
+              ].map(r => (
+                <div key={r.name} className="ds-token-row">
+                  <div className="ds-token-name">--{r.name}</div>
+                  <div className="ds-token-value">{r.val}</div>
+                  <div className="ds-token-preview">
+                    <div style={{ width: 40, height: 24, background: "var(--bg-muted)", borderRadius: r.val, border: "var(--border-width) solid var(--border-default)" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* COMPONENTS: BUTTONS */}
+        {section === "comp-buttons" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Componentes</div>
+            <h2 className="ds-section-title">Botones</h2>
+            <p className="ds-section-desc">Un botón primary por pantalla, máximo dos. El cobalto como acción de máxima jerarquía.</p>
+            <div className="ds-row-label">Variantes × tamaños</div>
+            {[
+              { label: "Primary", v: "primary" },
+              { label: "Secondary", v: "secondary" },
+              { label: "Ghost", v: "ghost" },
+              { label: "Destructive", v: "destructive" },
+            ].map(({ label, v }) => (
+              <div key={v} style={{ marginBottom: "var(--sp-4)" }}>
+                <div className="ds-row-label">{label}</div>
+                <div style={{ display: "flex", gap: "var(--sp-3)", alignItems: "center", flexWrap: "wrap" }}>
+                  <Btn variant={v} size="sm">Small</Btn>
+                  <Btn variant={v} size="md">Medium</Btn>
+                  <Btn variant={v} size="lg">Large</Btn>
+                  <Btn variant={v} icon="plus">Con ícono</Btn>
+                  <Btn variant={v} disabled>Disabled</Btn>
+                  <Btn variant={v} loading>Loading</Btn>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* COMPONENTS: INPUTS */}
+        {section === "comp-inputs" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Componentes</div>
+            <h2 className="ds-section-title">Inputs</h2>
+            <p className="ds-section-desc">Label en eyebrow style. Focus ring cobalto. Borde retina-thin.</p>
+            <InputDemo />
+          </div>
+        )}
+
+        {/* COMPONENTS: TAGS */}
+        {section === "comp-tags" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Componentes</div>
+            <h2 className="ds-section-title">Tags & Pills</h2>
+            <p className="ds-section-desc">Semánticos restringidos a feedback del sistema. Para categorías y áreas: siempre neutral.</p>
+            <TagsDemo />
+          </div>
+        )}
+
+        {/* COMPONENTS: AVATARS */}
+        {section === "comp-avatars" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Componentes</div>
+            <h2 className="ds-section-title">Avatares</h2>
+            <p className="ds-section-desc">Iniciales sobre bg-subtle. El usuario activo usa accent-subtle. Sin colores aleatorios.</p>
+            <div>
+              <div className="ds-row-label">Tamaños (usuario estándar)</div>
+              <div style={{ display: "flex", gap: "var(--sp-4)", alignItems: "flex-end" }}>
+                {[["xs", "MC"], ["sm", "MC"], ["md", "MC"], ["lg", "MC"], ["xl", "MC"]].map(([s, init]) => (
+                  <div key={s} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--sp-2)" }}>
+                    <AvatarComp size={s} initial={init} />
+                    <span style={{ font: "var(--text-caption)", color: "var(--text-quaternary)" }}>{s}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: "var(--sp-6)" }}>
+                <div className="ds-row-label">Usuario activo (accent-subtle)</div>
+                <div style={{ display: "flex", gap: "var(--sp-4)", alignItems: "flex-end" }}>
+                  {[["xs", "RC"], ["sm", "RC"], ["md", "RC"], ["lg", "RC"], ["xl", "RC"]].map(([s, init]) => (
+                    <div key={s} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--sp-2)" }}>
+                      <AvatarComp size={s} initial={init} self />
+                      <span style={{ font: "var(--text-caption)", color: "var(--text-quaternary)" }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* COMPONENTS: CARDS */}
+        {section === "comp-cards" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Componentes</div>
+            <h2 className="ds-section-title">Cards</h2>
+            <p className="ds-section-desc">Planas por defecto, sin sombra. La sombra indica elevación funcional: modales, dropdowns.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "var(--sp-4)", marginBottom: "var(--sp-8)" }}>
+              <div>
+                <div className="ds-row-label">Surface card</div>
+                <div className="card" style={{ padding: "var(--sp-5)" }}>
+                  <div style={{ font: "var(--text-h4)", color: "var(--text-primary)", marginBottom: "var(--sp-2)" }}>Dra. María Elena Cárdenas</div>
+                  <div style={{ font: "var(--text-body-s)", color: "var(--text-tertiary)" }}>Facultad de Ingeniería · SNII II</div>
+                </div>
+              </div>
+              <div>
+                <div className="ds-row-label">Subtle card</div>
+                <div className="card-subtle" style={{ padding: "var(--sp-5)" }}>
+                  <div style={{ font: "var(--text-h4)", color: "var(--text-primary)", marginBottom: "var(--sp-2)" }}>Cuerpo académico</div>
+                  <div style={{ font: "var(--text-body-s)", color: "var(--text-tertiary)" }}>Redes de Computadoras · Consolidado</div>
+                </div>
+              </div>
+              <div>
+                <div className="ds-row-label">Highlighted card</div>
+                <div className="card-highlighted" style={{ padding: "var(--sp-5)" }}>
+                  <div style={{ font: "var(--text-h4)", color: "var(--text-primary)", marginBottom: "var(--sp-2)" }}>Seleccionado</div>
+                  <div style={{ font: "var(--text-body-s)", color: "var(--text-tertiary)" }}>Este investigador está incluido en la simulación.</div>
+                </div>
+              </div>
+            </div>
+            <div className="ds-row-label">Stat cards (métricas)</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "var(--sp-3)" }}>
+              <StatCard eyebrow="Publicaciones" value="84" delta="+6 este año" />
+              <StatCard eyebrow="Citas" value="1,284" delta="+143 este año" />
+              <StatCard eyebrow="Índice h" value="21" />
+              <StatCard eyebrow="Coautores UAT" value="37" delta="+3 nuevos" />
+            </div>
+          </div>
+        )}
+
+        {/* COMPONENTS: NAV */}
+        {section === "comp-nav" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Componentes</div>
+            <h2 className="ds-section-title">Navegación</h2>
+            <p className="ds-section-desc">Top bar para zonas públicas. Side nav para zonas privadas. Tabs sin pills ni boxes.</p>
+            <NavDemo />
+          </div>
+        )}
+
+        {/* COMPONENTS: TABLES */}
+        {section === "comp-tables" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Componentes</div>
+            <h2 className="ds-section-title">Tablas</h2>
+            <p className="ds-section-desc">Densidad alta en zonas operativas: 40px por fila. Acciones en hover, alineadas a la derecha.</p>
+            <TableDemo />
+          </div>
+        )}
+
+        {/* COMPONENTS: MODALS */}
+        {section === "comp-modals" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Componentes</div>
+            <h2 className="ds-section-title">Modales</h2>
+            <p className="ds-section-desc">Overlay semitransparente + blur sutil. Contenedor máx 560px, padding 32px, radio 12px.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+              <ModalDemo />
+              <div className="ds-row-label">Vista estática del modal</div>
+              <div style={{ position: "relative", background: "var(--bg-subtle)", borderRadius: "var(--radius-lg)", padding: "var(--sp-10)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="modal" style={{ position: "relative", boxShadow: "var(--shadow-lg)" }}>
+                  <div className="modal-header">
+                    <h3 className="modal-title">Confirmar simulación</h3>
+                    <button className="modal-close"><Icon name="x" size={14} /></button>
+                  </div>
+                  <div className="modal-body">
+                    Esta simulación incluye <strong style={{ color: "var(--text-primary)" }}>187 gemelos</strong> y tiene un costo estimado de <span style={{ fontFamily: "var(--font-mono)", fontWeight: 500 }}>$2.40 USD</span>. ¿Deseas continuar?
+                  </div>
+                  <div className="modal-footer">
+                    <Btn variant="ghost">Cancelar</Btn>
+                    <Btn variant="primary" icon="zap">Lanzar simulación</Btn>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* COMPONENTS: STATES */}
+        {section === "comp-states" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Componentes</div>
+            <h2 className="ds-section-title">Estados especiales</h2>
+            <p className="ds-section-desc">Skeleton en lugar de spinners genéricos. Empty states con acción clara.</p>
+            <StatesDemo />
+            <div className="ds-divider" />
+            <div className="ds-row-label">Estado de error</div>
+            <div className="demo-surface" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--sp-3)", padding: "var(--sp-10)" }}>
+              <div style={{ color: "var(--danger)" }}><Icon name="alert-triangle" size={32} strokeWidth={1.25} /></div>
+              <div style={{ font: "var(--text-h4)", color: "var(--text-primary)" }}>Error al conectar con el sistema</div>
+              <div style={{ font: "var(--text-body-s)", color: "var(--text-tertiary)", textAlign: "center", maxWidth: 260 }}>No fue posible cargar los datos del cosechador. Verifica la conexión e intenta de nuevo.</div>
+              <Btn variant="secondary" size="sm" icon="refresh-cw">Reintentar</Btn>
+            </div>
+          </div>
+        )}
+
+        {/* COMPONENTS: MICRO */}
+        {section === "comp-micro" && (
+          <div className="ds-section">
+            <div className="ds-section-eyebrow">Componentes</div>
+            <h2 className="ds-section-title">Microcomponentes</h2>
+            <p className="ds-section-desc">Toggle de modo, indicadores de estado del gemelo, costo de simulación, breadcrumbs, tabs, acento izquierdo.</p>
+            <MicroDemo />
+          </div>
+        )}
+      </main>
+
+      <ModeToggle theme={theme} setTheme={setTheme} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<DesignSystem />);
+</script>
+</body>
+</html>

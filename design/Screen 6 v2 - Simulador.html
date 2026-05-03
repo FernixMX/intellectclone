@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>IntellectClone — Simulador</title>
+<link rel="stylesheet" href="screens-v2.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+.sim-layout{display:flex;height:calc(100vh - var(--header-height));margin-top:var(--header-height);margin-left:var(--sidebar-width);}
+.sim-editor{flex:3;display:flex;flex-direction:column;overflow-y:auto;background:var(--bg-body);}
+.sim-editor-inner{padding:var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-5);}
+.sim-cohort{flex:2;background:var(--bg-card);border-left:1px solid var(--border-color);display:flex;flex-direction:column;overflow-y:auto;}
+.sim-cohort-inner{padding:var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-5);}
+.section-title-sm{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--sp-3);}
+.scenario-ta{width:100%;min-height:200px;padding:16px;font-family:var(--font-sans);font-size:15px;line-height:1.65;color:var(--text-primary);background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);outline:none;resize:vertical;transition:border-color 120ms,box-shadow 120ms;}
+.scenario-ta:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(13,110,253,0.12);}
+.scenario-ta::placeholder{color:var(--text-light);}
+.options-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4);}
+.counter-card{background:linear-gradient(135deg,#0d6efd,#0b5ed7);border-radius:var(--radius-md);padding:var(--sp-5);display:flex;align-items:center;gap:var(--sp-4);}
+.counter-num{font-family:var(--font-mono);font-size:48px;font-weight:700;color:#fff;line-height:1;}
+.counter-lbl{font-size:14px;color:rgba(255,255,255,0.8);line-height:1.4;}
+.counter-sub{font-size:12px;color:rgba(255,255,255,0.55);margin-top:3px;}
+.fchip{padding:4px 12px;border-radius:var(--radius-full);font-size:12px;font-weight:500;border:1px solid var(--border-color);color:var(--text-muted);cursor:pointer;background:var(--bg-card);transition:all 120ms;}
+.fchip:hover{background:var(--bg-hover);}
+.fchip.active{background:var(--blue-light);border-color:var(--blue);color:var(--blue);}
+.estimate-card{background:var(--bg-body);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--sp-4) var(--sp-5);}
+.estimate-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
+.estimate-lbl{font-size:13px;color:var(--text-muted);}
+.estimate-val{font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--text-primary);}
+.sim-footer{padding:var(--sp-4) var(--sp-6);border-top:1px solid var(--border-color);background:var(--bg-card);display:flex;align-items:center;gap:var(--sp-3);}
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(2px);}
+.loading-card{background:var(--bg-card);border-radius:var(--radius-xl);padding:48px 64px;display:flex;flex-direction:column;align-items:center;gap:16px;box-shadow:var(--shadow-xl);}
+.spin-ring{width:48px;height:48px;border:4px solid var(--bg-muted);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo}=React;
+function Icon({name,size=16,sw=1.5}){
+  const ref=useRef(null);
+  useEffect(()=>{
+    if(!ref.current||!window.lucide)return;
+    ref.current.innerHTML="";
+    const k=name.split("-").map(w=>w[0].toUpperCase()+w.slice(1)).join("");
+    const el=lucide.createElement(lucide[k]);
+    if(el){el.setAttribute("width",size);el.setAttribute("height",size);el.setAttribute("stroke-width",sw);ref.current.appendChild(el);}
+  },[name,size]);
+  return <span ref={ref} style={{display:"inline-flex",alignItems:"center"}}/>;
+}
+
+const DEPS={Todas:612,"Ingeniería":148,"Medicina":112,"UAMRR":98,"Derecho":74,"Educación":61,"Comercio":55,"Mante":64};
+const SNII_C={Todos:612,C:231,I:187,II:134,III:60};
+const AREAS_C={Todas:612,"Ciencias Exactas":201,"Ciencias de la Salud":178,"Ciencias Sociales":142,"Humanidades":91};
+
+function Simulador(){
+  const [scenario,setScenario]=useState("");
+  const [tone,setTone]=useState("académico");
+  const [lang,setLang]=useState("español");
+  const [format,setFormat]=useState("estructurado");
+  const [dep,setDep]=useState("Todas");
+  const [snii,setSnii]=useState("Todos");
+  const [area,setArea]=useState("Todas");
+  const [showConfirm,setShowConfirm]=useState(false);
+  const [loading,setLoading]=useState(false);
+
+  const count=useMemo(()=>{
+    let b=612;
+    if(dep!=="Todas") b=Math.min(b,DEPS[dep]);
+    if(snii!=="Todos") b=Math.floor(b*(SNII_C[snii]/612));
+    if(area!=="Todas") b=Math.floor(b*(AREAS_C[area]/612));
+    return Math.max(1,b);
+  },[dep,snii,area]);
+
+  const cost=(count*0.013).toFixed(2);
+  const mins=Math.ceil(count*0.018);
+  const canLaunch=scenario.trim().length>20;
+  const isExpensive=parseFloat(cost)>5;
+
+  const handleConfirm=()=>{
+    setShowConfirm(false);setLoading(true);
+    setTimeout(()=>{setLoading(false);window.location.href="Screen 7 v2 - Resultado.html";},2800);
+  };
+
+  return(
+    <div style={{minHeight:"100vh",background:"var(--bg-body)"}}>
+      {/* Sidebar */}
+      <div className="sidebar">
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon"><span>IC</span></div>
+          <div className="sidebar-logo-text">
+            <div className="sidebar-logo-uat">UAT</div>
+            <div className="sidebar-logo-sub">IntellectClone</div>
+          </div>
+        </div>
+        {[
+          {label:"SIMULADOR",items:[{icon:"play-circle",lbl:"Nueva simulación",active:true},{icon:"clock",lbl:"Historial"},{icon:"bookmark",lbl:"Guardados"}]},
+          {label:"NAVEGACIÓN",items:[{icon:"users",lbl:"Directorio"},{icon:"git-branch",lbl:"Red de colaboración"},{icon:"info",lbl:"Acerca"}]},
+        ].map(section=>(
+          <div key={section.label}>
+            <div className="sidebar-section-label">{section.label}</div>
+            {section.items.map(item=>(
+              <button key={item.lbl} className={`sidebar-item ${item.active?"active":""}`}>
+                <div className="sidebar-item-icon"><Icon name={item.icon} size={16} sw={1.5}/></div>
+                {item.lbl}
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+      {/* Header */}
+      <div className="header">
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <Icon name="cpu" size={16}/>
+          <span style={{fontSize:15,fontWeight:600,color:"var(--text-primary)"}}>Simulador</span>
+          <span style={{color:"var(--text-light)",fontSize:16}}>/</span>
+          <span style={{fontSize:14,color:"var(--text-muted)"}}>Nuevo escenario</span>
+        </div>
+        <div className="header-spacer"/>
+        <div className="header-actions">
+          <button className="header-icon-btn"><Icon name="bell" size={16}/><span className="header-badge">3</span></button>
+          <div className="header-user">
+            <div className="header-avatar">RC</div>
+            <div><div className="header-user-name">Rectoría</div><div className="header-user-role">Autorizado</div></div>
+          </div>
+        </div>
+      </div>
+      {/* Content */}
+      <div className="sim-layout">
+        {/* Editor */}
+        <div className="sim-editor">
+          <div className="sim-editor-inner">
+            <div className="card">
+              <div className="card-header">
+                <div className="card-title">Escenario de simulación</div>
+              </div>
+              <div className="card-body">
+                <textarea className="scenario-ta"
+                  placeholder="Describe el escenario o pregunta que quieres simular. Ejemplo: «La Universidad está considerando adoptar un modelo de educación híbrida permanente para todos los programas de licenciatura a partir de 2026. ¿Qué postura tendría la comunidad académica?»"
+                  value={scenario} onChange={e=>setScenario(e.target.value)}
+                />
+                <div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}>
+                  <span style={{fontFamily:"var(--font-mono)",fontSize:11,color:scenario.length<20?"var(--red)":"var(--text-light)"}}>{scenario.length} caracteres {scenario.length<20&&"· mínimo 20"}</span>
+                </div>
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-header"><div className="card-title">Opciones avanzadas</div></div>
+              <div className="card-body">
+                <div className="options-grid">
+                  {[
+                    {lbl:"Tono de respuesta",val:tone,set:setTone,opts:["académico","directo","deliberativo","neutral"]},
+                    {lbl:"Idioma",val:lang,set:setLang,opts:["español","inglés","bilingüe"]},
+                    {lbl:"Formato de salida",val:format,set:setFormat,opts:["estructurado","narrativo","tabular"]},
+                  ].map(f=>(
+                    <div key={f.lbl}>
+                      <label className="form-label">{f.lbl}</label>
+                      <div style={{position:"relative"}}>
+                        <select className="form-control form-select" value={f.val} onChange={e=>f.set(e.target.value)}>
+                          {f.opts.map(o=><option key={o}>{o}</option>)}
+                        </select>
+                        <span className="select-chevron"><Icon name="chevron-down" size={13}/></span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="sim-footer">
+            <div style={{flex:1}}>
+              {!canLaunch&&<span style={{fontSize:13,color:"var(--text-muted)"}}><Icon name="info" size={13}/> Escribe el escenario para habilitar (mínimo 20 caracteres)</span>}
+            </div>
+            <button className="btn btn-outline btn-md">Guardar borrador</button>
+            <button className="btn btn-primary btn-lg" disabled={!canLaunch} onClick={()=>setShowConfirm(true)}>
+              <Icon name="zap" size={16}/>Lanzar simulación
+            </button>
+          </div>
+        </div>
+        {/* Cohort */}
+        <div className="sim-cohort">
+          <div className="sim-cohort-inner">
+            <div className="counter-card">
+              <div className="counter-num">{count.toLocaleString()}</div>
+              <div>
+                <div className="counter-lbl">gemelos seleccionados</div>
+                <div className="counter-sub">de 612 disponibles en v1</div>
+              </div>
+            </div>
+            <div>
+              <div className="section-title-sm">Dependencia</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {Object.keys(DEPS).map(d=>(
+                  <button key={d} className={`fchip ${dep===d?"active":""}`} onClick={()=>setDep(d)}>
+                    {d} <span style={{fontFamily:"var(--font-mono)",fontSize:10,opacity:0.7}}>{DEPS[d]}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="section-title-sm">Nivel SNII</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {Object.keys(SNII_C).map(s=>(
+                  <button key={s} className={`fchip ${snii===s?"active":""}`} onClick={()=>setSnii(s)}>{s}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="section-title-sm">Área de conocimiento</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {Object.keys(AREAS_C).map(a=>(
+                  <button key={a} className={`fchip ${area===a?"active":""}`} onClick={()=>setArea(a)}>{a}</button>
+                ))}
+              </div>
+            </div>
+            <div className="estimate-card">
+              <div className="section-title-sm" style={{marginBottom:8}}>Estimación</div>
+              {[["Costo estimado",`$${cost} USD`],["Tiempo estimado",`~${mins} min`],["Gemelos",count.toLocaleString()]].map(([lbl,val])=>(
+                <div key={lbl} className="estimate-row">
+                  <span className="estimate-lbl">{lbl}</span>
+                  <span className="estimate-val" style={{color:lbl==="Costo estimado"&&isExpensive?"var(--orange)":"var(--text-primary)"}}>{val}</span>
+                </div>
+              ))}
+              {isExpensive&&(
+                <div style={{display:"flex",alignItems:"center",gap:6,marginTop:10,padding:"8px 12px",background:"var(--orange-light)",borderRadius:"var(--radius-sm)",fontSize:12,color:"var(--orange)"}}>
+                  <Icon name="alert-triangle" size={13}/>Costo elevado — requiere confirmación
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirm modal */}
+      {showConfirm&&(
+        <div className="modal-overlay" onClick={()=>setShowConfirm(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title">Confirmar simulación</div>
+              <button className="modal-close" onClick={()=>setShowConfirm(false)}><Icon name="x" size={14}/></button>
+            </div>
+            <div className="modal-body">
+              Esta simulación consultará <strong>{count.toLocaleString()} gemelos digitales</strong> con un costo estimado de <span style={{fontFamily:"var(--font-mono)",fontWeight:600}}>${cost} USD</span> y duración aproximada de {mins} minutos.
+              {isExpensive&&(
+                <div style={{marginTop:12,padding:"10px 14px",background:"var(--orange-light)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--orange)",display:"flex",gap:8,alignItems:"flex-start"}}>
+                  <Icon name="alert-triangle" size={14}/>El costo supera el umbral de $5 USD configurado para esta cuenta.
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline btn-md" onClick={()=>setShowConfirm(false)}>Cancelar</button>
+              <button className="btn btn-primary btn-md" onClick={handleConfirm}><Icon name="zap" size={14}/>Confirmar y lanzar</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {loading&&(
+        <div className="loading-overlay">
+          <div className="loading-card">
+            <div className="spin-ring"/>
+            <div style={{fontSize:16,fontWeight:600,color:"var(--text-primary)"}}>Consultando gemelos digitales…</div>
+            <div style={{fontSize:13,color:"var(--text-muted)"}}>{count.toLocaleString()} agentes · ~{mins} min</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Simulador/>);
+</script>
+</body>
+</html>

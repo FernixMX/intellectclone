@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IntellectClone — Home</title>
+<link rel="stylesheet" href="screens-v2.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Public page — no sidebar, full-width header */
+.pub-header {
+  position: fixed; top: 0; left: 0; right: 0; height: 60px;
+  background: #14243c; display: flex; align-items: center;
+  padding: 0 var(--sp-8); gap: var(--sp-6); z-index: 100;
+  border-bottom: 1px solid #1e3350;
+}
+.pub-nav-item {
+  font-size: 13px; color: #8da2b5; padding: 6px 14px;
+  border-radius: var(--radius-sm); cursor: pointer; border: none;
+  background: none; transition: background 120ms, color 120ms;
+}
+.pub-nav-item:hover { background: #1e3350; color: #fff; }
+.pub-nav-item.active { color: #fff; font-weight: 500; }
+.pub-content { padding-top: 60px; }
+
+/* Hero */
+.hero-wrap {
+  background: #14243c; padding: 80px var(--sp-8) 72px;
+  display: grid; grid-template-columns: 1fr 420px; gap: 64px;
+  align-items: center; max-width: 1200px; margin: 0 auto;
+}
+.hero-eyebrow {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--blue); margin-bottom: 12px;
+}
+.hero-title {
+  font-size: 42px; font-weight: 700; color: #fff; line-height: 1.1;
+  letter-spacing: -0.02em; margin-bottom: 16px;
+}
+.hero-title span { color: var(--blue); }
+.hero-desc { font-size: 16px; color: #8da2b5; line-height: 1.65; margin-bottom: 32px; max-width: 480px; }
+.hero-actions { display: flex; gap: 12px; }
+.hero-visual {
+  background: #1e3350; border-radius: var(--radius-lg);
+  border: 1px solid #2a4060; padding: var(--sp-5);
+  display: flex; flex-direction: column; gap: var(--sp-3);
+}
+.hero-vis-title { font-size: 12px; font-weight: 600; color: #8da2b5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+.hero-researcher-row {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  background: #253d59; cursor: pointer;
+  transition: background 120ms;
+}
+.hero-researcher-row:hover { background: #2d4a6a; }
+.hero-res-name { font-size: 13px; font-weight: 500; color: #fff; }
+.hero-res-dep  { font-size: 11px; color: #8da2b5; }
+.hero-res-metrics { margin-left: auto; display: flex; gap: 12px; }
+.hero-metric { display: flex; flex-direction: column; align-items: flex-end; }
+.hero-metric-val { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: #fff; }
+.hero-metric-lbl { font-size: 10px; color: #8da2b5; }
+
+/* Stats row */
+.stats-row {
+  background: #0d6efd; padding: 0;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+}
+.stat-strip-item {
+  padding: 20px 32px; display: flex; flex-direction: column; gap: 3px;
+  border-right: 1px solid rgba(255,255,255,0.15);
+}
+.stat-strip-item:last-child { border-right: none; }
+.stat-strip-val { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: #fff; line-height: 1; }
+.stat-strip-lbl { font-size: 13px; color: rgba(255,255,255,0.75); }
+
+/* Features */
+.features-section { max-width: 1200px; margin: 0 auto; padding: 64px var(--sp-8); }
+.features-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; text-align: center; }
+.features-title { font-size: 30px; font-weight: 700; color: var(--text-primary); text-align: center; margin-bottom: 48px; }
+.features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+.feature-card {
+  background: var(--bg-card); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-light);
+  padding: var(--sp-6); cursor: pointer; text-decoration: none;
+  display: flex; flex-direction: column; gap: 14px;
+  transition: box-shadow 180ms, transform 180ms;
+}
+.feature-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.feature-icon-wrap {
+  width: 52px; height: 52px; border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+}
+.feature-card-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.feature-card-desc  { font-size: 14px; color: var(--text-muted); line-height: 1.55; flex: 1; }
+.feature-card-cta   { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 500; color: var(--blue); }
+
+/* Endorsed */
+.endorsed-section {
+  background: var(--bg-card); border-top: 1px solid var(--border-color);
+  padding: 40px var(--sp-8);
+}
+.endorsed-inner { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.endorsed-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); }
+.endorsed-logos { display: flex; align-items: center; gap: 48px; }
+.endorsed-item-name { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+.endorsed-item-sub  { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+.pdi-tag {
+  background: var(--blue-light); border-radius: var(--radius-full);
+  padding: 6px 16px; font-size: 12px; font-weight: 600; color: var(--blue);
+}
+
+/* Footer */
+.pub-footer {
+  background: #14243c; padding: 24px var(--sp-8);
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 100%;
+}
+.pub-footer-logo-uat { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.06em; }
+.pub-footer-logo-sub { font-size: 10px; color: #8da2b5; letter-spacing: 0.04em; text-transform: uppercase; }
+.pub-footer-links { display: flex; gap: 24px; }
+.pub-footer-link { font-size: 13px; color: #8da2b5; text-decoration: none; transition: color 120ms; }
+.pub-footer-link:hover { color: #fff; }
+.pub-footer-copy { font-size: 12px; color: #506a84; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+function Icon({ name, size = 16, sw = 1.5, color }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!ref.current || !window.lucide) return;
+    ref.current.innerHTML = "";
+    const k = name.split("-").map(w => w[0].toUpperCase()+w.slice(1)).join("");
+    const el = lucide.createElement(lucide[k]);
+    if (el) { el.setAttribute("width",size); el.setAttribute("height",size); el.setAttribute("stroke-width",sw); if(color) el.setAttribute("stroke",color); ref.current.appendChild(el); }
+  }, [name, size]);
+  return <span ref={ref} style={{display:"inline-flex",alignItems:"center"}} />;
+}
+
+const RESEARCHERS = [
+  { init:"MC", name:"Dra. María Elena Cárdenas", dep:"Fac. de Ingeniería", papers:84, citas:1284, color:"blue" },
+  { init:"JH", name:"Dr. Jorge Hernández Mota", dep:"Fac. de Medicina", papers:118, citas:2341, color:"green" },
+  { init:"EC", name:"Dr. Ernesto Chávez Ramírez", dep:"Fac. de Ingeniería", papers:134, citas:3102, color:"purple" },
+  { init:"BJ", name:"Dra. Beatriz Jiménez Cruz", dep:"UAMRR", papers:102, citas:2198, color:"orange" },
+];
+
+const FEATURES = [
+  { icon:"users", color:"blue", bg:"var(--blue-light)", title:"Directorio de investigadores", desc:"Consulta la producción intelectual de 612 investigadores UAT: publicaciones, citas, áreas de especialización y redes de colaboración.", cta:"Explorar directorio", href:"Screen 2 v2 - Directorio.html", restricted:false },
+  { icon:"git-branch", color:"green", bg:"var(--green-light)", title:"Red de colaboración", desc:"Visualiza cómo se conectan los investigadores a través de coautorías. Nodos proporcionales a productividad, aristas a intensidad de colaboración.", cta:"Ver red", href:"Screen 4 v2 - Red.html", restricted:false },
+  { icon:"cpu", color:"purple", bg:"var(--purple-light)", title:"Simulador de escenarios", desc:"Formule preguntas y obtenga respuestas agregadas de gemelos digitales de la comunidad académica. Herramienta de prospectiva institucional.", cta:"Acceder al simulador", href:"Screen 6 v2 - Simulador.html", restricted:true },
+];
+
+function Home() {
+  const [activeNav, setActiveNav] = useState(0);
+  return (
+    <div style={{background:"var(--bg-body)", minHeight:"100vh"}}>
+      {/* Header */}
+      <header className="pub-header">
+        <div style={{display:"flex",flexDirection:"column",gap:1}}>
+          <span className="sidebar-logo-uat">UAT</span>
+          <span className="sidebar-logo-sub">IntellectClone</span>
+        </div>
+        <nav style={{display:"flex",gap:4,marginLeft:24}}>
+          {["Directorio","Red de colaboración","Acerca"].map((n,i) => (
+            <button key={n} className={`pub-nav-item ${activeNav===i?"active":""}`} onClick={()=>setActiveNav(i)}>{n}</button>
+          ))}
+        </nav>
+        <div style={{marginLeft:"auto",display:"flex",gap:8}}>
+          <button className="btn btn-outline btn-sm" style={{borderColor:"#2a4060",color:"#8da2b5"}}>Iniciar sesión</button>
+          <button className="btn btn-primary btn-sm">Acceso autorizado</button>
+        </div>
+      </header>
+
+      <div className="pub-content">
+        {/* Hero */}
+        <div style={{background:"#14243c"}}>
+          <div className="hero-wrap">
+            <div>
+              <div className="hero-eyebrow">Universidad Autónoma de Tamaulipas · PDI 2024–2028</div>
+              <h1 className="hero-title">La comunidad académica UAT,<br/><span>en forma digital</span></h1>
+              <p className="hero-desc">IntellectClone construye gemelos digitales de los investigadores UAT a partir de su producción académica pública. Consulta perfiles, explora redes y simula respuestas institucionales.</p>
+              <div className="hero-actions">
+                <a href="Screen 2 v2 - Directorio.html" className="btn btn-primary btn-lg">
+                  <Icon name="search" size={16}/> Explorar directorio
+                </a>
+                <a href="Screen 5 v2 - Acerca.html" className="btn btn-outline btn-lg" style={{borderColor:"#2a4060",color:"#8da2b5"}}>
+                  Conocer el proyecto
+                </a>
+              </div>
+            </div>
+            <div className="hero-visual">
+              <div className="hero-vis-title">Investigadores destacados</div>
+              {RESEARCHERS.map(r => (
+                <div key={r.init} className="hero-researcher-row">
+                  <div className={`avatar avatar-sm avatar-${r.color}`}>{r.init}</div>
+                  <div>
+                    <div className="hero-res-name">{r.name}</div>
+                    <div className="hero-res-dep">{r.dep}</div>
+                  </div>
+                  <div className="hero-res-metrics">
+                    <div className="hero-metric">
+                      <div className="hero-metric-val">{r.papers}</div>
+                      <div className="hero-metric-lbl">papers</div>
+                    </div>
+                    <div className="hero-metric">
+                      <div className="hero-metric-val">{r.citas.toLocaleString()}</div>
+                      <div className="hero-metric-lbl">citas</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="stats-row">
+          {[
+            {val:"612",lbl:"investigadores activos"},
+            {val:"14,830",lbl:"publicaciones indexadas"},
+            {val:"47",lbl:"cuerpos académicos"},
+            {val:"23",lbl:"áreas de conocimiento"},
+          ].map(s => (
+            <div key={s.lbl} className="stat-strip-item">
+              <div className="stat-strip-val">{s.val}</div>
+              <div className="stat-strip-lbl">{s.lbl}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Features */}
+        <section className="features-section">
+          <div className="features-eyebrow">Plataforma</div>
+          <h2 className="features-title">Todo sobre la comunidad académica UAT</h2>
+          <div className="features-grid">
+            {FEATURES.map(f => (
+              <a key={f.title} href={f.href} className="feature-card">
+                <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between"}}>
+                  <div className="feature-icon-wrap" style={{background:f.bg,color:`var(--${f.color})`}}>
+                    <Icon name={f.icon} size={22} sw={1.5}/>
+                  </div>
+                  {f.restricted && <span className="badge badge-orange">Solo autorizado</span>}
+                </div>
+                <div className="feature-card-title">{f.title}</div>
+                <div className="feature-card-desc">{f.desc}</div>
+                <div className="feature-card-cta">{f.cta} <Icon name="arrow-right" size={14}/></div>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* Endorsed */}
+        <div className="endorsed-section">
+          <div className="endorsed-inner">
+            <div className="endorsed-label">Respaldado por</div>
+            <div className="endorsed-logos">
+              <div style={{textAlign:"center"}}>
+                <div className="endorsed-item-name">Rectoría UAT</div>
+                <div className="endorsed-item-sub">Universidad Autónoma de Tamaulipas</div>
+              </div>
+              <div style={{width:1,height:36,background:"var(--border-color)"}}/>
+              <div style={{textAlign:"center"}}>
+                <div className="endorsed-item-name">Oficina de Asesores</div>
+                <div className="endorsed-item-sub">Secretaría Académica</div>
+              </div>
+              <div style={{width:1,height:36,background:"var(--border-color)"}}/>
+              <div className="pdi-tag">PDI 2024–2028 · «La UAT se Transforma»</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="pub-footer">
+          <div style={{display:"flex",flexDirection:"column",gap:2}}>
+            <div className="pub-footer-logo-uat">UAT</div>
+            <div className="pub-footer-logo-sub">IntellectClone</div>
+          </div>
+          <div className="pub-footer-links">
+            <a href="#" className="pub-footer-link">Privacidad</a>
+            <a href="#" className="pub-footer-link">Solicitar baja</a>
+            <a href="#" className="pub-footer-link">Contacto</a>
+            <a href="Screen 5 v2 - Acerca.html" className="pub-footer-link">Acerca</a>
+          </div>
+          <div className="pub-footer-copy">© 2025 Universidad Autónoma de Tamaulipas</div>
+        </footer>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Home/>);
+</script>
+</body>
+</html>

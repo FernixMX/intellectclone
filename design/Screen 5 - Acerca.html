@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IntellectClone — Acerca del proyecto</title>
+<link rel="stylesheet" href="screens.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+.editorial-shell { max-width: 680px; margin: 0 auto; padding: 64px var(--sp-8) 120px; }
+
+.ed-eyebrow {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-quaternary);
+  margin-bottom: var(--sp-4);
+}
+.ed-h1 {
+  font-family: var(--font-sans); font-size: 32px; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.15; color: var(--text-primary);
+  margin-bottom: var(--sp-5);
+}
+.ed-lead {
+  font-family: var(--font-sans); font-size: 16px; line-height: 1.65;
+  color: var(--text-secondary); margin-bottom: var(--sp-8);
+}
+.ed-divider { height: var(--border-width); background: var(--border-subtle); margin: var(--sp-10) 0; }
+.ed-h2 {
+  font-family: var(--font-sans); font-size: 22px; font-weight: 600;
+  letter-spacing: -0.015em; color: var(--text-primary); margin-bottom: var(--sp-4);
+}
+.ed-h3 {
+  font-family: var(--font-sans); font-size: 16px; font-weight: 600;
+  letter-spacing: -0.005em; color: var(--text-primary); margin-bottom: var(--sp-3);
+  margin-top: var(--sp-6);
+}
+.ed-p {
+  font-family: var(--font-sans); font-size: 15px; line-height: 1.65;
+  color: var(--text-secondary); margin-bottom: var(--sp-4);
+  text-wrap: pretty;
+}
+.ed-blockquote {
+  border-left: 2px solid var(--accent-primary);
+  padding: var(--sp-3) var(--sp-5);
+  margin: var(--sp-6) 0;
+  background: var(--bg-subtle);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+.ed-blockquote-text {
+  font-family: var(--font-sans); font-size: 15px; font-style: normal;
+  line-height: 1.6; color: var(--text-primary); font-weight: 500;
+}
+.ed-blockquote-source {
+  font-family: var(--font-sans); font-size: 12px; color: var(--text-quaternary);
+  margin-top: var(--sp-2);
+}
+.ed-list {
+  list-style: none; padding: 0; margin: 0 0 var(--sp-4) 0;
+  display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.ed-list-item {
+  display: flex; gap: var(--sp-3); align-items: flex-start;
+  font-family: var(--font-sans); font-size: 15px; line-height: 1.55; color: var(--text-secondary);
+}
+.ed-list-bullet {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent-primary); flex-shrink: 0; margin-top: 8px;
+}
+
+/* Sources */
+.source-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.source-item {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.source-name { font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.source-desc { font-family: var(--font-sans); font-size: 12px; color: var(--text-quaternary); }
+
+/* Contact section */
+.contact-card {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-lg); padding: var(--sp-6);
+  display: flex; flex-direction: column; gap: var(--sp-3);
+}
+.contact-row { display: flex; align-items: center; gap: var(--sp-3); }
+.contact-label { font-family: var(--font-sans); font-size: 13px; color: var(--text-tertiary); width: 100px; flex-shrink: 0; }
+.contact-val { font-family: var(--font-sans); font-size: 13px; color: var(--text-primary); }
+.contact-link { color: var(--accent-primary); text-decoration: none; }
+.contact-link:hover { text-decoration: underline; }
+
+/* TOC floating */
+.toc {
+  position: fixed; left: calc(50% + 360px); top: 120px;
+  width: 180px;
+}
+.toc-label {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-quaternary);
+  margin-bottom: var(--sp-3);
+}
+.toc-item {
+  display: block; font-family: var(--font-sans); font-size: 12px;
+  color: var(--text-quaternary); text-decoration: none; padding: 3px 0;
+  transition: color 120ms;
+  border-left: 2px solid transparent; padding-left: var(--sp-2);
+  margin-left: -var(--sp-2);
+}
+.toc-item:hover { color: var(--text-secondary); }
+.toc-item.active { color: var(--text-primary); border-left-color: var(--accent-primary); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+function Icon({ name, size = 16, strokeWidth = 1.5 }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current && window.lucide) {
+      ref.current.innerHTML = "";
+      const key = name.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join("");
+      const el = lucide.createElement(lucide[key]);
+      if (el) { el.setAttribute("width", size); el.setAttribute("height", size); el.setAttribute("stroke-width", strokeWidth); ref.current.appendChild(el); }
+    }
+  }, [name, size]);
+  return <span ref={ref} style={{ display: "inline-flex", alignItems: "center" }} />;
+}
+
+function ModeToggle({ theme, setTheme }) {
+  return (
+    <div className="mode-toggle-fixed">
+      <button className={`mt-btn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}><Icon name="sun" size={13} /></button>
+      <button className={`mt-btn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}><Icon name="moon" size={13} /></button>
+    </div>
+  );
+}
+
+function Acerca() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("ic-theme") || "light");
+  const [activeSection, setActiveSection] = useState("que-es");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("ic-theme", theme);
+  }, [theme]);
+
+  const tocItems = [
+    { id: "que-es", label: "Qué es" },
+    { id: "como-funciona", label: "Cómo funciona" },
+    { id: "fuentes", label: "Fuentes de datos" },
+    { id: "privacidad", label: "Privacidad" },
+    { id: "baja", label: "Solicitar baja" },
+    { id: "contacto", label: "Contacto" },
+  ];
+
+  return (
+    <div className="page">
+      <header className="topbar">
+        <a className="logo" href="Screen 1 - Home.html">
+          <span className="logo-uat">UAT</span>
+          <span className="logo-sub">IntellectClone</span>
+        </a>
+        <nav className="topbar-nav" style={{ marginLeft: "var(--sp-6)" }}>
+          {["Directorio", "Red de colaboración", "Acerca"].map((item, i) => (
+            <button key={item} className={`topbar-nav-item ${i === 2 ? "active" : ""}`}>{item}</button>
+          ))}
+        </nav>
+        <div className="topbar-actions">
+          <button className="btn btn-secondary btn-sm">Iniciar sesión</button>
+        </div>
+      </header>
+
+      {/* Floating TOC */}
+      <nav className="toc">
+        <div className="toc-label">En esta página</div>
+        {tocItems.map(t => (
+          <a key={t.id} href={`#${t.id}`} className={`toc-item ${activeSection === t.id ? "active" : ""}`}
+            onClick={() => setActiveSection(t.id)}>{t.label}</a>
+        ))}
+      </nav>
+
+      <main>
+        <div className="editorial-shell">
+          <div className="ed-eyebrow">Acerca del proyecto</div>
+          <h1 className="ed-h1">IntellectClone: gemelos digitales de la comunidad académica UAT</h1>
+          <p className="ed-lead">
+            Un sistema de prospectiva institucional construido sobre la producción intelectual pública de los investigadores de la Universidad Autónoma de Tamaulipas, alineado al Plan de Desarrollo Institucional 2024–2028.
+          </p>
+
+          <div className="ed-divider" id="que-es" />
+
+          <h2 className="ed-h2">Qué es IntellectClone</h2>
+          <p className="ed-p">
+            IntellectClone es una plataforma que cosecha, organiza y hace consultable la producción académica pública de los investigadores UAT. Sobre esa base, construye para cada investigador un <em>gemelo digital</em>: una representación computacional de su forma de razonar, sus áreas de interés, sus posiciones temáticas y su estilo argumentativo, inferidos a partir de su huella académica.
+          </p>
+          <p className="ed-p">
+            El sistema opera sobre datos que ya son públicos — artículos indexados, afiliaciones institucionales, redes de coautoría — y los estructura de una manera que hace posible tanto la consulta directa como la simulación prospectiva.
+          </p>
+
+          <div className="ed-blockquote">
+            <div className="ed-blockquote-text">«El gemelo digital no es una simulación de la persona: es una simulación de su producción académica documentada. Sólo responde con lo que está en los textos.»</div>
+            <div className="ed-blockquote-source">Principio de diseño del sistema · versión 1</div>
+          </div>
+
+          <div className="ed-divider" id="como-funciona" />
+
+          <h2 className="ed-h2">Cómo funciona</h2>
+          <h3 className="ed-h3">Cosecha de datos</h3>
+          <p className="ed-p">El sistema consulta automáticamente cuatro fuentes de datos académicos de acceso público. Los datos se actualizan de manera periódica y no se almacena información que no sea ya pública.</p>
+
+          <h3 className="ed-h3">Construcción del gemelo</h3>
+          <p className="ed-p">A partir del corpus de publicaciones de cada investigador, un pipeline de procesamiento de lenguaje natural extrae áreas temáticas, posiciones argumentativas, frecuencias de conceptos y patrones de colaboración. Estos elementos forman la base del agente.</p>
+
+          <h3 className="ed-h3">Simulación de escenarios</h3>
+          <p className="ed-p">Los usuarios autorizados pueden formular preguntas o escenarios y seleccionar un subconjunto de la comunidad UAT. El simulador consulta los gemelos seleccionados y devuelve respuestas agregadas y desagregadas, con indicadores de postura, intensidad y consenso.</p>
+
+          <div className="ed-divider" id="fuentes" />
+
+          <h2 className="ed-h2">Fuentes de datos</h2>
+          <p className="ed-p">Todos los datos utilizados son de acceso público. No se procesa ningún dato personal privado.</p>
+          <div className="source-grid">
+            {[
+              { name: "OpenAlex", desc: "Índice académico global de acceso abierto" },
+              { name: "VuFind UAT", desc: "Catálogo de la biblioteca universitaria" },
+              { name: "RIUAT", desc: "Repositorio institucional de la UAT" },
+              { name: "SNII — Conacyt", desc: "Datos públicos del SNI mexicano" },
+            ].map(s => (
+              <div key={s.name} className="source-item">
+                <div className="source-name">{s.name}</div>
+                <div className="source-desc">{s.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="ed-divider" id="privacidad" />
+
+          <h2 className="ed-h2">Privacidad y datos personales</h2>
+          <p className="ed-p">
+            IntellectClone procesa exclusivamente información académica de carácter público. No accede a correos electrónicos, datos biométricos, calificaciones, historial laboral interno ni ningún otro dato de carácter privado.
+          </p>
+          <ul className="ed-list">
+            {[
+              "Los perfiles se construyen únicamente con publicaciones indexadas en bases de datos públicas.",
+              "Los investigadores pueden solicitar la revisión o corrección de sus datos en cualquier momento.",
+              "El acceso al módulo de simulación está restringido a personal autorizado de Rectoría y secretarías académicas.",
+              "Los resultados de simulaciones son confidenciales y no se publican sin autorización explícita.",
+            ].map((item, i) => (
+              <li key={i} className="ed-list-item">
+                <span className="ed-list-bullet" />
+                {item}
+              </li>
+            ))}
+          </ul>
+
+          <div className="ed-divider" id="baja" />
+
+          <h2 className="ed-h2">Solicitar baja del sistema</h2>
+          <p className="ed-p">
+            Si eres investigador UAT y deseas que tu perfil sea eliminado de IntellectClone, puedes solicitarlo en cualquier momento. La solicitud se procesará en un plazo máximo de 10 días hábiles.
+          </p>
+          <button className="btn btn-secondary btn-md">
+            <Icon name="user-x" size={15} />
+            Solicitar baja del sistema
+          </button>
+
+          <div className="ed-divider" id="contacto" />
+
+          <h2 className="ed-h2">Contacto</h2>
+          <p className="ed-p">Para consultas técnicas, correcciones de datos o cualquier duda sobre el proyecto:</p>
+          <div className="contact-card">
+            {[
+              { label: "Proyecto", val: "IntellectClone · UAT" },
+              { label: "Dependencia", val: "Oficina de Asesores de Rectoría" },
+              { label: "Correo", val: <a className="contact-link" href="mailto:intellectclone@uat.edu.mx">intellectclone@uat.edu.mx</a> },
+              { label: "Versión", val: <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>v1.0 · Mayo 2025</span> },
+            ].map(r => (
+              <div key={r.label} className="contact-row">
+                <div className="contact-label">{r.label}</div>
+                <div className="contact-val">{r.val}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+
+      <footer className="site-footer" style={{ marginTop: 0 }}>
+        <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div className="logo">
+            <span className="logo-uat">UAT</span>
+            <span className="logo-sub">IntellectClone</span>
+          </div>
+          <div style={{ display: "flex", gap: "var(--sp-6)" }}>
+            <a href="#privacidad" style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-quaternary)", textDecoration: "none" }}>Privacidad</a>
+            <a href="#baja" style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-quaternary)", textDecoration: "none" }}>Solicitar baja</a>
+            <a href="#contacto" style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-quaternary)", textDecoration: "none" }}>Contacto</a>
+          </div>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--text-quaternary)" }}>© 2025 Universidad Autónoma de Tamaulipas</div>
+        </div>
+      </footer>
+
+      <ModeToggle theme={theme} setTheme={setTheme} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<Acerca />);
+</script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>IntellectClone — Acerca</title>
+<link rel="stylesheet" href="screens-v2.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+.pub-header{position:fixed;top:0;left:0;right:0;height:60px;background:#14243c;display:flex;align-items:center;padding:0 var(--sp-8);gap:var(--sp-6);z-index:100;border-bottom:1px solid #1e3350;}
+.pub-nav-item{font-size:13px;color:#8da2b5;padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer;border:none;background:none;transition:background 120ms,color 120ms;}
+.pub-nav-item:hover{background:#1e3350;color:#fff;}
+.pub-nav-item.active{color:#fff;font-weight:500;}
+.editorial{max-width:720px;margin:0 auto;padding:88px var(--sp-8) 96px;}
+.ed-eyebrow{font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--blue);margin-bottom:10px;}
+.ed-h1{font-size:32px;font-weight:700;color:var(--text-primary);line-height:1.15;letter-spacing:-0.02em;margin-bottom:16px;}
+.ed-lead{font-size:16px;color:var(--text-muted);line-height:1.65;margin-bottom:var(--sp-8);}
+.ed-divider{height:1px;background:var(--border-light);margin:var(--sp-8) 0;}
+.ed-h2{font-size:22px;font-weight:700;color:var(--text-primary);margin-bottom:12px;}
+.ed-h3{font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px;margin-top:24px;}
+.ed-p{font-size:15px;color:var(--text-secondary);line-height:1.65;margin-bottom:16px;}
+.ed-quote{border-left:3px solid var(--blue);padding:14px 20px;background:var(--blue-light);border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin:24px 0;}
+.ed-quote-text{font-size:15px;font-weight:500;color:var(--text-primary);line-height:1.6;}
+.ed-quote-src{font-size:12px;color:var(--text-muted);margin-top:6px;}
+.ed-list{list-style:none;padding:0;margin:0 0 16px;display:flex;flex-direction:column;gap:8px;}
+.ed-list-item{display:flex;gap:10px;font-size:15px;color:var(--text-secondary);line-height:1.55;}
+.ed-list-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:8px;}
+.source-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.source-item{background:var(--bg-card);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:12px 16px;box-shadow:var(--shadow-xs);}
+.source-name{font-size:13px;font-weight:600;color:var(--text-primary);}
+.source-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.contact-card{background:var(--bg-card);border:1px solid var(--border-light);border-radius:var(--radius-md);padding:var(--sp-5);box-shadow:var(--shadow-sm);}
+.contact-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-light);}
+.contact-row:last-child{border-bottom:none;}
+.contact-label{font-size:13px;color:var(--text-muted);width:100px;flex-shrink:0;}
+.contact-val{font-size:13px;color:var(--text-primary);}
+/* TOC */
+.toc{position:fixed;left:calc(50% + 380px);top:100px;width:170px;}
+.toc-title{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-light);margin-bottom:12px;}
+.toc-link{display:block;font-size:12px;color:var(--text-muted);text-decoration:none;padding:3px 8px;border-left:2px solid transparent;transition:color 120ms,border-color 120ms;}
+.toc-link:hover{color:var(--blue);border-left-color:var(--blue);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useRef,useEffect}=React;
+function Icon({name,size=16,sw=1.5}){
+  const ref=useRef(null);
+  useEffect(()=>{
+    if(!ref.current||!window.lucide)return;
+    ref.current.innerHTML="";
+    const k=name.split("-").map(w=>w[0].toUpperCase()+w.slice(1)).join("");
+    const el=lucide.createElement(lucide[k]);
+    if(el){el.setAttribute("width",size);el.setAttribute("height",size);el.setAttribute("stroke-width",sw);ref.current.appendChild(el);}
+  },[name,size]);
+  return <span ref={ref} style={{display:"inline-flex",alignItems:"center"}}/>;
+}
+
+function Acerca(){
+  return(
+    <div style={{background:"var(--bg-body)",minHeight:"100vh"}}>
+      <header className="pub-header">
+        <div style={{display:"flex",flexDirection:"column",gap:1}}>
+          <span style={{fontSize:15,fontWeight:700,color:"#fff",letterSpacing:"0.06em"}}>UAT</span>
+          <span style={{fontSize:10,color:"#8da2b5",letterSpacing:"0.04em",textTransform:"uppercase"}}>IntellectClone</span>
+        </div>
+        <nav style={{display:"flex",gap:4,marginLeft:24}}>
+          {["Directorio","Red de colaboración","Acerca"].map((n,i)=>(
+            <button key={n} className={`pub-nav-item ${i===2?"active":""}`}>{n}</button>
+          ))}
+        </nav>
+        <div style={{marginLeft:"auto"}}>
+          <button className="btn btn-outline btn-sm" style={{borderColor:"#2a4060",color:"#8da2b5"}}>Iniciar sesión</button>
+        </div>
+      </header>
+
+      <nav className="toc">
+        <div className="toc-title">Contenido</div>
+        {[["que-es","Qué es"],["como-funciona","Cómo funciona"],["fuentes","Fuentes"],["privacidad","Privacidad"],["baja","Solicitar baja"],["contacto","Contacto"]].map(([id,lbl])=>(
+          <a key={id} href={`#${id}`} className="toc-link">{lbl}</a>
+        ))}
+      </nav>
+
+      <main className="editorial">
+        <div className="ed-eyebrow">Acerca del proyecto</div>
+        <h1 className="ed-h1">IntellectClone: gemelos digitales de la comunidad académica UAT</h1>
+        <p className="ed-lead">Un sistema de prospectiva institucional construido sobre la producción intelectual pública de los investigadores de la Universidad Autónoma de Tamaulipas, alineado al PDI 2024–2028.</p>
+
+        <div className="ed-divider" id="que-es"/>
+        <h2 className="ed-h2">Qué es IntellectClone</h2>
+        <p className="ed-p">IntellectClone cosecha, organiza y hace consultable la producción académica pública de los investigadores UAT. Sobre esa base, construye para cada investigador un gemelo digital: una representación computacional de su forma de razonar, sus áreas de interés y su estilo argumentativo, inferidos a partir de su huella académica.</p>
+        <div className="ed-quote">
+          <div className="ed-quote-text">«El gemelo digital no es una simulación de la persona: es una simulación de su producción académica documentada. Sólo responde con lo que está en los textos.»</div>
+          <div className="ed-quote-src">Principio de diseño del sistema · versión 1</div>
+        </div>
+
+        <div className="ed-divider" id="como-funciona"/>
+        <h2 className="ed-h2">Cómo funciona</h2>
+        <h3 className="ed-h3">Cosecha de datos</h3>
+        <p className="ed-p">El sistema consulta automáticamente cuatro fuentes de datos académicos de acceso público. Los datos se actualizan periódicamente y no se almacena información que no sea ya pública.</p>
+        <h3 className="ed-h3">Construcción del gemelo</h3>
+        <p className="ed-p">A partir del corpus de publicaciones, un pipeline de PLN extrae áreas temáticas, posiciones argumentativas y patrones de colaboración que forman la base del agente.</p>
+        <h3 className="ed-h3">Simulación de escenarios</h3>
+        <p className="ed-p">Los usuarios autorizados formulan preguntas, seleccionan una cohorte y el simulador devuelve respuestas agregadas y desagregadas con indicadores de postura, intensidad y consenso.</p>
+
+        <div className="ed-divider" id="fuentes"/>
+        <h2 className="ed-h2">Fuentes de datos</h2>
+        <div className="source-grid">
+          {[
+            {name:"OpenAlex",desc:"Índice académico global de acceso abierto"},
+            {name:"VuFind UAT",desc:"Catálogo de la biblioteca universitaria"},
+            {name:"RIUAT",desc:"Repositorio institucional de la UAT"},
+            {name:"SNII — Conacyt",desc:"Datos públicos del SNI mexicano"},
+          ].map(s=>(
+            <div key={s.name} className="source-item">
+              <div className="source-name">{s.name}</div>
+              <div className="source-desc">{s.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="ed-divider" id="privacidad"/>
+        <h2 className="ed-h2">Privacidad</h2>
+        <p className="ed-p">IntellectClone procesa exclusivamente información académica de carácter público. No accede a datos privados.</p>
+        <ul className="ed-list">
+          {["Los perfiles se construyen únicamente con publicaciones indexadas en bases de datos públicas.","Los investigadores pueden solicitar revisión o corrección en cualquier momento.","El acceso al simulador está restringido a personal autorizado de Rectoría.","Los resultados de simulaciones son confidenciales."].map((item,i)=>(
+            <li key={i} className="ed-list-item"><span className="ed-list-dot"/>{item}</li>
+          ))}
+        </ul>
+
+        <div className="ed-divider" id="baja"/>
+        <h2 className="ed-h2">Solicitar baja del sistema</h2>
+        <p className="ed-p">Puedes solicitar la eliminación de tu perfil en cualquier momento. Se procesará en máximo 10 días hábiles.</p>
+        <button className="btn btn-outline btn-md"><Icon name="user-x" size={15}/>Solicitar baja del sistema</button>
+
+        <div className="ed-divider" id="contacto"/>
+        <h2 className="ed-h2">Contacto</h2>
+        <div className="contact-card">
+          {[
+            {lbl:"Proyecto",val:"IntellectClone · UAT"},
+            {lbl:"Dependencia",val:"Oficina de Asesores de Rectoría"},
+            {lbl:"Correo",val:<a href="mailto:intellectclone@uat.edu.mx" style={{color:"var(--blue)"}}>intellectclone@uat.edu.mx</a>},
+            {lbl:"Versión",val:<span style={{fontFamily:"var(--font-mono)",fontSize:12}}>v1.0 · Mayo 2025</span>},
+          ].map(r=>(
+            <div key={r.lbl} className="contact-row">
+              <div className="contact-label">{r.lbl}</div>
+              <div className="contact-val">{r.val}</div>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      <footer style={{background:"#14243c",padding:"24px var(--sp-8)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",flexDirection:"column",gap:2}}>
+          <span style={{fontSize:15,fontWeight:700,color:"#fff",letterSpacing:"0.06em"}}>UAT</span>
+          <span style={{fontSize:10,color:"#8da2b5",letterSpacing:"0.04em",textTransform:"uppercase"}}>IntellectClone</span>
+        </div>
+        <div style={{display:"flex",gap:24}}>
+          {["Privacidad","Solicitar baja","Contacto"].map(l=>(
+            <a key={l} href="#" style={{fontSize:13,color:"#8da2b5",textDecoration:"none"}}>{l}</a>
+          ))}
+        </div>
+        <div style={{fontSize:12,color:"#506a84"}}>© 2025 Universidad Autónoma de Tamaulipas</div>
+      </footer>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Acerca/>);
+</script>
+</body>
+</html>

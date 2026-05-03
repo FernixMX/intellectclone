@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>IntellectClone — Admin</title>
+<link rel="stylesheet" href="screens-v2.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+.harvester-card{background:var(--bg-card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border-light);padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-4);}
+.hstat-val{font-family:var(--font-mono);font-size:20px;font-weight:700;line-height:1;}
+.hstat-lbl{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.tog{width:38px;height:22px;border-radius:11px;border:none;cursor:pointer;position:relative;transition:background 200ms;flex-shrink:0;}
+.tog.on{background:var(--blue);}
+.tog.off{background:var(--bg-muted);}
+.tog-knob{position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left 200ms;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.tog.on .tog-knob{left:19px;}
+.tog.off .tog-knob{left:3px;}
+.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;animation:pulse-a 1.2s ease-in-out infinite;}
+@keyframes pulse-a{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
+.config-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-light);}
+.config-row:last-child{border-bottom:none;}
+.config-key{font-size:13px;color:var(--text-secondary);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+function Icon({name,size=16,sw=1.5}){
+  const ref=useRef(null);
+  useEffect(()=>{
+    if(!ref.current||!window.lucide)return;
+    ref.current.innerHTML="";
+    const k=name.split("-").map(w=>w[0].toUpperCase()+w.slice(1)).join("");
+    const el=lucide.createElement(lucide[k]);
+    if(el){el.setAttribute("width",size);el.setAttribute("height",size);el.setAttribute("stroke-width",sw);ref.current.appendChild(el);}
+  },[name,size]);
+  return <span ref={ref} style={{display:"inline-flex",alignItems:"center"}}/>;
+}
+function Toggle({on,onClick}){
+  return(
+    <button className={`tog ${on?"on":"off"}`} onClick={onClick}>
+      <div className="tog-knob"/>
+    </button>
+  );
+}
+
+const HARVESTERS=[
+  {id:"openalex",name:"OpenAlex",desc:"Índice académico global · API v3",status:"ok",lastRun:"02/05/25 03:00",nextRun:"03/05/25 03:00",records:14830,newRecs:47,errors:0,progress:100},
+  {id:"vufind",name:"VuFind UAT",desc:"Catálogo de biblioteca universitaria",status:"ok",lastRun:"01/05/25 22:00",nextRun:"02/05/25 22:00",records:3241,newRecs:12,errors:0,progress:100},
+  {id:"riuat",name:"RIUAT",desc:"Repositorio institucional UAT",status:"running",lastRun:"02/05/25 14:00",nextRun:"02/05/25 20:00",records:1892,newRecs:8,errors:2,progress:64},
+  {id:"snii",name:"SNII — Conacyt",desc:"Datos públicos del SNI mexicano",status:"warning",lastRun:"28/04/25 08:00",nextRun:"05/05/25 08:00",records:612,newRecs:0,errors:14,progress:100},
+];
+const SC_INFO={ok:{color:"var(--green)",bg:"var(--green-light)",lbl:"Activo"},running:{color:"var(--blue)",bg:"var(--blue-light)",lbl:"Ejecutando"},warning:{color:"var(--orange)",bg:"var(--orange-light)",lbl:"Advertencia"},error:{color:"var(--red)",bg:"var(--red-light)",lbl:"Error"}};
+const USERS=[
+  {name:"Dr. Roberto Castillo",email:"rcastillo@uat.edu.mx",role:"Rectoría",status:"activo",login:"02/05/25 14:37",c:"blue"},
+  {name:"Lic. Ana Fuentes",email:"afuentes@uat.edu.mx",role:"Oficina Asesores",status:"activo",login:"29/04/25 09:12",c:"green"},
+  {name:"Dr. Carlos Méndez",email:"cmendez@uat.edu.mx",role:"Sec. Académica",status:"activo",login:"25/04/25 16:45",c:"orange"},
+  {name:"Lic. Laura Vega",email:"lvega@uat.edu.mx",role:"Admin técnico",status:"activo",login:"02/05/25 12:00",c:"purple"},
+  {name:"Dr. Pedro Ramos",email:"pramos@uat.edu.mx",role:"Sec. Académica",status:"inactivo",login:"10/03/25 11:20",c:"red"},
+];
+
+function HarvestTab(){
+  const [running,setRunning]=useState({});
+  return(
+    <div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"var(--sp-5)"}}>
+        <div>
+          <div style={{fontSize:16,fontWeight:600,color:"var(--text-primary)"}}>Cosechas de datos</div>
+          <div style={{fontSize:13,color:"var(--text-muted)",marginTop:2}}>Estado en tiempo real de los harvesters activos</div>
+        </div>
+        <button className="btn btn-outline btn-sm"><Icon name="refresh-cw" size={13}/>Actualizar estado</button>
+      </div>
+      <div className="grid-2">
+        {HARVESTERS.map(h=>{
+          const isRun=running[h.id]||h.status==="running";
+          const si=SC_INFO[isRun?"running":h.status];
+          return(
+            <div key={h.id} className="harvester-card">
+              <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontSize:14,fontWeight:600,color:"var(--text-primary)"}}>{h.name}</div>
+                  <div style={{fontSize:12,color:"var(--text-muted)",marginTop:2}}>{h.desc}</div>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  {isRun&&<span className="pulse" style={{background:si.color}}/>}
+                  <span className="badge" style={{color:si.color,background:si.bg}}>{isRun?"Ejecutando":si.lbl}</span>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+                {[{val:h.records.toLocaleString(),lbl:"registros",c:"var(--text-primary)"},{val:`+${h.newRecs}`,lbl:"nuevos",c:"var(--green)"},{val:h.errors,lbl:"errores",c:h.errors>0?"var(--red)":"var(--text-muted)"}].map(s=>(
+                  <div key={s.lbl}>
+                    <div className="hstat-val" style={{color:s.c}}>{s.val}</div>
+                    <div className="hstat-lbl">{s.lbl}</div>
+                  </div>
+                ))}
+              </div>
+              {isRun&&(
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                    <span style={{fontSize:11,color:"var(--text-muted)"}}>Progreso</span>
+                    <span style={{fontFamily:"var(--font-mono)",fontSize:11,color:"var(--text-muted)"}}>{running[h.id]?5:h.progress}%</span>
+                  </div>
+                  <div className="progress-track"><div className="progress-fill" style={{width:`${running[h.id]?5:h.progress}%`,background:"var(--blue)"}}/></div>
+                </div>
+              )}
+              <div style={{display:"flex",flexDirection:"column",gap:4,borderTop:"1px solid var(--border-light)",paddingTop:12}}>
+                {[["Última corrida",h.lastRun],["Próxima corrida",h.nextRun]].map(([lbl,val])=>(
+                  <div key={lbl} style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
+                    <span style={{color:"var(--text-muted)"}}>{lbl}</span>
+                    <span style={{fontFamily:"var(--font-mono)",color:"var(--text-secondary)"}}>{val}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <button className="btn btn-ghost btn-sm" style={{fontSize:11,color:"var(--text-muted)"}}><Icon name="file-text" size={12}/>Ver logs</button>
+                <button className="btn btn-outline btn-sm" disabled={!!running[h.id]} onClick={()=>{setRunning(r=>({...r,[h.id]:true}));setTimeout(()=>setRunning(r=>{const n={...r};delete n[h.id];return n;}),3000);}}>
+                  <Icon name="play" size={12}/>{running[h.id]?"Ejecutando…":"Forzar cosecha"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TwinsTab(){
+  const TWIN_STATS=[
+    {icon:"cpu",c:"blue",bg:"var(--blue-light)",val:"612",lbl:"Total generados",delta:"+47 esta semana"},
+    {icon:"check-circle",c:"green",bg:"var(--green-light)",val:"489",lbl:"Validados",delta:"79.8% del total"},
+    {icon:"clock",c:"orange",bg:"var(--orange-light)",val:"98",lbl:"Pendientes",delta:"16.0% del total"},
+    {icon:"alert-circle",c:"red",bg:"var(--red-light)",val:"25",lbl:"Con error",delta:"4.1% del total"},
+  ];
+  const TWIN_ROWS=[
+    {name:"Dra. María Elena Cárdenas",dep:"Ingeniería",snii:"II",status:"validated",updated:"28/04/25",source:"OpenAlex"},
+    {name:"Dr. Arturo Velázquez Ríos",dep:"Medicina",snii:"I",status:"validated",updated:"28/04/25",source:"OpenAlex"},
+    {name:"Dra. Sofía Montoya Perales",dep:"UAMRR",snii:"C",status:"generated",updated:"29/04/25",source:"RIUAT"},
+    {name:"Dr. Luis Felipe Garza Torres",dep:"Derecho",snii:"—",status:"pending",updated:"01/05/25",source:"VuFind"},
+    {name:"Dra. Patricia Rangel Herrera",dep:"Ingeniería",snii:"II",status:"validated",updated:"28/04/25",source:"OpenAlex"},
+    {name:"Dr. Daniel Morales Fuentes",dep:"Mante",snii:"C",status:"outdated",updated:"15/03/25",source:"RIUAT"},
+  ];
+  const DOT_LBL={validated:"Validado",generated:"Generado",pending:"Pendiente",outdated:"Desactualizado"};
+  return(
+    <div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"var(--sp-5)"}}>
+        <div style={{fontSize:16,fontWeight:600,color:"var(--text-primary)"}}>Gemelos digitales</div>
+        <div style={{display:"flex",gap:8}}>
+          <button className="btn btn-outline btn-sm"><Icon name="check-circle" size={13}/>Validar pendientes</button>
+          <button className="btn btn-ghost btn-sm"><Icon name="refresh-cw" size={13}/>Regenerar errores</button>
+        </div>
+      </div>
+      <div className="grid-4" style={{marginBottom:"var(--sp-5)"}}>
+        {TWIN_STATS.map(s=>(
+          <div key={s.lbl} className="stat-card">
+            <div className="stat-icon" style={{background:s.bg,color:`var(--${s.c})`}}><Icon name={s.icon} size={22}/></div>
+            <div className="stat-info">
+              <div className="stat-value">{s.val}</div>
+              <div className="stat-label">{s.lbl}</div>
+              <div className="stat-delta up">{s.delta}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        <table className="table">
+          <thead><tr>{["Investigador","Dependencia","SNII","Estado","Actualizado","Fuente",""].map(h=><th key={h} className="table-th">{h}</th>)}</tr></thead>
+          <tbody>
+            {TWIN_ROWS.map((r,i)=>(
+              <tr key={i} className="table-tr">
+                <td className="table-td strong">{r.name}</td>
+                <td className="table-td">{r.dep}</td>
+                <td className="table-td"><span className="badge badge-blue">{r.snii}</span></td>
+                <td className="table-td">
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <span className={`twin-dot ${r.status}`}/>
+                    <span style={{fontSize:12,color:"var(--text-secondary)"}}>{DOT_LBL[r.status]}</span>
+                  </div>
+                </td>
+                <td className="table-td mono" style={{fontSize:11}}>{r.updated}</td>
+                <td className="table-td" style={{fontSize:12,color:"var(--text-muted)"}}>{r.source}</td>
+                <td className="table-td">
+                  <div className="row-actions">
+                    <button className="btn btn-ghost btn-sm"><Icon name="refresh-cw" size={12}/></button>
+                    <button className="btn btn-ghost btn-sm"><Icon name="eye" size={12}/></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function UsersTab(){
+  return(
+    <div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"var(--sp-5)"}}>
+        <div style={{fontSize:16,fontWeight:600,color:"var(--text-primary)"}}>Usuarios con acceso</div>
+        <button className="btn btn-primary btn-sm"><Icon name="user-plus" size={13}/>Agregar usuario</button>
+      </div>
+      <div className="card">
+        <table className="table">
+          <thead><tr>{["Usuario","Correo","Rol","Último acceso","Estado",""].map(h=><th key={h} className="table-th">{h}</th>)}</tr></thead>
+          <tbody>
+            {USERS.map((u,i)=>(
+              <tr key={i} className="table-tr">
+                <td className="table-td">
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div className={`avatar avatar-sm avatar-${u.c}`}>{u.name.split(" ").map(w=>w[0]).slice(0,2).join("")}</div>
+                    <span className="table-td strong" style={{padding:0}}>{u.name}</span>
+                  </div>
+                </td>
+                <td className="table-td mono" style={{fontSize:11}}>{u.email}</td>
+                <td className="table-td"><span className="badge badge-muted">{u.role}</span></td>
+                <td className="table-td mono" style={{fontSize:11}}>{u.login}</td>
+                <td className="table-td">
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <span style={{width:7,height:7,borderRadius:"50%",background:u.status==="activo"?"var(--green)":"var(--text-light)",display:"inline-block"}}/>
+                    <span style={{fontSize:12,color:u.status==="activo"?"var(--green)":"var(--text-muted)"}}>{u.status}</span>
+                  </div>
+                </td>
+                <td className="table-td">
+                  <div className="row-actions">
+                    <button className="btn btn-ghost btn-sm"><Icon name="edit-2" size={12}/></button>
+                    <button className="btn btn-ghost btn-sm"><Icon name="trash-2" size={12}/></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function ConfigTab(){
+  const [costThreshold,setCostThreshold]=useState("5.00");
+  const [autoHarvest,setAutoHarvest]=useState(true);
+  const [publicDir,setPublicDir]=useState(true);
+  const [publicNet,setPublicNet]=useState(true);
+  const [emailAlerts,setEmailAlerts]=useState(true);
+  return(
+    <div style={{maxWidth:560}}>
+      <div style={{fontSize:16,fontWeight:600,color:"var(--text-primary)",marginBottom:"var(--sp-5)"}}>Configuración del sistema</div>
+      {[
+        {title:"Simulador",rows:[
+          {key:"Umbral de confirmación (USD)",comp:<input style={{width:90,height:28,padding:"0 8px",fontFamily:"var(--font-mono)",fontSize:12,border:"1px solid var(--border-color)",borderRadius:"var(--radius-sm)",outline:"none",textAlign:"right"}} value={costThreshold} onChange={e=>setCostThreshold(e.target.value)}/>},
+          {key:"Modelo LLM activo",comp:<span style={{fontFamily:"var(--font-mono)",fontSize:12,color:"var(--text-primary)"}}>claude-haiku-4-5</span>},
+          {key:"Versión de gemelos",comp:<span style={{fontFamily:"var(--font-mono)",fontSize:12,color:"var(--text-primary)"}}>v1.2.0</span>},
+        ]},
+        {title:"Acceso público",rows:[
+          {key:"Directorio público visible",comp:<Toggle on={publicDir} onClick={()=>setPublicDir(v=>!v)}/>},
+          {key:"Red de colaboración pública",comp:<Toggle on={publicNet} onClick={()=>setPublicNet(v=>!v)}/>},
+        ]},
+        {title:"Sistema",rows:[
+          {key:"Cosechas automáticas",comp:<Toggle on={autoHarvest} onClick={()=>setAutoHarvest(v=>!v)}/>},
+          {key:"Alertas por correo",comp:<Toggle on={emailAlerts} onClick={()=>setEmailAlerts(v=>!v)}/>},
+        ]},
+      ].map(section=>(
+        <div key={section.title} style={{marginBottom:"var(--sp-6)"}}>
+          <div style={{fontSize:14,fontWeight:600,color:"var(--text-primary)",marginBottom:"var(--sp-3)"}}>{section.title}</div>
+          <div className="card">
+            <div className="card-body" style={{padding:"0 var(--sp-5)"}}>
+              {section.rows.map(r=>(
+                <div key={r.key} className="config-row">
+                  <span className="config-key">{r.key}</span>
+                  {r.comp}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+      <button className="btn btn-primary btn-md">Guardar configuración</button>
+    </div>
+  );
+}
+
+function Admin(){
+  const [tab,setTab]=useState(1);
+  const TABS=["Usuarios","Cosechas","Gemelos","Configuración"];
+  const SIDEBAR_ITEMS=[
+    {label:"ADMINISTRACIÓN",items:[{icon:"users",lbl:"Usuarios"},{icon:"refresh-cw",lbl:"Cosechas",active:true},{icon:"cpu",lbl:"Gemelos"},{icon:"settings",lbl:"Configuración"}]},
+    {label:"NAVEGACIÓN",items:[{icon:"home",lbl:"Home"},{icon:"search",lbl:"Directorio"},{icon:"git-branch",lbl:"Red de colaboración"}]},
+  ];
+  return(
+    <div style={{minHeight:"100vh",background:"var(--bg-body)"}}>
+      <div className="sidebar">
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon"><span>IC</span></div>
+          <div className="sidebar-logo-text">
+            <div className="sidebar-logo-uat">UAT</div>
+            <div className="sidebar-logo-sub">IntellectClone</div>
+          </div>
+        </div>
+        {SIDEBAR_ITEMS.map(section=>(
+          <div key={section.label}>
+            <div className="sidebar-section-label">{section.label}</div>
+            {section.items.map(item=>(
+              <button key={item.lbl} className={`sidebar-item ${item.active&&tab===1?"active":""}`} onClick={()=>{const map={"Cosechas":1,"Gemelos":2,"Usuarios":0,"Configuración":3};if(map[item.lbl]!==undefined)setTab(map[item.lbl]);}}>
+                <div className="sidebar-item-icon"><Icon name={item.icon} size={16}/></div>{item.lbl}
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="header">
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <Icon name="shield" size={16}/>
+          <span style={{fontSize:15,fontWeight:600,color:"var(--text-primary)"}}>Panel de administración</span>
+        </div>
+        <div className="header-spacer"/>
+        <div className="header-actions">
+          <button className="header-icon-btn"><Icon name="bell" size={16}/><span className="header-badge">2</span></button>
+          <div className="header-user">
+            <div className="header-avatar" style={{background:"var(--purple-light)",color:"var(--purple)"}}>LV</div>
+            <div><div className="header-user-name">Laura Vega</div><div className="header-user-role">Admin técnico</div></div>
+          </div>
+        </div>
+      </div>
+      <div className="page-content">
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"var(--sp-5)"}}>
+          <div className="tabs" style={{marginBottom:0,borderBottom:"none"}}>
+            {TABS.map((t,i)=>(
+              <button key={t} className={`tab-item ${tab===i?"active":""}`} onClick={()=>setTab(i)}>{t}</button>
+            ))}
+          </div>
+        </div>
+        {tab===0&&<UsersTab/>}
+        {tab===1&&<HarvestTab/>}
+        {tab===2&&<TwinsTab/>}
+        {tab===3&&<ConfigTab/>}
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Admin/>);
+</script>
+</body>
+</html>

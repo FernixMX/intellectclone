@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IntellectClone — Directorio</title>
+<link rel="stylesheet" href="screens-v2.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Public page layout */
+.pub-header { position:fixed;top:0;left:0;right:0;height:60px;background:#14243c;display:flex;align-items:center;padding:0 var(--sp-8);gap:var(--sp-6);z-index:100;border-bottom:1px solid #1e3350; }
+.pub-nav-item { font-size:13px;color:#8da2b5;padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer;border:none;background:none;transition:background 120ms,color 120ms; }
+.pub-nav-item:hover { background:#1e3350;color:#fff; }
+.pub-nav-item.active { color:#fff;font-weight:500; }
+
+.dir-layout { display:flex;margin-top:60px;min-height:calc(100vh - 60px); }
+.dir-sidebar { width:260px;flex-shrink:0;background:var(--bg-card);border-right:1px solid var(--border-color);padding:var(--sp-5) var(--sp-4);position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto; }
+.dir-main { flex:1;display:flex;flex-direction:column;min-width:0; }
+.dir-toolbar { padding:var(--sp-4) var(--sp-6);background:var(--bg-card);border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:var(--sp-4);position:sticky;top:60px;z-index:10; }
+
+.filter-section { margin-bottom:var(--sp-5); }
+.filter-title { font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--sp-3); }
+.filter-chips { display:flex;flex-wrap:wrap;gap:6px; }
+.chip { padding:4px 10px;border-radius:var(--radius-full);font-size:12px;font-weight:500;border:1px solid var(--border-color);color:var(--text-muted);cursor:pointer;background:transparent;transition:all 120ms; }
+.chip:hover { background:var(--bg-hover); }
+.chip.active { background:var(--blue-light);border-color:var(--blue);color:var(--blue); }
+
+.results-grid { flex:1;padding:var(--sp-5) var(--sp-6);display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--sp-4);align-content:start; }
+
+.rc { background:var(--bg-card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border-light);padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-3);cursor:pointer;text-decoration:none;transition:box-shadow 150ms,transform 150ms; }
+.rc:hover { box-shadow:var(--shadow-md);transform:translateY(-1px); }
+.rc-head { display:flex;align-items:flex-start;gap:var(--sp-3); }
+.rc-name { font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.rc-dep  { font-size:12px;color:var(--text-muted);margin-top:2px; }
+.rc-tags { display:flex;flex-wrap:wrap;gap:4px; }
+.rc-metrics { display:flex;gap:var(--sp-4);padding-top:var(--sp-3);border-top:1px solid var(--border-light); }
+.rc-metric { display:flex;flex-direction:column;gap:2px; }
+.rc-metric-val { font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--text-primary);line-height:1; }
+.rc-metric-lbl { font-size:11px;color:var(--text-light); }
+
+.pagination { padding:var(--sp-4) var(--sp-6);border-top:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;background:var(--bg-card); }
+.pg-info { font-size:13px;color:var(--text-muted); }
+.pg-btns { display:flex;gap:4px; }
+.pg-btn { width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);border:1px solid var(--border-color);font-size:13px;cursor:pointer;background:var(--bg-card);color:var(--text-muted);transition:all 120ms; }
+.pg-btn:hover { background:var(--bg-hover); }
+.pg-btn.active { background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600; }
+.pg-btn:disabled { opacity:0.3;cursor:not-allowed; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useMemo } = React;
+function Icon({ name, size=16, sw=1.5 }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!ref.current||!window.lucide) return;
+    ref.current.innerHTML="";
+    const k=name.split("-").map(w=>w[0].toUpperCase()+w.slice(1)).join("");
+    const el=lucide.createElement(lucide[k]);
+    if(el){el.setAttribute("width",size);el.setAttribute("height",size);el.setAttribute("stroke-width",sw);ref.current.appendChild(el);}
+  },[name,size]);
+  return <span ref={ref} style={{display:"inline-flex",alignItems:"center"}}/>;
+}
+
+const COLORS = ["blue","green","orange","purple","red","teal"];
+const AREAS = ["Machine learning","Redes","PLN","Bioinformática","IoT","Química","Derecho","Educación","Economía","Medicina"];
+const DEPS = ["Todas","Fac. de Ingeniería","Fac. de Medicina","UAMRR","Fac. de Derecho","Fac. de Educación","Fac. de Comercio","UAM Mante"];
+const SNII_OPTS = ["Todos","C","I","II","III"];
+const DATA = [
+  {id:1,name:"Dra. María Elena Cárdenas Ruiz",dep:"Fac. de Ingeniería",snii:"II",areas:["Machine learning","Redes","PLN"],papers:84,citas:1284,c:"blue"},
+  {id:2,name:"Dr. Arturo Velázquez Ríos",dep:"Fac. de Medicina",snii:"I",areas:["Bioinformática","Química"],papers:51,citas:723,c:"green"},
+  {id:3,name:"Dra. Sofía Montoya Perales",dep:"UAMRR",snii:"C",areas:["Educación","PLN"],papers:29,citas:312,c:"orange"},
+  {id:4,name:"Dr. Luis Felipe Garza Torres",dep:"Fac. de Derecho",snii:"—",areas:["Derecho","Economía"],papers:17,citas:89,c:"purple"},
+  {id:5,name:"Dra. Patricia Rangel Herrera",dep:"Fac. de Ingeniería",snii:"II",areas:["IoT","Redes"],papers:62,citas:940,c:"red"},
+  {id:6,name:"Dr. Jorge Hernández Mota",dep:"Fac. de Medicina",snii:"III",areas:["Medicina","Bioinformática"],papers:118,citas:2341,c:"teal"},
+  {id:7,name:"Dra. Carmen Reyes Villanueva",dep:"Fac. de Comercio",snii:"I",areas:["Economía","Educación"],papers:34,citas:421,c:"blue"},
+  {id:8,name:"Dr. Daniel Morales Fuentes",dep:"UAM Mante",snii:"C",areas:["Química"],papers:22,citas:178,c:"green"},
+  {id:9,name:"Dra. Elena Bustamante Arias",dep:"Fac. de Ingeniería",snii:"I",areas:["Machine learning","IoT"],papers:45,citas:612,c:"purple"},
+  {id:10,name:"Dr. Rodrigo Vega Salinas",dep:"UAMRR",snii:"II",areas:["Redes","PLN"],papers:71,citas:1023,c:"orange"},
+  {id:11,name:"Dra. Irma López Castellanos",dep:"Fac. de Educación",snii:"C",areas:["Educación"],papers:15,citas:94,c:"red"},
+  {id:12,name:"Dr. Miguel Ángel Torres Díaz",dep:"Fac. de Medicina",snii:"II",areas:["Medicina","Química"],papers:88,citas:1567,c:"blue"},
+  {id:13,name:"Dra. Valeria Soto Ibáñez",dep:"Fac. de Derecho",snii:"I",areas:["Derecho"],papers:28,citas:203,c:"green"},
+  {id:14,name:"Dr. Ernesto Chávez Ramírez",dep:"Fac. de Ingeniería",snii:"III",areas:["Machine learning","Bioinformática"],papers:134,citas:3102,c:"purple"},
+  {id:15,name:"Dra. Adriana Medina Paredes",dep:"UAM Mante",snii:"C",areas:["Economía","Educación"],papers:11,citas:67,c:"orange"},
+  {id:16,name:"Dr. Fernando Acosta Núñez",dep:"Fac. de Comercio",snii:"I",areas:["Economía"],papers:39,citas:488,c:"red"},
+  {id:17,name:"Dra. Laura Quintero Vázquez",dep:"UAMRR",snii:"II",areas:["PLN","Machine learning"],papers:56,citas:876,c:"teal"},
+  {id:18,name:"Dr. Héctor Robles Mendoza",dep:"Fac. de Medicina",snii:"I",areas:["Medicina"],papers:43,citas:534,c:"blue"},
+  {id:19,name:"Dra. Gabriela Flores Ortega",dep:"Fac. de Educación",snii:"C",areas:["Educación","Economía"],papers:19,citas:142,c:"green"},
+  {id:20,name:"Dr. Oscar Pérez Domínguez",dep:"Fac. de Ingeniería",snii:"II",areas:["IoT","Redes","Machine learning"],papers:77,citas:1128,c:"purple"},
+  {id:21,name:"Dra. Norma Salinas Aguirre",dep:"Fac. de Derecho",snii:"I",areas:["Derecho","Educación"],papers:24,citas:198,c:"orange"},
+  {id:22,name:"Dr. Ricardo Gutiérrez Leal",dep:"Fac. de Comercio",snii:"C",areas:["Economía"],papers:14,citas:89,c:"red"},
+  {id:23,name:"Dra. Beatriz Jiménez Cruz",dep:"UAMRR",snii:"III",areas:["Bioinformática","Química"],papers:102,citas:2198,c:"teal"},
+  {id:24,name:"Dr. Alejandro Ruiz Peña",dep:"UAM Mante",snii:"I",areas:["Redes"],papers:33,citas:287,c:"blue"},
+];
+const PER_PAGE = 12;
+const INIT = r => r.name.split(" ").filter(w=>w.match(/^[A-ZÁÉÍÓÚÑ]/)).slice(0,2).map(w=>w[0]).join("");
+
+function Directorio() {
+  const [search,setSearch]=useState("");
+  const [activeAreas,setActiveAreas]=useState([]);
+  const [dep,setDep]=useState("Todas");
+  const [snii,setSnii]=useState("Todos");
+  const [sort,setSort]=useState("relevancia");
+  const [page,setPage]=useState(1);
+
+  const toggleArea = a => setActiveAreas(p=>p.includes(a)?p.filter(x=>x!==a):[...p,a]);
+
+  const filtered = useMemo(()=>{
+    let r=DATA;
+    if(search) r=r.filter(x=>x.name.toLowerCase().includes(search.toLowerCase())||x.areas.some(a=>a.toLowerCase().includes(search.toLowerCase())));
+    if(activeAreas.length) r=r.filter(x=>x.areas.some(a=>activeAreas.includes(a)));
+    if(dep!=="Todas") r=r.filter(x=>x.dep===dep);
+    if(snii!=="Todos") r=r.filter(x=>x.snii===snii);
+    if(sort==="alfabético") r=[...r].sort((a,b)=>a.name.localeCompare(b.name));
+    if(sort==="productividad") r=[...r].sort((a,b)=>b.papers-a.papers);
+    return r;
+  },[search,activeAreas,dep,snii,sort]);
+
+  useEffect(()=>setPage(1),[search,activeAreas,dep,snii,sort]);
+  const totalPages=Math.ceil(filtered.length/PER_PAGE);
+  const paged=filtered.slice((page-1)*PER_PAGE,page*PER_PAGE);
+
+  return (
+    <div style={{background:"var(--bg-body)",minHeight:"100vh"}}>
+      <header className="pub-header">
+        <div style={{display:"flex",flexDirection:"column",gap:1}}>
+          <span className="sidebar-logo-uat" style={{fontSize:15,fontWeight:700,color:"#fff",letterSpacing:"0.06em"}}>UAT</span>
+          <span style={{fontSize:10,color:"#8da2b5",letterSpacing:"0.04em",textTransform:"uppercase"}}>IntellectClone</span>
+        </div>
+        <nav style={{display:"flex",gap:4,marginLeft:24}}>
+          {["Directorio","Red de colaboración","Acerca"].map((n,i)=>(
+            <button key={n} className={`pub-nav-item ${i===0?"active":""}`}>{n}</button>
+          ))}
+        </nav>
+        <div style={{marginLeft:"auto"}}>
+          <button className="btn btn-outline btn-sm" style={{borderColor:"#2a4060",color:"#8da2b5"}}>Iniciar sesión</button>
+        </div>
+      </header>
+
+      <div className="dir-layout">
+        {/* Sidebar */}
+        <aside className="dir-sidebar">
+          <div style={{fontWeight:600,fontSize:14,color:"var(--text-primary)",marginBottom:"var(--sp-5)"}}>Filtros</div>
+          <div className="filter-section">
+            <div className="filter-title">Área de conocimiento</div>
+            <div className="filter-chips">
+              {AREAS.map(a=>(
+                <button key={a} className={`chip ${activeAreas.includes(a)?"active":""}`} onClick={()=>toggleArea(a)}>{a}</button>
+              ))}
+            </div>
+          </div>
+          <div className="filter-section">
+            <div className="filter-title">Dependencia</div>
+            <div style={{position:"relative"}}>
+              <select className="form-control form-select" value={dep} onChange={e=>setDep(e.target.value)} style={{height:36,fontSize:12}}>
+                {DEPS.map(d=><option key={d}>{d}</option>)}
+              </select>
+              <span className="select-chevron"><Icon name="chevron-down" size={13}/></span>
+            </div>
+          </div>
+          <div className="filter-section">
+            <div className="filter-title">Nivel SNII</div>
+            <div className="filter-chips">
+              {SNII_OPTS.map(s=>(
+                <button key={s} className={`chip ${snii===s?"active":""}`} onClick={()=>setSnii(s)}>{s}</button>
+              ))}
+            </div>
+          </div>
+          {(activeAreas.length>0||dep!=="Todas"||snii!=="Todos") && (
+            <button className="btn btn-ghost btn-sm" style={{marginTop:"auto",color:"var(--red)"}} onClick={()=>{setActiveAreas([]);setDep("Todas");setSnii("Todos");}}>
+              <Icon name="x" size={13}/> Limpiar filtros
+            </button>
+          )}
+        </aside>
+
+        {/* Main */}
+        <div className="dir-main">
+          <div className="dir-toolbar">
+            <div className="input-group" style={{flex:1,maxWidth:400}}>
+              <span className="input-icon-left"><Icon name="search" size={15}/></span>
+              <input className="form-control has-icon-left" placeholder="Buscar investigador, área…" value={search} onChange={e=>setSearch(e.target.value)} style={{height:38,borderRadius:"var(--radius-full)"}}/>
+            </div>
+            <div style={{fontWeight:500,fontSize:14,color:"var(--text-primary)",marginLeft:8}}>
+              <span style={{fontFamily:"var(--font-mono)",fontWeight:700}}>{filtered.length}</span>
+              <span style={{color:"var(--text-muted)",fontWeight:400}}> investigadores</span>
+            </div>
+            <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:13,color:"var(--text-muted)"}}>Ordenar</span>
+              <div style={{position:"relative"}}>
+                <select className="form-control form-select" value={sort} onChange={e=>setSort(e.target.value)} style={{height:36,fontSize:13,width:160}}>
+                  <option value="relevancia">Relevancia</option>
+                  <option value="alfabético">Alfabético</option>
+                  <option value="productividad">Productividad</option>
+                </select>
+                <span className="select-chevron"><Icon name="chevron-down" size={13}/></span>
+              </div>
+            </div>
+          </div>
+
+          <div className="results-grid">
+            {paged.length===0 ? (
+              <div style={{gridColumn:"1/-1",display:"flex",flexDirection:"column",alignItems:"center",padding:"80px 0",gap:12}}>
+                <div style={{color:"var(--text-light)"}}><Icon name="search" size={40} sw={1}/></div>
+                <div style={{fontSize:16,fontWeight:600,color:"var(--text-primary)"}}>Sin resultados</div>
+                <div style={{fontSize:13,color:"var(--text-muted)"}}>Intenta con otros filtros.</div>
+              </div>
+            ) : paged.map(r=>(
+              <a key={r.id} className="rc" href="Screen 3 v2 - Perfil.html">
+                <div className="rc-head">
+                  <div className={`avatar avatar-md avatar-${r.c}`}>{INIT(r)}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div className="rc-name">{r.name}</div>
+                    <div className="rc-dep">{r.dep}</div>
+                  </div>
+                  {r.snii!=="—" && <span className="badge badge-blue">{r.snii}</span>}
+                </div>
+                <div className="rc-tags">
+                  {r.areas.slice(0,3).map(a=>(
+                    <span key={a} className="badge badge-muted">{a}</span>
+                  ))}
+                </div>
+                <div className="rc-metrics">
+                  <div className="rc-metric">
+                    <div className="rc-metric-val">{r.papers}</div>
+                    <div className="rc-metric-lbl">papers</div>
+                  </div>
+                  <div className="rc-metric">
+                    <div className="rc-metric-val">{r.citas.toLocaleString()}</div>
+                    <div className="rc-metric-lbl">citas</div>
+                  </div>
+                  <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:6}}>
+                    <span className="twin-dot generated"/>
+                    <span style={{fontSize:11,color:"var(--blue)"}}>Gemelo</span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          {totalPages>1 && (
+            <div className="pagination">
+              <div className="pg-info">Página {page} de {totalPages} · {filtered.length} resultados</div>
+              <div className="pg-btns">
+                <button className="pg-btn" disabled={page===1} onClick={()=>setPage(p=>p-1)}><Icon name="chevron-left" size={14}/></button>
+                {Array.from({length:Math.min(totalPages,5)},(_,i)=>i+1).map(p=>(
+                  <button key={p} className={`pg-btn ${page===p?"active":""}`} onClick={()=>setPage(p)}>{p}</button>
+                ))}
+                <button className="pg-btn" disabled={page===totalPages} onClick={()=>setPage(p=>p+1)}><Icon name="chevron-right" size={14}/></button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Directorio/>);
+</script>
+</body>
+</html>

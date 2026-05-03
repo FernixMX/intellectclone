@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IntellectClone — Perfil</title>
+<link rel="stylesheet" href="screens.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+.profile-layout {
+  max-width: 1080px; margin: 0 auto; padding: 48px var(--sp-8) 96px;
+  display: grid; grid-template-columns: 1fr 320px; gap: var(--sp-8);
+}
+/* Profile header */
+.profile-header {
+  grid-column: 1 / -1;
+  display: flex; align-items: flex-start; gap: var(--sp-6);
+  padding-bottom: var(--sp-8);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+.profile-meta { flex: 1; }
+.profile-eyebrow {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-quaternary);
+  margin-bottom: var(--sp-2); display: flex; align-items: center; gap: var(--sp-2);
+}
+.profile-name {
+  font-family: var(--font-sans); font-size: 32px; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.15; color: var(--text-primary);
+  margin-bottom: var(--sp-2);
+}
+.profile-sub {
+  font-family: var(--font-sans); font-size: 14px; color: var(--text-tertiary);
+  margin-bottom: var(--sp-4);
+}
+.profile-badges { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.profile-actions { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-end; }
+
+/* Stat grid */
+.stat-grid {
+  grid-column: 1 / -1;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-4);
+}
+.stat-card-block {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-lg); padding: var(--sp-5);
+}
+
+/* Main column */
+.section-block {
+  display: flex; flex-direction: column; gap: var(--sp-5);
+  margin-bottom: var(--sp-8);
+}
+.section-title {
+  font-family: var(--font-sans); font-size: 16px; font-weight: 600;
+  letter-spacing: -0.005em; color: var(--text-primary);
+  padding-bottom: var(--sp-3);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+
+/* Publications */
+.pub-item {
+  padding: var(--sp-4) 0;
+  border-bottom: var(--border-width) solid var(--border-subtle);
+  display: flex; flex-direction: column; gap: var(--sp-1);
+}
+.pub-item:last-child { border-bottom: none; }
+.pub-title {
+  font-family: var(--font-sans); font-size: 14px; font-weight: 500;
+  color: var(--text-primary); line-height: 1.4; cursor: pointer;
+  transition: color 120ms;
+}
+.pub-title:hover { color: var(--accent-primary); }
+.pub-meta {
+  font-family: var(--font-sans); font-size: 12px; color: var(--text-tertiary);
+  display: flex; align-items: center; gap: var(--sp-3);
+}
+.pub-citas {
+  display: flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-quaternary);
+}
+
+/* Coauthors mini */
+.coauthor-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-3);
+}
+.coauthor-item {
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-1);
+  cursor: pointer; padding: var(--sp-2); border-radius: var(--radius-md);
+  transition: background 120ms;
+}
+.coauthor-item:hover { background: var(--bg-subtle); }
+.coauthor-name {
+  font-family: var(--font-sans); font-size: 11px; color: var(--text-tertiary);
+  text-align: center; line-height: 1.3;
+}
+
+/* Sidebar */
+.twin-card {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-lg); padding: var(--sp-5);
+  display: flex; flex-direction: column; gap: var(--sp-4);
+  position: sticky; top: 80px;
+}
+.twin-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.twin-title {
+  font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--text-primary);
+}
+.twin-status-row {
+  display: flex; align-items: center; gap: var(--sp-2);
+  font-family: var(--font-sans); font-size: 13px; color: var(--text-secondary);
+}
+.twin-desc {
+  font-family: var(--font-sans); font-size: 13px; color: var(--text-tertiary);
+  line-height: 1.5;
+}
+.twin-update {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-quaternary);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(10,10,10,0.6);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+  backdrop-filter: blur(2px);
+}
+.modal {
+  background: var(--bg-surface); border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-xl); padding: var(--sp-8); width: 100%; max-width: 540px;
+  box-shadow: var(--shadow-lg);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--sp-5); padding-bottom: var(--sp-4);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+.modal-title { font-family: var(--font-sans); font-size: 18px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+.modal-close {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); cursor: pointer; border: none; background: none;
+  color: var(--text-quaternary); transition: background 120ms; 
+}
+.modal-close:hover { background: var(--bg-subtle); }
+.agent-section { margin-bottom: var(--sp-5); }
+.agent-section-title {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-quaternary);
+  margin-bottom: var(--sp-2);
+}
+.agent-text {
+  font-family: var(--font-sans); font-size: 13px; color: var(--text-secondary); line-height: 1.55;
+}
+.trait-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.trait-row { display: flex; align-items: center; gap: var(--sp-3); }
+.trait-name { font-family: var(--font-sans); font-size: 13px; color: var(--text-tertiary); width: 140px; flex-shrink: 0; }
+.trait-bar-track { flex: 1; height: 4px; background: var(--bg-muted); border-radius: 2px; overflow: hidden; }
+.trait-bar-fill { height: 100%; background: var(--accent-primary); border-radius: 2px; }
+.trait-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-quaternary); width: 28px; text-align: right; }
+
+/* Footer */
+.profile-footer {
+  grid-column: 1 / -1;
+  padding-top: var(--sp-6);
+  border-top: var(--border-width) solid var(--border-subtle);
+  display: flex; gap: var(--sp-4); align-items: center;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+function Icon({ name, size = 16, strokeWidth = 1.5 }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current && window.lucide) {
+      ref.current.innerHTML = "";
+      const key = name.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join("");
+      const el = lucide.createElement(lucide[key]);
+      if (el) { el.setAttribute("width", size); el.setAttribute("height", size); el.setAttribute("stroke-width", strokeWidth); ref.current.appendChild(el); }
+    }
+  }, [name, size]);
+  return <span ref={ref} style={{ display: "inline-flex", alignItems: "center" }} />;
+}
+
+function ModeToggle({ theme, setTheme }) {
+  return (
+    <div className="mode-toggle-fixed">
+      <button className={`mt-btn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}><Icon name="sun" size={13} /></button>
+      <button className={`mt-btn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}><Icon name="moon" size={13} /></button>
+    </div>
+  );
+}
+
+const PUBS = [
+  { title: "Recurrent neural networks for time-series prediction in complex biological systems", journal: "Neural Computing & Applications", year: 2024, citas: 143 },
+  { title: "Graph-based collaborative filtering with heterogeneous academic networks", journal: "Information Sciences", year: 2023, citas: 89 },
+  { title: "Federated learning for IoT anomaly detection in resource-constrained environments", journal: "IEEE Internet of Things Journal", year: 2023, citas: 212 },
+  { title: "Transfer learning applied to Mexican Spanish sentiment analysis corpora", journal: "Expert Systems with Applications", year: 2022, citas: 67 },
+  { title: "Co-authorship network dynamics in Latin American computer science research", journal: "Scientometrics", year: 2022, citas: 45 },
+];
+
+const COAUTHORS = [
+  { initials: "AV", name: "Arturo Velázquez" },
+  { initials: "PR", name: "Patricia Rangel" },
+  { initials: "RV", name: "Rodrigo Vega" },
+  { initials: "EC", name: "Ernesto Chávez" },
+  { initials: "LQ", name: "Laura Quintero" },
+  { initials: "JH", name: "Jorge Hernández" },
+  { initials: "EB", name: "Elena Bustamante" },
+  { initials: "SM", name: "Sofía Montoya" },
+  { initials: "OP", name: "Oscar Pérez" },
+  { initials: "DM", name: "Daniel Morales" },
+];
+
+const TRAITS = [
+  { name: "Rigor metodológico", val: 91 },
+  { name: "Apertura interdiscipl.", val: 74 },
+  { name: "Sesgo cuantitativo", val: 88 },
+  { name: "Orientación práctica", val: 62 },
+  { name: "Nivel de consenso", val: 55 },
+];
+
+function TwinModal({ onClose }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)" }}>
+            <div className="avatar avatar-md">MC</div>
+            <div>
+              <div className="modal-title">Perfil cognitivo del gemelo</div>
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--text-quaternary)", marginTop: 2 }}>Dra. María Elena Cárdenas Ruiz</div>
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose}><Icon name="x" size={14} /></button>
+        </div>
+        <div className="agent-section">
+          <div className="agent-section-title">Descripción del agente</div>
+          <div className="agent-text">
+            Investigadora con fuerte orientación a la aplicación práctica de métodos de machine learning en contextos de redes y sistemas embebidos. Prioriza la reproducibilidad metodológica y tiende hacia enfoques cuantitativos. Historial de colaboración amplio dentro de la UAT; receptiva a nuevas colaboraciones si existe alineación metodológica.
+          </div>
+        </div>
+        <div className="agent-section">
+          <div className="agent-section-title">Rasgos cognitivos calibrados</div>
+          <div className="trait-list">
+            {TRAITS.map(t => (
+              <div key={t.name} className="trait-row">
+                <div className="trait-name">{t.name}</div>
+                <div className="trait-bar-track">
+                  <div className="trait-bar-fill" style={{ width: `${t.val}%` }} />
+                </div>
+                <div className="trait-val">{t.val}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="agent-section" style={{ marginBottom: 0 }}>
+          <div className="agent-section-title">Fuentes utilizadas</div>
+          <div className="agent-text">
+            84 publicaciones indexadas · 1,284 citas · 10 coautores UAT · OpenAlex · VuFind UAT
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Perfil() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("ic-theme") || "light");
+  const [showAll, setShowAll] = useState(false);
+  const [twinModal, setTwinModal] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("ic-theme", theme);
+  }, [theme]);
+
+  const visiblePubs = showAll ? PUBS : PUBS.slice(0, 3);
+
+  return (
+    <div className="page">
+      <header className="topbar">
+        <a className="logo" href="Screen 1 - Home.html">
+          <span className="logo-uat">UAT</span>
+          <span className="logo-sub">IntellectClone</span>
+        </a>
+        <nav className="topbar-nav" style={{ marginLeft: "var(--sp-6)" }}>
+          {["Directorio", "Red de colaboración", "Acerca"].map((item, i) => (
+            <button key={item} className={`topbar-nav-item ${i === 0 ? "active" : ""}`}>{item}</button>
+          ))}
+        </nav>
+        <div className="topbar-actions">
+          <button className="btn btn-secondary btn-sm">Iniciar sesión</button>
+        </div>
+      </header>
+
+      <div style={{ background: "var(--bg-base)", padding: "12px var(--sp-8) 0", maxWidth: 1080, margin: "0 auto" }}>
+        <div className="breadcrumbs" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <a href="Screen 2 - Directorio.html" style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-quaternary)", textDecoration: "none" }}>Directorio</a>
+          <span style={{ color: "var(--text-quaternary)", display: "flex" }}><Icon name="chevron-right" size={12} /></span>
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-tertiary)" }}>Dra. María Elena Cárdenas Ruiz</span>
+        </div>
+      </div>
+
+      <main>
+        <div className="profile-layout">
+          {/* Header */}
+          <div className="profile-header">
+            <div className="avatar avatar-xl">MC</div>
+            <div className="profile-meta">
+              <div className="profile-eyebrow">
+                <Icon name="map-pin" size={12} />
+                Investigadora · Facultad de Ingeniería
+              </div>
+              <h1 className="profile-name">Dra. María Elena Cárdenas Ruiz</h1>
+              <div className="profile-sub">Cuerpo Académico: Redes de Computadoras y Sistemas Inteligentes · UAT</div>
+              <div className="profile-badges">
+                <span className="tag tag-info">SNII Nivel II</span>
+                <span className="tag tag-neutral">Consolidado</span>
+                <span className="tag tag-success">Perfil activo</span>
+              </div>
+            </div>
+            <div className="profile-actions">
+              <button className="btn btn-primary btn-md">
+                <Icon name="cpu" size={14} />
+                Incluir en simulación
+              </button>
+              <button className="btn btn-ghost btn-sm" style={{ color: "var(--text-quaternary)", fontSize: 12 }}>
+                <Icon name="flag" size={12} />
+                Solicitar corrección
+              </button>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="stat-grid">
+            {[
+              { eyebrow: "Publicaciones", val: "84", delta: "+6 en 2024" },
+              { eyebrow: "Citas totales", val: "1,284", delta: "+143 en 2024" },
+              { eyebrow: "Índice h", val: "21", delta: null },
+              { eyebrow: "Coautores UAT", val: "37", delta: "+3 nuevos" },
+            ].map(s => (
+              <div key={s.eyebrow} className="stat-card-block">
+                <div className="stat-eyebrow">{s.eyebrow}</div>
+                <div className="stat-value">{s.val}</div>
+                {s.delta && <div className="stat-delta"><Icon name="trending-up" size={11} />{s.delta}</div>}
+              </div>
+            ))}
+          </div>
+
+          {/* Main column */}
+          <div>
+            {/* Areas */}
+            <div className="section-block" style={{ marginBottom: "var(--sp-8)" }}>
+              <div className="section-title">Áreas de especialización</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {["Machine learning", "Redes de computadoras", "Procesamiento de lenguaje natural", "IoT", "Aprendizaje federado", "Series temporales", "Bioinformática computacional"].map(a => (
+                  <span key={a} className="tag tag-neutral pill">{a}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Publications */}
+            <div className="section-block" style={{ marginBottom: "var(--sp-8)" }}>
+              <div className="section-title">Publicaciones</div>
+              <div>
+                {visiblePubs.map(p => (
+                  <div key={p.title} className="pub-item">
+                    <div className="pub-title">{p.title}</div>
+                    <div className="pub-meta">
+                      <span>{p.journal}</span>
+                      <span>·</span>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{p.year}</span>
+                      <span>·</span>
+                      <span className="pub-citas">
+                        <Icon name="quote" size={11} />
+                        {p.citas} citas
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {!showAll && (
+                <button className="btn btn-ghost btn-sm" onClick={() => setShowAll(true)} style={{ alignSelf: "flex-start", color: "var(--accent-primary)" }}>
+                  Ver todas las publicaciones (84)
+                  <Icon name="chevron-down" size={13} />
+                </button>
+              )}
+            </div>
+
+            {/* Coauthors */}
+            <div className="section-block">
+              <div className="section-title">Red de colaboración</div>
+              <div className="coauthor-grid">
+                {COAUTHORS.map(c => (
+                  <div key={c.initials} className="coauthor-item">
+                    <div className="avatar avatar-md">{c.initials}</div>
+                    <div className="coauthor-name">{c.name}</div>
+                  </div>
+                ))}
+              </div>
+              <a href="Screen 4 - Red.html" className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start", color: "var(--accent-primary)", marginTop: "var(--sp-2)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                Explorar red completa
+                <Icon name="arrow-right" size={13} />
+              </a>
+            </div>
+          </div>
+
+          {/* Sidebar: Twin card */}
+          <div>
+            <div className="twin-card">
+              <div className="twin-header">
+                <div className="twin-title">Gemelo digital</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span className="twin-dot generated" />
+                  <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--accent-primary)" }}>Generado</span>
+                </div>
+              </div>
+              <div className="twin-update">Última actualización: 28 abr 2025 · OpenAlex v3</div>
+              <div className="twin-desc">
+                Agente reconstruido a partir de 84 publicaciones, red de coautoría y datos de adscripción institucional. Calibrado para simulaciones de prospectiva académica.
+              </div>
+              <button className="btn btn-secondary btn-sm" style={{ width: "100%", justifyContent: "center" }} onClick={() => setTwinModal(true)}>
+                <Icon name="cpu" size={13} />
+                Ver perfil cognitivo
+              </button>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="profile-footer">
+            <button className="btn btn-ghost btn-sm" style={{ color: "var(--text-quaternary)", fontSize: 12 }}>
+              <Icon name="edit-3" size={12} />
+              Solicitar corrección de datos
+            </button>
+            <button className="btn btn-ghost btn-sm" style={{ color: "var(--text-quaternary)", fontSize: 12 }}>
+              <Icon name="user-x" size={12} />
+              Solicitar baja del sistema
+            </button>
+          </div>
+        </div>
+      </main>
+
+      {twinModal && <TwinModal onClose={() => setTwinModal(false)} />}
+      <ModeToggle theme={theme} setTheme={setTheme} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<Perfil />);
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+/* ============================================================
+   IntellectClone v2 — Syndron-style Design Tokens
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Backgrounds ── */
+  --bg-body:     #f0f4f8;
+  --bg-card:     #ffffff;
+  --bg-sidebar:  #14243c;
+  --bg-header:   #ffffff;
+  --bg-input:    #f8fafc;
+  --bg-hover:    #f1f5f9;
+  --bg-muted:    #e9eef5;
+
+  /* ── Sidebar specific ── */
+  --sidebar-text:        #8da2b5;
+  --sidebar-text-active: #ffffff;
+  --sidebar-hover:       #1e3350;
+  --sidebar-active:      #0d6efd;
+  --sidebar-section:     #506a84;
+  --sidebar-border:      #1e3350;
+  --sidebar-width:       260px;
+
+  /* ── Borders ── */
+  --border-color:   #e3e8ef;
+  --border-light:   #eef2f7;
+
+  /* ── Text ── */
+  --text-primary:    #212529;
+  --text-secondary:  #495057;
+  --text-muted:      #6c757d;
+  --text-light:      #adb5bd;
+  --text-white:      #ffffff;
+
+  /* ── Brand accent colors ── */
+  --blue:       #0d6efd;
+  --blue-light: #e8f0fe;
+  --blue-dark:  #0b5ed7;
+
+  --green:       #02c27a;
+  --green-light: #d4f5e9;
+  --green-dark:  #01a668;
+
+  --orange:       #fd7e14;
+  --orange-light: #fff0e0;
+  --orange-dark:  #e06c0a;
+
+  --red:       #fc185a;
+  --red-light: #fde8ef;
+  --red-dark:  #d90f4c;
+
+  --purple:       #8b5cf6;
+  --purple-light: #ede9fe;
+  --purple-dark:  #7c3aed;
+
+  --teal:       #0dcaf0;
+  --teal-light: #d7f5fb;
+
+  --yellow:       #ffc107;
+  --yellow-light: #fff8e1;
+
+  /* ── Typography ── */
+  --font-sans: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* ── Font sizes ── */
+  --fs-xs:   11px;
+  --fs-sm:   12px;
+  --fs-base: 14px;
+  --fs-md:   15px;
+  --fs-lg:   16px;
+  --fs-xl:   18px;
+  --fs-2xl:  20px;
+  --fs-3xl:  24px;
+  --fs-4xl:  28px;
+  --fs-5xl:  32px;
+
+  /* ── Spacing ── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* ── Radii ── */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   18px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-xs:  0 1px 3px rgba(0,0,0,0.06);
+  --shadow-sm:  0 2px 6px rgba(0,0,0,0.08);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.12);
+  --shadow-xl:  0 16px 48px rgba(0,0,0,0.14);
+
+  /* ── Header ── */
+  --header-height: 60px;
+}
+
+/* ── Global Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--text-secondary);
+  background: var(--bg-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: var(--blue); }
+a:hover { color: var(--blue-dark); }

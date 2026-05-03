@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>IntellectClone — Red de colaboración</title>
+<link rel="stylesheet" href="screens-v2.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js"></script>
+<style>
+html,body,#root{height:100%;margin:0;}
+.pub-header{position:fixed;top:0;left:0;right:0;height:60px;background:#14243c;display:flex;align-items:center;padding:0 var(--sp-8);gap:var(--sp-6);z-index:100;border-bottom:1px solid #1e3350;}
+.pub-nav-item{font-size:13px;color:#8da2b5;padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer;border:none;background:none;transition:background 120ms,color 120ms;}
+.pub-nav-item:hover{background:#1e3350;color:#fff;}
+.pub-nav-item.active{color:#fff;font-weight:500;}
+.net-body{display:flex;height:calc(100vh - 60px);margin-top:60px;}
+.net-canvas{flex:1;position:relative;background:#f8fafc;overflow:hidden;}
+.net-svg{width:100%;height:100%;}
+.net-controls{position:absolute;top:16px;left:16px;display:flex;gap:6px;}
+.ctrl-btn{width:34px;height:34px;border-radius:var(--radius-sm);background:var(--bg-card);border:1px solid var(--border-color);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);box-shadow:var(--shadow-xs);transition:all 120ms;}
+.ctrl-btn:hover{background:var(--bg-hover);color:var(--text-primary);}
+.net-panel{width:300px;flex-shrink:0;border-left:1px solid var(--border-color);background:var(--bg-card);display:flex;flex-direction:column;overflow-y:auto;}
+.panel-sec{padding:var(--sp-5);border-bottom:1px solid var(--border-light);}
+.panel-sec-title{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--sp-3);}
+.legend-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+.legend-lbl{font-size:12px;color:var(--text-secondary);}
+.person-stat{display:flex;flex-direction:column;gap:2px;}
+.person-stat-val{font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--text-primary);line-height:1;}
+.person-stat-lbl{font-size:11px;color:var(--text-light);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+function Icon({name,size=16,sw=1.5}){
+  const ref=useRef(null);
+  useEffect(()=>{
+    if(!ref.current||!window.lucide)return;
+    ref.current.innerHTML="";
+    const k=name.split("-").map(w=>w[0].toUpperCase()+w.slice(1)).join("");
+    const el=lucide.createElement(lucide[k]);
+    if(el){el.setAttribute("width",size);el.setAttribute("height",size);el.setAttribute("stroke-width",sw);ref.current.appendChild(el);}
+  },[name,size]);
+  return <span ref={ref} style={{display:"inline-flex",alignItems:"center"}}/>;
+}
+
+const DEP_COLORS={"Ingeniería":"#0d6efd","Medicina":"#02c27a","UAMRR":"#fd7e14","Derecho":"#6c757d","Educación":"#8b5cf6","Comercio":"#0dcaf0","Mante":"#fc185a"};
+const NODES=[
+  {id:"MC",name:"Dra. María Elena Cárdenas",dep:"Ingeniería",papers:84,citas:1284,snii:"II"},
+  {id:"AV",name:"Dr. Arturo Velázquez",dep:"Medicina",papers:51,citas:723,snii:"I"},
+  {id:"SM",name:"Dra. Sofía Montoya",dep:"UAMRR",papers:29,citas:312,snii:"C"},
+  {id:"LG",name:"Dr. Luis Garza",dep:"Derecho",papers:17,citas:89,snii:"—"},
+  {id:"PR",name:"Dra. Patricia Rangel",dep:"Ingeniería",papers:62,citas:940,snii:"II"},
+  {id:"JH",name:"Dr. Jorge Hernández",dep:"Medicina",papers:118,citas:2341,snii:"III"},
+  {id:"CR",name:"Dra. Carmen Reyes",dep:"Comercio",papers:34,citas:421,snii:"I"},
+  {id:"DM",name:"Dr. Daniel Morales",dep:"Mante",papers:22,citas:178,snii:"C"},
+  {id:"EB",name:"Dra. Elena Bustamante",dep:"Ingeniería",papers:45,citas:612,snii:"I"},
+  {id:"RV",name:"Dr. Rodrigo Vega",dep:"UAMRR",papers:71,citas:1023,snii:"II"},
+  {id:"IL",name:"Dra. Irma López",dep:"Educación",papers:15,citas:94,snii:"C"},
+  {id:"MT",name:"Dr. Miguel Torres",dep:"Medicina",papers:88,citas:1567,snii:"II"},
+  {id:"VS",name:"Dra. Valeria Soto",dep:"Derecho",papers:28,citas:203,snii:"I"},
+  {id:"EC",name:"Dr. Ernesto Chávez",dep:"Ingeniería",papers:134,citas:3102,snii:"III"},
+  {id:"LQ",name:"Dra. Laura Quintero",dep:"UAMRR",papers:56,citas:876,snii:"II"},
+  {id:"BJ",name:"Dra. Beatriz Jiménez",dep:"UAMRR",papers:102,citas:2198,snii:"III"},
+  {id:"OP",name:"Dr. Oscar Pérez",dep:"Ingeniería",papers:77,citas:1128,snii:"II"},
+  {id:"PG",name:"Dr. Pablo González",dep:"Ingeniería",papers:58,citas:712,snii:"I"},
+  {id:"MR",name:"Dra. Marta Ríos",dep:"Medicina",papers:37,citas:421,snii:"C"},
+  {id:"HR",name:"Dr. Héctor Robles",dep:"Medicina",papers:43,citas:534,snii:"I"},
+];
+const EDGES=[
+  {source:"MC",target:"AV",weight:4},{source:"MC",target:"PR",weight:8},{source:"MC",target:"RV",weight:5},
+  {source:"MC",target:"EC",weight:6},{source:"MC",target:"LQ",weight:3},{source:"MC",target:"EB",weight:7},
+  {source:"MC",target:"SM",weight:2},{source:"MC",target:"OP",weight:4},{source:"AV",target:"JH",weight:6},
+  {source:"AV",target:"MT",weight:5},{source:"AV",target:"HR",weight:4},{source:"AV",target:"MR",weight:3},
+  {source:"JH",target:"MT",weight:7},{source:"JH",target:"BJ",weight:4},{source:"PR",target:"OP",weight:6},
+  {source:"PR",target:"PG",weight:5},{source:"PR",target:"EB",weight:4},{source:"EC",target:"BJ",weight:5},
+  {source:"EC",target:"PG",weight:6},{source:"RV",target:"LQ",weight:6},{source:"RV",target:"SM",weight:5},
+  {source:"BJ",target:"LQ",weight:5},{source:"SM",target:"IL",weight:3},{source:"LG",target:"VS",weight:5},
+  {source:"CR",target:"MR",weight:3},{source:"OP",target:"PG",weight:3},
+];
+
+function NetworkGraph({nodes,edges,selected,onSelect}){
+  const svgRef=useRef(null);
+  const zoomRef=useRef(null);
+  const rScale=d3.scaleLinear().domain([d3.min(nodes,d=>d.papers),d3.max(nodes,d=>d.papers)]).range([8,22]);
+  const wScale=d3.scaleLinear().domain([1,8]).range([1,4]);
+
+  useEffect(()=>{
+    if(!svgRef.current||!nodes.length)return;
+    const container=svgRef.current.parentElement;
+    const W=container.clientWidth,H=container.clientHeight;
+    d3.select(svgRef.current).selectAll("*").remove();
+    const svg=d3.select(svgRef.current).attr("width",W).attr("height",H);
+    const g=svg.append("g");
+    const zoom=d3.zoom().scaleExtent([0.3,3]).on("zoom",e=>g.attr("transform",e.transform));
+    svg.call(zoom);
+    zoomRef.current=zoom;
+    const simNodes=nodes.map(d=>({...d}));
+    const nodeById=Object.fromEntries(simNodes.map(d=>[d.id,d]));
+    const simEdges=edges.map(e=>({source:nodeById[e.source],target:nodeById[e.target],weight:e.weight}));
+    const sim=d3.forceSimulation(simNodes)
+      .force("link",d3.forceLink(simEdges).id(d=>d.id).distance(80))
+      .force("charge",d3.forceManyBody().strength(-200))
+      .force("center",d3.forceCenter(W/2,H/2))
+      .force("collision",d3.forceCollide(d=>rScale(d.papers)+4));
+    const link=g.append("g").selectAll("line").data(simEdges).join("line")
+      .attr("stroke","#dde3ef").attr("stroke-width",d=>wScale(d.weight)).attr("stroke-opacity",0.8);
+    const node=g.append("g").selectAll("g").data(simNodes).join("g")
+      .attr("cursor","pointer")
+      .call(d3.drag()
+        .on("start",(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+        .on("drag",(e,d)=>{d.fx=e.x;d.fy=e.y;})
+        .on("end",(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;})
+      )
+      .on("click",(e,d)=>{e.stopPropagation();onSelect(d.id===selected?null:d.id);});
+    node.append("circle")
+      .attr("r",d=>rScale(d.papers))
+      .attr("fill",d=>d.id===selected?"var(--blue-light)":DEP_COLORS[d.dep]+"22")
+      .attr("stroke",d=>d.id===selected?"var(--blue)":DEP_COLORS[d.dep])
+      .attr("stroke-width",d=>d.id===selected?2.5:1.5);
+    node.append("text").text(d=>d.id)
+      .attr("text-anchor","middle").attr("dominant-baseline","middle")
+      .attr("font-size",d=>Math.max(7,rScale(d.papers)*0.55))
+      .attr("font-family","var(--font-sans)").attr("font-weight","600")
+      .attr("fill",d=>d.id===selected?"var(--blue)":DEP_COLORS[d.dep])
+      .attr("pointer-events","none");
+    svg.on("click",()=>onSelect(null));
+    sim.on("tick",()=>{
+      link.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y).attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
+      node.attr("transform",d=>`translate(${d.x},${d.y})`);
+    });
+    return()=>sim.stop();
+  },[nodes,edges]);
+
+  return(
+    <div style={{position:"relative",width:"100%",height:"100%"}}>
+      <svg ref={svgRef} className="net-svg"/>
+      <div className="net-controls">
+        <button className="ctrl-btn" onClick={()=>d3.select(svgRef.current).transition().call(zoomRef.current.scaleBy,1.4)}><Icon name="plus" size={14}/></button>
+        <button className="ctrl-btn" onClick={()=>d3.select(svgRef.current).transition().call(zoomRef.current.scaleBy,0.7)}><Icon name="minus" size={14}/></button>
+        <button className="ctrl-btn" onClick={()=>d3.select(svgRef.current).transition().call(zoomRef.current.transform,d3.zoomIdentity)}><Icon name="maximize-2" size={14}/></button>
+        <button className="ctrl-btn" title="Exportar"><Icon name="download" size={14}/></button>
+      </div>
+    </div>
+  );
+}
+
+function NetworkApp(){
+  const [selected,setSelected]=useState("MC");
+  const [filterDep,setFilterDep]=useState("Todas");
+  const filteredNodes=filterDep==="Todas"?NODES:NODES.filter(n=>n.dep===filterDep);
+  const filteredIds=new Set(filteredNodes.map(n=>n.id));
+  const filteredEdges=EDGES.filter(e=>filteredIds.has(e.source)&&filteredIds.has(e.target));
+  const selNode=NODES.find(n=>n.id===selected);
+  const selEdges=EDGES.filter(e=>e.source===selected||e.target===selected);
+
+  return(
+    <div style={{height:"100vh",display:"flex",flexDirection:"column"}}>
+      <header className="pub-header">
+        <div style={{display:"flex",flexDirection:"column",gap:1}}>
+          <span style={{fontSize:15,fontWeight:700,color:"#fff",letterSpacing:"0.06em"}}>UAT</span>
+          <span style={{fontSize:10,color:"#8da2b5",letterSpacing:"0.04em",textTransform:"uppercase"}}>IntellectClone</span>
+        </div>
+        <nav style={{display:"flex",gap:4,marginLeft:24}}>
+          {["Directorio","Red de colaboración","Acerca"].map((n,i)=>(
+            <button key={n} className={`pub-nav-item ${i===1?"active":""}`}>{n}</button>
+          ))}
+        </nav>
+        <div style={{marginLeft:"auto"}}>
+          <button className="btn btn-outline btn-sm" style={{borderColor:"#2a4060",color:"#8da2b5"}}>Iniciar sesión</button>
+        </div>
+      </header>
+      <div className="net-body">
+        <div className="net-canvas">
+          <NetworkGraph nodes={filteredNodes} edges={filteredEdges} selected={selected} onSelect={setSelected}/>
+        </div>
+        <aside className="net-panel">
+          <div className="panel-sec">
+            <div className="panel-sec-title">Filtrar por dependencia</div>
+            {["Todas",...Object.keys(DEP_COLORS)].map(d=>(
+              <div key={d} className="legend-row" style={{cursor:"pointer"}} onClick={()=>setFilterDep(d)}>
+                <div className="legend-dot" style={{background:d==="Todas"?"var(--text-light)":DEP_COLORS[d],opacity:filterDep===d||filterDep==="Todas"?1:0.3}}/>
+                <div className="legend-lbl" style={{fontWeight:filterDep===d?600:400}}>{d}</div>
+              </div>
+            ))}
+          </div>
+          <div className="panel-sec" style={{flex:1}}>
+            <div className="panel-sec-title">{selNode?"Seleccionado":"Ningún nodo"}</div>
+            {selNode?(
+              <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:44,height:44,borderRadius:"50%",background:DEP_COLORS[selNode.dep]+"22",border:`2px solid ${DEP_COLORS[selNode.dep]}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:DEP_COLORS[selNode.dep]}}>{selNode.id}</div>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:600,color:"var(--text-primary)"}}>{selNode.name}</div>
+                    <div style={{fontSize:12,color:"var(--text-muted)"}}>{selNode.dep} · SNII {selNode.snii}</div>
+                  </div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                  {[{val:selNode.papers,lbl:"publicaciones"},{val:selNode.citas.toLocaleString(),lbl:"citas"},{val:selEdges.length,lbl:"coautores"},{val:"Generado",lbl:"estado gemelo"}].map((s,i)=>(
+                    <div key={i} className="person-stat">
+                      <div className="person-stat-val" style={{fontSize:i===3?13:"var(--fs-4xl)",color:i===3?"var(--blue)":"var(--text-primary)"}}>{s.val}</div>
+                      <div className="person-stat-lbl">{s.lbl}</div>
+                    </div>
+                  ))}
+                </div>
+                <a href="Screen 3 v2 - Perfil.html" className="btn btn-primary btn-sm" style={{justifyContent:"center",textDecoration:"none"}}>
+                  Ver perfil completo <Icon name="arrow-right" size={13}/>
+                </a>
+              </div>
+            ):(
+              <div style={{fontSize:13,color:"var(--text-muted)"}}>Haz clic en un nodo para ver la información del investigador.</div>
+            )}
+          </div>
+          <div className="panel-sec">
+            <div className="panel-sec-title">Leyenda de tamaño</div>
+            <div style={{display:"flex",alignItems:"center",gap:16}}>
+              {[8,14,20].map(r=>(
+                <div key={r} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                  <div style={{width:r*2,height:r*2,borderRadius:"50%",background:"var(--bg-muted)",border:"1.5px solid var(--border-color)"}}/>
+                  <span style={{fontSize:10,color:"var(--text-muted)"}}>{r<10?"<30":r<16?"30–80":">80"}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<NetworkApp/>);
+</script>
+</body>
+</html>
