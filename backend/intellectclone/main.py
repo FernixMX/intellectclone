@@ -5,6 +5,8 @@ Punto de entrada de la aplicación FastAPI.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from intellectclone.api.excepciones import registrar_handlers
+from intellectclone.api.v1.router import router as router_v1
 from intellectclone.config import get_settings
 
 settings = get_settings()
@@ -26,8 +28,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Registrar handlers de excepciones de dominio (RFC 7807)
+registrar_handlers(app)
 
-@app.get("/health", tags=["sistema"])
+# Incluir router de la API interna v1
+app.include_router(router_v1, prefix="/api/v1")
+
+
+@app.get("/health", tags=["sistema"])  # type: ignore[misc]
 async def health() -> dict[str, str]:
     """Health check básico del servidor."""
     return {"status": "ok", "version": "0.1.0"}

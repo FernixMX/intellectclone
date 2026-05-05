@@ -84,6 +84,12 @@ line-length = 100
 select = ["E", "F", "I", "N", "UP", "B", "SIM"]
 ignore = ["E501"]
 
+[tool.ruff.lint.per-file-ignores]
+# FastAPI usa Query()/Depends() en defaults de función — patrón intencional del framework
+"backend/intellectclone/api/**/*.py" = ["B008"]
+# Excepciones de dominio en español — sufijo Error no aplica a nombres de dominio UAT
+"backend/intellectclone/api/excepciones.py" = ["N818"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["intellectclone"]
 
@@ -99,6 +105,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]

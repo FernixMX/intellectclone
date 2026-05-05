@@ -20,12 +20,12 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Importar todos los modelos aquí para que Alembic los detecte en autogenerate.
-# En Fase B se irán agregando conforme se definan.
-# from intellectclone.models import *  # noqa: F401, F403
+# Importar todos los modelos para que Alembic los detecte en autogenerate.
+from intellectclone.db.base import Base  # noqa: E402
+from intellectclone.models import *  # noqa: E402, F401, F403
 
-# MetaData para autogenerate (se asigna en Fase B al importar los modelos)
-target_metadata = None
+# MetaData para autogenerate
+target_metadata = Base.metadata
 
 
 def get_database_url() -> str:
