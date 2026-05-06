@@ -1,0 +1,32 @@
+"""
+Instancia de aplicación Celery para IntellectClone.
+Broker y backend sobre Redis (configurado en Settings.redis_url).
+"""
+
+from celery import Celery
+
+from intellectclone.config import get_settings
+
+
+def make_celery() -> Celery:
+    settings = get_settings()
+    app = Celery(
+        "intellectclone",
+        broker=str(settings.redis_url),
+        backend=str(settings.redis_url),
+        include=["intellectclone.tasks.cosecha"],
+    )
+    app.conf.update(
+        task_serializer="json",
+        result_serializer="json",
+        accept_content=["json"],
+        timezone="UTC",
+        enable_utc=True,
+        task_track_started=True,
+        task_acks_late=True,
+        worker_prefetch_multiplier=1,
+    )
+    return app
+
+
+celery_app = make_celery()
