@@ -26,12 +26,14 @@ from intellectclone.harvesters.tipos import (
     ResultadoCosecha,
     ResultadoIntento,
 )
+from intellectclone.harvesters.vufind_uat import VuFindUATHarvester
 
 __all__ = [
     "AccionIntento",
     "BaseHarvester",
     "NivelError",
     "OpenAlexHarvester",
+    "VuFindUATHarvester",
     "ResultadoCosecha",
     "ResultadoDeduplicacion",
     "ResultadoDesambiguacion",
