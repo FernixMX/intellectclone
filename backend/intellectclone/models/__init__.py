@@ -5,6 +5,14 @@ El orden de importación respeta las dependencias entre tablas.
 """
 
 # Primero: enumeraciones (sin dependencias)
+# Octavo: auxiliares (FK a gemelo, usuario_sistema)
+from intellectclone.models.auxiliares import (
+    ConfiguracionPresupuesto,
+    ConsumoLlm,
+    ExportToken,
+    TemaTroncoComun,
+    ValidacionGemelo,
+)
 from intellectclone.models.enums import (
     EstadoCosecha,
     EstadoDocumento,
@@ -21,6 +29,9 @@ from intellectclone.models.enums import (
     TipoPersona,
 )
 
+# Sexto: gemelos (FK a persona, paper, documento_corpus)
+from intellectclone.models.gemelo import Gemelo, GemeloCorpusUso
+
 # Segundo: estructura institucional (sin FK entre sí excepto self-ref en area_conocimiento)
 from intellectclone.models.institucional import AreaConocimiento, CuerpoAcademico, Dependencia
 
@@ -30,23 +41,11 @@ from intellectclone.models.persona import Persona, PersonaArea, PersonaDependenc
 # Cuarto: producción académica (FK a persona)
 from intellectclone.models.produccion import Coautoria, DocumentoCorpus, Paper
 
-# Quinto: sistema (FK a persona — UsuarioSistema; cosecha referenciada desde paper)
-from intellectclone.models.sistema import Auditoria, Cosecha, UsuarioSistema
-
-# Sexto: gemelos (FK a persona, paper, documento_corpus)
-from intellectclone.models.gemelo import Gemelo, GemeloCorpusUso
-
 # Séptimo: simulaciones (FK a gemelo, persona, usuario_sistema)
 from intellectclone.models.simulacion import RespuestaSimulacion, Simulacion
 
-# Octavo: auxiliares (FK a gemelo, usuario_sistema)
-from intellectclone.models.auxiliares import (
-    ConfiguracionPresupuesto,
-    ConsumoLlm,
-    ExportToken,
-    TemaTroncoComun,
-    ValidacionGemelo,
-)
+# Quinto: sistema (FK a persona — UsuarioSistema; cosecha referenciada desde paper)
+from intellectclone.models.sistema import Auditoria, Cosecha, UsuarioSistema
 
 __all__ = [
     # Enums

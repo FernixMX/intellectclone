@@ -29,9 +29,7 @@ class ValidacionGemelo(Base):
 
     __tablename__ = "validacion_gemelo"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     gemelo_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         sa.ForeignKey("gemelo.id", ondelete="CASCADE"),
@@ -49,7 +47,7 @@ class ValidacionGemelo(Base):
 
     # Secciones con correcciones específicas (JSONB libre)
     # Ejemplo: {"hexaco": {"nivel_extraversion": "medio", ...}, "idiolecto": {...}}
-    correcciones: Mapped[dict | None] = mapped_column(JSONB, nullable=True)  # type: ignore[type-arg]
+    correcciones: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
@@ -68,21 +66,15 @@ class ExportToken(Base):
 
     __tablename__ = "export_token"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     nombre: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     token_hash: Mapped[str] = mapped_column(sa.String(255), unique=True, nullable=False)
     descripcion: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
     # Restricciones de acceso
     activo: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=True)
-    expira_at: Mapped[datetime | None] = mapped_column(
-        sa.TIMESTAMP(timezone=True), nullable=True
-    )
-    ultimo_uso: Mapped[datetime | None] = mapped_column(
-        sa.TIMESTAMP(timezone=True), nullable=True
-    )
+    expira_at: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True), nullable=True)
+    ultimo_uso: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True), nullable=True)
     usos_total: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
 
     creado_por: Mapped[uuid.UUID | None] = mapped_column(
@@ -91,7 +83,7 @@ class ExportToken(Base):
         nullable=True,
     )
 
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
 
@@ -111,11 +103,9 @@ class ConfiguracionPresupuesto(Base):
 
     __tablename__ = "configuracion_presupuesto"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     clave: Mapped[str] = mapped_column(sa.String(100), unique=True, nullable=False)
-    valor_json: Mapped[dict] = mapped_column(JSONB, nullable=False)  # type: ignore[type-arg]
+    valor_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
     descripcion: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
     actualizado_por: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
@@ -141,9 +131,7 @@ class ConsumoLlm(Base):
 
     __tablename__ = "consumo_llm"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     usuario_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         sa.ForeignKey("usuario_sistema.id", ondelete="SET NULL"),
@@ -160,11 +148,9 @@ class ConsumoLlm(Base):
 
     # Referencia a la entidad que generó el consumo (polimórfica vía JSONB)
     entidad_tipo: Mapped[str | None] = mapped_column(sa.String(50), nullable=True)
-    entidad_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
+    entidad_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
 
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
 
@@ -184,9 +170,7 @@ class TemaTroncoComun(Base):
 
     __tablename__ = "tema_tronco_comun"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     clave: Mapped[str] = mapped_column(sa.String(50), unique=True, nullable=False)
     nombre: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     descripcion: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
@@ -196,7 +180,7 @@ class TemaTroncoComun(Base):
     activo: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=True)
     orden: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
 
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
 

@@ -19,7 +19,7 @@ from intellectclone.models.enums import NivelSnii, TipoFuente, TipoPersona
 if TYPE_CHECKING:
     from intellectclone.models.gemelo import Gemelo
     from intellectclone.models.institucional import AreaConocimiento, CuerpoAcademico, Dependencia
-    from intellectclone.models.produccion import DocumentoCorpus, Paper
+    from intellectclone.models.produccion import DocumentoCorpus
     from intellectclone.models.sistema import UsuarioSistema
 
 
@@ -28,9 +28,7 @@ class Persona(Base):
 
     __tablename__ = "persona"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Identidad básica
     nombre_completo: Mapped[str] = mapped_column(sa.String(255), nullable=False)
@@ -48,18 +46,10 @@ class Persona(Base):
 
     # Identificadores externos
     orcid: Mapped[str | None] = mapped_column(sa.String(19), unique=True, nullable=True)
-    openalex_id: Mapped[str | None] = mapped_column(
-        sa.String(50), unique=True, nullable=True
-    )
-    scopus_id: Mapped[str | None] = mapped_column(
-        sa.String(50), unique=True, nullable=True
-    )
-    cvu_conacyt: Mapped[str | None] = mapped_column(
-        sa.String(20), unique=True, nullable=True
-    )
-    google_scholar_id: Mapped[str | None] = mapped_column(
-        sa.String(50), nullable=True
-    )
+    openalex_id: Mapped[str | None] = mapped_column(sa.String(50), unique=True, nullable=True)
+    scopus_id: Mapped[str | None] = mapped_column(sa.String(50), unique=True, nullable=True)
+    cvu_conacyt: Mapped[str | None] = mapped_column(sa.String(20), unique=True, nullable=True)
+    google_scholar_id: Mapped[str | None] = mapped_column(sa.String(50), nullable=True)
 
     # Pertenencia institucional actual
     dependencia_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -84,9 +74,7 @@ class Persona(Base):
     grado_disciplina: Mapped[str | None] = mapped_column(sa.String(255), nullable=True)
 
     # Métricas bibliométricas
-    total_publicaciones: Mapped[int] = mapped_column(
-        sa.Integer, nullable=False, default=0
-    )
+    total_publicaciones: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
     total_citas: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
     indice_h: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
     indice_i10: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
@@ -100,9 +88,7 @@ class Persona(Base):
     # Estado en el sistema
     activa: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=True)
     motivo_baja: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
-    fecha_baja: Mapped[datetime | None] = mapped_column(
-        sa.TIMESTAMP(timezone=True), nullable=True
-    )
+    fecha_baja: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True), nullable=True)
 
     # Trazabilidad de origen
     fuente_principal: Mapped[TipoFuente | None] = mapped_column(
@@ -111,12 +97,10 @@ class Persona(Base):
     )
 
     # Embedding semántico del perfil
-    embedding_perfil: Mapped[list[float] | None] = mapped_column(
-        Vector(1536), nullable=True
-    )
+    embedding_perfil: Mapped[list[float] | None] = mapped_column(Vector(1536), nullable=True)
 
     # Metadatos extensibles
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
 
@@ -170,9 +154,7 @@ class PersonaArea(Base):
         primary_key=True,
         nullable=False,
     )
-    peso: Mapped[float] = mapped_column(
-        sa.Numeric(4, 3), nullable=False, default=1.0
-    )
+    peso: Mapped[float] = mapped_column(sa.Numeric(4, 3), nullable=False, default=1.0)
     fuente: Mapped[str | None] = mapped_column(sa.String(50), nullable=True)
     paper_count: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
@@ -189,9 +171,7 @@ class PersonaDependenciaHistorico(Base):
 
     __tablename__ = "persona_dependencia_historico"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     persona_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         sa.ForeignKey("persona.id", ondelete="CASCADE"),
@@ -208,7 +188,7 @@ class PersonaDependenciaHistorico(Base):
     es_actual: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=False)
     fuente: Mapped[str | None] = mapped_column(sa.String(50), nullable=True)
     confianza: Mapped[float | None] = mapped_column(sa.Numeric(4, 3), nullable=True)
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -216,7 +196,5 @@ class PersonaDependenciaHistorico(Base):
     )
 
     # Relaciones
-    persona: Mapped["Persona"] = relationship(
-        "Persona", back_populates="historico_dependencias"
-    )
+    persona: Mapped["Persona"] = relationship("Persona", back_populates="historico_dependencias")
     dependencia: Mapped["Dependencia | None"] = relationship("Dependencia")

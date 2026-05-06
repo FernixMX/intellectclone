@@ -26,7 +26,7 @@ from intellectclone.schemas.persona import (
 router = APIRouter(prefix="/personas", tags=["personas"])
 
 
-@router.get("", response_model=RespuestaPaginada[PersonaListItem])
+@router.get("", response_model=RespuestaPaginada[PersonaListItem])  # type: ignore[misc]
 async def listar_personas(
     tipo: TipoPersona | None = Query(default=None),
     dependencia_id: uuid.UUID | None = Query(default=None),
@@ -60,7 +60,7 @@ async def listar_personas(
     )
 
 
-@router.get("/{id}", response_model=PersonaRead)
+@router.get("/{id}", response_model=PersonaRead)  # type: ignore[misc]
 async def obtener_persona(
     id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
@@ -73,7 +73,7 @@ async def obtener_persona(
     return PersonaRead.model_validate(instancia)
 
 
-@router.post("", response_model=PersonaRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=PersonaRead, status_code=status.HTTP_201_CREATED)  # type: ignore[misc]
 async def crear_persona(
     datos: PersonaCreate,
     session: AsyncSession = Depends(get_db),
@@ -87,7 +87,7 @@ async def crear_persona(
     return PersonaRead.model_validate(nueva_persona)
 
 
-@router.patch("/{id}", response_model=PersonaRead)
+@router.patch("/{id}", response_model=PersonaRead)  # type: ignore[misc]
 async def actualizar_persona(
     id: uuid.UUID,
     datos: PersonaUpdate,
@@ -99,8 +99,6 @@ async def actualizar_persona(
     if instancia is None:
         raise EntidadNoEncontrada("Persona", id)
     # Solo enviamos campos que no son None
-    campos_a_actualizar = {
-        k: v for k, v in datos.model_dump().items() if v is not None
-    }
+    campos_a_actualizar = {k: v for k, v in datos.model_dump().items() if v is not None}
     actualizada = await repo.actualizar(instancia, campos_a_actualizar)
     return PersonaRead.model_validate(actualizada)

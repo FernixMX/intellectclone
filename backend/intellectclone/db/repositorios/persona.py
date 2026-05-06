@@ -96,4 +96,4 @@ class RepositorioPersona(RepositorioBase[Persona]):
             .where(Persona.id == id)
         )
         result = await self._session.execute(stmt)
-        return result.scalar_one_or_none()  # type: ignore[return-value]
+        return result.scalar_one_or_none()  # type: ignore[no-any-return]

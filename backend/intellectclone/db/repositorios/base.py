@@ -27,7 +27,7 @@ class RepositorioBase(Generic[TModel]):
     async def obtener_por_id(self, id: uuid.UUID) -> TModel | None:
         """Obtiene una entidad por su ID. Devuelve None si no existe."""
         result = await self._session.get(self._model, id)
-        return result
+        return result  # type: ignore[no-any-return]
 
     async def listar(self, limit: int = 20, offset: int = 0) -> tuple[int, list[TModel]]:
         """

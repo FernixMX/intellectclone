@@ -59,7 +59,7 @@ Acento (cobalto)
 Semánticos (uso restringido)
 - success:        #0F6E56  verde profundo, solo confirmaciones
 - success-subtle: #E1F5EE
-- warning:        #854F0B  ámbar profundo, solo advertencias  
+- warning:        #854F0B  ámbar profundo, solo advertencias
 - warning-subtle: #FAEEDA
 - danger:         #A32D2D  rojo profundo, solo errores y destructivos
 - danger-subtle:  #FCEBEB

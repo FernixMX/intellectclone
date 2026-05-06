@@ -17,14 +17,13 @@ from intellectclone.db.base import Base
 from intellectclone.models.enums import (
     EstadoDocumento,
     TipoDocumentoCorpus,
-    TipoPaper,
     TipoFuente,
+    TipoPaper,
 )
 
 if TYPE_CHECKING:
     from intellectclone.models.gemelo import GemeloCorpusUso
     from intellectclone.models.persona import Persona
-    from intellectclone.models.sistema import Cosecha
 
 
 class Paper(Base):
@@ -32,15 +31,11 @@ class Paper(Base):
 
     __tablename__ = "paper"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Identificadores únicos
     doi: Mapped[str | None] = mapped_column(sa.String(255), unique=True, nullable=True)
-    openalex_id: Mapped[str | None] = mapped_column(
-        sa.String(50), unique=True, nullable=True
-    )
+    openalex_id: Mapped[str | None] = mapped_column(sa.String(50), unique=True, nullable=True)
     handle_riuat: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)
 
     # Tipo
@@ -74,17 +69,13 @@ class Paper(Base):
 
     # Citaciones
     total_citas: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
-    citas_por_año: Mapped[dict | None] = mapped_column(JSONB, nullable=True)  # type: ignore[type-arg]
+    citas_por_año: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     # Conceptos OpenAlex
-    conceptos: Mapped[list[str] | None] = mapped_column(
-        sa.ARRAY(sa.Text), nullable=True
-    )
+    conceptos: Mapped[list[str] | None] = mapped_column(sa.ARRAY(sa.Text), nullable=True)
 
     # Embedding del título + abstract
-    embedding_contenido: Mapped[list[float] | None] = mapped_column(
-        Vector(1536), nullable=True
-    )
+    embedding_contenido: Mapped[list[float] | None] = mapped_column(Vector(1536), nullable=True)
 
     # Trazabilidad de cosecha
     fuente_origen: Mapped[TipoFuente | None] = mapped_column(
@@ -97,7 +88,7 @@ class Paper(Base):
     )
 
     # Metadatos extensibles
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
 
@@ -125,9 +116,7 @@ class Coautoria(Base):
 
     __tablename__ = "coautoria"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     persona_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         sa.ForeignKey("persona.id", ondelete="CASCADE"),
@@ -147,20 +136,14 @@ class Coautoria(Base):
     es_autor_correspondiente: Mapped[bool] = mapped_column(
         sa.Boolean, nullable=False, default=False
     )
-    es_primer_autor: Mapped[bool] = mapped_column(
-        sa.Boolean, nullable=False, default=False
-    )
-    es_ultimo_autor: Mapped[bool] = mapped_column(
-        sa.Boolean, nullable=False, default=False
-    )
+    es_primer_autor: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=False)
+    es_ultimo_autor: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=False)
 
     # Afiliación declarada en ese paper
     afiliacion_declarada: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
     # Confianza en la asignación
-    confianza_match: Mapped[float] = mapped_column(
-        sa.Numeric(4, 3), nullable=False, default=1.0
-    )
+    confianza_match: Mapped[float] = mapped_column(sa.Numeric(4, 3), nullable=False, default=1.0)
     metodo_match: Mapped[str | None] = mapped_column(sa.String(50), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -179,9 +162,7 @@ class DocumentoCorpus(Base):
 
     __tablename__ = "documento_corpus"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     persona_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         sa.ForeignKey("persona.id", ondelete="CASCADE"),
@@ -221,7 +202,7 @@ class DocumentoCorpus(Base):
     )
     error_procesamiento: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
 
@@ -233,12 +214,8 @@ class DocumentoCorpus(Base):
     )
 
     # Relaciones
-    persona: Mapped["Persona"] = relationship(
-        "Persona", back_populates="documentos_corpus"
-    )
-    paper: Mapped["Paper | None"] = relationship(
-        "Paper", back_populates="documentos_corpus"
-    )
+    persona: Mapped["Persona"] = relationship("Persona", back_populates="documentos_corpus")
+    paper: Mapped["Paper | None"] = relationship("Paper", back_populates="documentos_corpus")
     gemelo_corpus_usos: Mapped[list["GemeloCorpusUso"]] = relationship(
         "GemeloCorpusUso", back_populates="documento"
     )

@@ -27,18 +27,14 @@ class Gemelo(Base):
 
     __tablename__ = "gemelo"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     persona_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         sa.ForeignKey("persona.id", ondelete="CASCADE"),
         nullable=False,
     )
     version: Mapped[int] = mapped_column(sa.Integer, nullable=False)
-    es_version_actual: Mapped[bool] = mapped_column(
-        sa.Boolean, nullable=False, default=False
-    )
+    es_version_actual: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=False)
     estado: Mapped[EstadoGemelo] = mapped_column(
         sa.Enum(EstadoGemelo, name="estado_gemelo", create_type=False),
         nullable=False,
@@ -46,12 +42,12 @@ class Gemelo(Base):
     )
 
     # Núcleo HEXACO
-    rasgo_extraversion: Mapped[dict | None] = mapped_column(JSONB, nullable=True)  # type: ignore[type-arg]
-    rasgo_neuroticismo: Mapped[dict | None] = mapped_column(JSONB, nullable=True)  # type: ignore[type-arg]
-    rasgo_responsabilidad: Mapped[dict | None] = mapped_column(JSONB, nullable=True)  # type: ignore[type-arg]
-    rasgo_amabilidad: Mapped[dict | None] = mapped_column(JSONB, nullable=True)  # type: ignore[type-arg]
-    rasgo_apertura: Mapped[dict | None] = mapped_column(JSONB, nullable=True)  # type: ignore[type-arg]
-    rasgo_honestidad_humildad: Mapped[dict | None] = mapped_column(JSONB, nullable=True)  # type: ignore[type-arg]
+    rasgo_extraversion: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    rasgo_neuroticismo: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    rasgo_responsabilidad: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    rasgo_amabilidad: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    rasgo_apertura: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    rasgo_honestidad_humildad: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     # Niveles desnormalizados para queries rápidos
     nivel_extraversion: Mapped[NivelRasgo | None] = mapped_column(
@@ -80,15 +76,15 @@ class Gemelo(Base):
     )
 
     # Idiolecto
-    idiolecto: Mapped[dict | None] = mapped_column(JSONB, nullable=True)  # type: ignore[type-arg]
+    idiolecto: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     # Posturas temáticas
-    posturas_tematicas: Mapped[list] = mapped_column(  # type: ignore[type-arg]
+    posturas_tematicas: Mapped[list] = mapped_column(
         JSONB, nullable=True, server_default=text("'[]'::jsonb")
     )
 
     # Valores Schwartz (confirmado por Fernando, va en primera migración)
-    valores_schwartz: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    valores_schwartz: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
 
@@ -96,47 +92,31 @@ class Gemelo(Base):
     system_prompt: Mapped[str] = mapped_column(sa.Text, nullable=False)
 
     # Score de veracidad y calidad
-    score_veracidad: Mapped[float | None] = mapped_column(
-        sa.Numeric(4, 3), nullable=True
-    )
-    score_completitud: Mapped[float | None] = mapped_column(
-        sa.Numeric(4, 3), nullable=True
-    )
-    score_consistencia: Mapped[float | None] = mapped_column(
-        sa.Numeric(4, 3), nullable=True
-    )
+    score_veracidad: Mapped[float | None] = mapped_column(sa.Numeric(4, 3), nullable=True)
+    score_completitud: Mapped[float | None] = mapped_column(sa.Numeric(4, 3), nullable=True)
+    score_consistencia: Mapped[float | None] = mapped_column(sa.Numeric(4, 3), nullable=True)
 
     # Linaje de generación
     modelo_perfilador: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)
-    prompt_perfilador_version: Mapped[str | None] = mapped_column(
-        sa.String(20), nullable=True
-    )
+    prompt_perfilador_version: Mapped[str | None] = mapped_column(sa.String(20), nullable=True)
     tokens_consumidos: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
-    costo_generacion_usd: Mapped[float | None] = mapped_column(
-        sa.Numeric(10, 4), nullable=True
-    )
+    costo_generacion_usd: Mapped[float | None] = mapped_column(sa.Numeric(10, 4), nullable=True)
     duracion_generacion_ms: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
 
     # Validación humana
-    validado_por_persona: Mapped[bool] = mapped_column(
-        sa.Boolean, nullable=False, default=False
-    )
+    validado_por_persona: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=False)
     fecha_validacion: Mapped[datetime | None] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=True
     )
     comentarios_validacion: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
     # Embedding del perfil completo
-    embedding_gemelo: Mapped[list[float] | None] = mapped_column(
-        Vector(1536), nullable=True
-    )
+    embedding_gemelo: Mapped[list[float] | None] = mapped_column(Vector(1536), nullable=True)
 
     # Razón de regeneración
-    razon_regeneracion: Mapped[str | None] = mapped_column(
-        sa.String(255), nullable=True
-    )
+    razon_regeneracion: Mapped[str | None] = mapped_column(sa.String(255), nullable=True)
 
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
 
@@ -164,9 +144,7 @@ class GemeloCorpusUso(Base):
 
     __tablename__ = "gemelo_corpus_uso"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     gemelo_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         sa.ForeignKey("gemelo.id", ondelete="CASCADE"),
@@ -195,9 +173,7 @@ class GemeloCorpusUso(Base):
 
     # Relaciones
     gemelo: Mapped["Gemelo"] = relationship("Gemelo", back_populates="corpus_uso")
-    paper: Mapped["Paper | None"] = relationship(
-        "Paper", back_populates="gemelo_corpus_usos"
-    )
+    paper: Mapped["Paper | None"] = relationship("Paper", back_populates="gemelo_corpus_usos")
     documento: Mapped["DocumentoCorpus | None"] = relationship(
         "DocumentoCorpus", back_populates="gemelo_corpus_usos"
     )

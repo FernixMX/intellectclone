@@ -7,7 +7,7 @@ GET /api/v1/papers/{id}
 import uuid
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from intellectclone.api.excepciones import EntidadNoEncontrada
@@ -20,7 +20,7 @@ from intellectclone.schemas.paper import PaperListItem, PaperRead
 router = APIRouter(prefix="/papers", tags=["papers"])
 
 
-@router.get("", response_model=RespuestaPaginada[PaperListItem])
+@router.get("", response_model=RespuestaPaginada[PaperListItem])  # type: ignore[misc]
 async def listar_papers(
     año: int | None = Query(default=None),
     tipo: TipoPaper | None = Query(default=None),
@@ -57,7 +57,7 @@ async def listar_papers(
     )
 
 
-@router.get("/{id}", response_model=PaperRead)
+@router.get("/{id}", response_model=PaperRead)  # type: ignore[misc]
 async def obtener_paper(
     id: uuid.UUID,
     session: AsyncSession = Depends(get_db),

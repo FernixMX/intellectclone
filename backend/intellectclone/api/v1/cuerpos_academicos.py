@@ -18,7 +18,7 @@ from intellectclone.schemas.cuerpo_academico import CuerpoAcademicoRead
 router = APIRouter(prefix="/cuerpos-academicos", tags=["cuerpos-academicos"])
 
 
-@router.get("", response_model=RespuestaPaginada[CuerpoAcademicoRead])
+@router.get("", response_model=RespuestaPaginada[CuerpoAcademicoRead])  # type: ignore[misc]
 async def listar_cuerpos_academicos(
     dependencia_id: uuid.UUID | None = Query(default=None),
     limit: int = 50,
@@ -40,7 +40,7 @@ async def listar_cuerpos_academicos(
     )
 
 
-@router.get("/{id}", response_model=CuerpoAcademicoRead)
+@router.get("/{id}", response_model=CuerpoAcademicoRead)  # type: ignore[misc]
 async def obtener_cuerpo_academico(
     id: uuid.UUID,
     session: AsyncSession = Depends(get_db),

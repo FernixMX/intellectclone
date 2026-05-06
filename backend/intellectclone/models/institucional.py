@@ -22,9 +22,7 @@ class Dependencia(Base):
 
     __tablename__ = "dependencia"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     codigo: Mapped[str] = mapped_column(sa.String(50), unique=True, nullable=False)
     nombre: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     nombre_corto: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)
@@ -33,7 +31,7 @@ class Dependencia(Base):
     sitio_web: Mapped[str | None] = mapped_column(sa.String(500), nullable=True)
     descripcion: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
     activa: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=True)
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
     created_at: Mapped[sa.DateTime] = mapped_column(
@@ -57,9 +55,7 @@ class CuerpoAcademico(Base):
 
     __tablename__ = "cuerpo_academico"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     codigo: Mapped[str | None] = mapped_column(sa.String(50), unique=True, nullable=True)
     nombre: Mapped[str] = mapped_column(sa.String(500), nullable=False)
     estatus: Mapped[str | None] = mapped_column(sa.String(50), nullable=True)
@@ -68,12 +64,10 @@ class CuerpoAcademico(Base):
         sa.ForeignKey("dependencia.id", ondelete="SET NULL"),
         nullable=True,
     )
-    lineas_generacion: Mapped[list[str] | None] = mapped_column(
-        sa.ARRAY(sa.Text), nullable=True
-    )
+    lineas_generacion: Mapped[list[str] | None] = mapped_column(sa.ARRAY(sa.Text), nullable=True)
     fecha_registro: Mapped[sa.Date | None] = mapped_column(sa.Date, nullable=True)
     activo: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=True)
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
     created_at: Mapped[sa.DateTime] = mapped_column(
@@ -99,9 +93,7 @@ class AreaConocimiento(Base):
 
     __tablename__ = "area_conocimiento"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     codigo: Mapped[str] = mapped_column(sa.String(50), unique=True, nullable=False)
     nombre: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     descripcion: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
@@ -112,7 +104,7 @@ class AreaConocimiento(Base):
         nullable=True,
     )
     sistema_origen: Mapped[str | None] = mapped_column(sa.String(50), nullable=True)
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
     created_at: Mapped[sa.DateTime] = mapped_column(

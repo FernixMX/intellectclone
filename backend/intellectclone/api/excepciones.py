@@ -8,7 +8,6 @@ import uuid
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-
 # =============================================================================
 # Jerarquía de excepciones de dominio
 # =============================================================================
@@ -36,9 +35,7 @@ class EntidadDuplicada(IntellectCloneError):
         self.entity_type = entity_type
         self.campo = campo
         self.valor = valor
-        super().__init__(
-            f"{entity_type} con {campo}='{valor}' ya existe."
-        )
+        super().__init__(f"{entity_type} con {campo}='{valor}' ya existe.")
 
 
 class PermisoInsuficiente(IntellectCloneError):
@@ -56,9 +53,7 @@ class EstadoInvalido(IntellectCloneError):
         self.entity_type = entity_type
         self.estado_actual = estado_actual
         self.operacion = operacion
-        super().__init__(
-            f"{entity_type} en estado '{estado_actual}' no permite: {operacion}"
-        )
+        super().__init__(f"{entity_type} en estado '{estado_actual}' no permite: {operacion}")
 
 
 class PresupuestoExcedido(IntellectCloneError):
@@ -78,9 +73,7 @@ class PresupuestoExcedido(IntellectCloneError):
 # =============================================================================
 
 
-async def handler_entidad_no_encontrada(
-    request: Request, exc: EntidadNoEncontrada
-) -> JSONResponse:
+async def handler_entidad_no_encontrada(request: Request, exc: EntidadNoEncontrada) -> JSONResponse:
     """Traduce EntidadNoEncontrada a HTTP 404 con Problem Detail."""
     return JSONResponse(
         status_code=404,
@@ -97,9 +90,7 @@ async def handler_entidad_no_encontrada(
     )
 
 
-async def handler_entidad_duplicada(
-    request: Request, exc: EntidadDuplicada
-) -> JSONResponse:
+async def handler_entidad_duplicada(request: Request, exc: EntidadDuplicada) -> JSONResponse:
     """Traduce EntidadDuplicada a HTTP 409 con Problem Detail."""
     return JSONResponse(
         status_code=409,
@@ -116,9 +107,7 @@ async def handler_entidad_duplicada(
     )
 
 
-async def handler_permiso_insuficiente(
-    request: Request, exc: PermisoInsuficiente
-) -> JSONResponse:
+async def handler_permiso_insuficiente(request: Request, exc: PermisoInsuficiente) -> JSONResponse:
     """Traduce PermisoInsuficiente a HTTP 403 con Problem Detail."""
     return JSONResponse(
         status_code=403,
@@ -133,9 +122,7 @@ async def handler_permiso_insuficiente(
     )
 
 
-async def handler_estado_invalido(
-    request: Request, exc: EstadoInvalido
-) -> JSONResponse:
+async def handler_estado_invalido(request: Request, exc: EstadoInvalido) -> JSONResponse:
     """Traduce EstadoInvalido a HTTP 422 con Problem Detail."""
     return JSONResponse(
         status_code=422,
@@ -152,9 +139,7 @@ async def handler_estado_invalido(
     )
 
 
-async def handler_presupuesto_excedido(
-    request: Request, exc: PresupuestoExcedido
-) -> JSONResponse:
+async def handler_presupuesto_excedido(request: Request, exc: PresupuestoExcedido) -> JSONResponse:
     """Traduce PresupuestoExcedido a HTTP 402 con Problem Detail."""
     return JSONResponse(
         status_code=402,
@@ -176,8 +161,8 @@ def registrar_handlers(app: "FastAPI") -> None:  # type: ignore[name-defined]  #
     Registra todos los exception handlers de dominio en la aplicación FastAPI.
     Llamar desde main.py al crear la app.
     """
-    app.add_exception_handler(EntidadNoEncontrada, handler_entidad_no_encontrada)  # type: ignore[arg-type]
-    app.add_exception_handler(EntidadDuplicada, handler_entidad_duplicada)  # type: ignore[arg-type]
-    app.add_exception_handler(PermisoInsuficiente, handler_permiso_insuficiente)  # type: ignore[arg-type]
-    app.add_exception_handler(EstadoInvalido, handler_estado_invalido)  # type: ignore[arg-type]
-    app.add_exception_handler(PresupuestoExcedido, handler_presupuesto_excedido)  # type: ignore[arg-type]
+    app.add_exception_handler(EntidadNoEncontrada, handler_entidad_no_encontrada)
+    app.add_exception_handler(EntidadDuplicada, handler_entidad_duplicada)
+    app.add_exception_handler(PermisoInsuficiente, handler_permiso_insuficiente)
+    app.add_exception_handler(EstadoInvalido, handler_estado_invalido)
+    app.add_exception_handler(PresupuestoExcedido, handler_presupuesto_excedido)

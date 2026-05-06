@@ -34,9 +34,7 @@ class Simulacion(Base):
 
     __tablename__ = "simulacion"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Quién y cuándo
     creada_por: Mapped[uuid.UUID] = mapped_column(
@@ -52,22 +50,16 @@ class Simulacion(Base):
 
     # Configuración
     modelo_simulacion: Mapped[str | None] = mapped_column(sa.String(100), nullable=True)
-    temperatura: Mapped[float | None] = mapped_column(
-        sa.Numeric(3, 2), nullable=True, default=0.7
-    )
+    temperatura: Mapped[float | None] = mapped_column(sa.Numeric(3, 2), nullable=True, default=0.7)
     max_tokens_respuesta: Mapped[int | None] = mapped_column(
         sa.Integer, nullable=True, default=2000
     )
-    idioma_respuesta: Mapped[str] = mapped_column(
-        sa.String(10), nullable=False, default="es"
-    )
-    formato_esperado: Mapped[str] = mapped_column(
-        sa.String(50), nullable=False, default="libre"
-    )
+    idioma_respuesta: Mapped[str] = mapped_column(sa.String(10), nullable=False, default="es")
+    formato_esperado: Mapped[str] = mapped_column(sa.String(50), nullable=False, default="libre")
 
     # Cohorte
-    filtros_cohorte: Mapped[dict] = mapped_column(JSONB, nullable=False)  # type: ignore[type-arg]
-    gemelos_seleccionados: Mapped[list] = mapped_column(  # type: ignore[type-arg]
+    filtros_cohorte: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    gemelos_seleccionados: Mapped[list] = mapped_column(
         sa.ARRAY(UUID(as_uuid=True)), nullable=False
     )
     total_gemelos: Mapped[int] = mapped_column(sa.Integer, nullable=False)
@@ -78,46 +70,34 @@ class Simulacion(Base):
         nullable=False,
         default=EstadoSimulacion.borrador,
     )
-    progreso_porcentaje: Mapped[int] = mapped_column(
-        sa.SmallInteger, nullable=False, default=0
-    )
+    progreso_porcentaje: Mapped[int] = mapped_column(sa.SmallInteger, nullable=False, default=0)
 
     # Costos
-    costo_estimado_usd: Mapped[float | None] = mapped_column(
-        sa.Numeric(10, 4), nullable=True
-    )
-    costo_real_usd: Mapped[float | None] = mapped_column(
-        sa.Numeric(10, 4), nullable=True
-    )
+    costo_estimado_usd: Mapped[float | None] = mapped_column(sa.Numeric(10, 4), nullable=True)
+    costo_real_usd: Mapped[float | None] = mapped_column(sa.Numeric(10, 4), nullable=True)
     tokens_consumidos_total: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
 
     # Tiempos
-    iniciada_at: Mapped[datetime | None] = mapped_column(
-        sa.TIMESTAMP(timezone=True), nullable=True
-    )
+    iniciada_at: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True), nullable=True)
     completada_at: Mapped[datetime | None] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=True
     )
     duracion_ms: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
 
     # Síntesis
-    sintesis: Mapped[dict | None] = mapped_column(JSONB, nullable=True)  # type: ignore[type-arg]
+    sintesis: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     sintesis_generada_at: Mapped[datetime | None] = mapped_column(
         sa.TIMESTAMP(timezone=True), nullable=True
     )
     resumen_ejecutivo: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
     # Acceso
-    visibilidad: Mapped[str] = mapped_column(
-        sa.String(20), nullable=False, default="privada"
-    )
-    compartida_con: Mapped[list | None] = mapped_column(  # type: ignore[type-arg]
-        sa.ARRAY(UUID(as_uuid=True)), nullable=True
-    )
+    visibilidad: Mapped[str] = mapped_column(sa.String(20), nullable=False, default="privada")
+    compartida_con: Mapped[list | None] = mapped_column(sa.ARRAY(UUID(as_uuid=True)), nullable=True)
 
     error_mensaje: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
 
@@ -145,9 +125,7 @@ class RespuestaSimulacion(Base):
 
     __tablename__ = "respuesta_simulacion"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     simulacion_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         sa.ForeignKey("simulacion.id", ondelete="CASCADE"),
@@ -177,12 +155,8 @@ class RespuestaSimulacion(Base):
         sa.Enum(IntensidadRespuesta, name="intensidad_respuesta", create_type=False),
         nullable=True,
     )
-    temas_tocados: Mapped[list[str] | None] = mapped_column(
-        sa.ARRAY(sa.Text), nullable=True
-    )
-    citas_clave: Mapped[list[str] | None] = mapped_column(
-        sa.ARRAY(sa.Text), nullable=True
-    )
+    temas_tocados: Mapped[list[str] | None] = mapped_column(sa.ARRAY(sa.Text), nullable=True)
+    citas_clave: Mapped[list[str] | None] = mapped_column(sa.ARRAY(sa.Text), nullable=True)
     sentimiento: Mapped[float | None] = mapped_column(sa.Numeric(4, 3), nullable=True)
 
     # Linaje de la ejecución
@@ -196,11 +170,9 @@ class RespuestaSimulacion(Base):
     error_mensaje: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
 
     # Embedding de la respuesta
-    embedding_respuesta: Mapped[list[float] | None] = mapped_column(
-        Vector(1536), nullable=True
-    )
+    embedding_respuesta: Mapped[list[float] | None] = mapped_column(Vector(1536), nullable=True)
 
-    metadatos: Mapped[dict] = mapped_column(  # type: ignore[type-arg]
+    metadatos: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")
     )
 
@@ -211,10 +183,6 @@ class RespuestaSimulacion(Base):
     __table_args__ = (sa.UniqueConstraint("simulacion_id", "gemelo_id"),)
 
     # Relaciones
-    simulacion: Mapped["Simulacion"] = relationship(
-        "Simulacion", back_populates="respuestas"
-    )
-    gemelo: Mapped["Gemelo"] = relationship(
-        "Gemelo", back_populates="respuestas_simulacion"
-    )
+    simulacion: Mapped["Simulacion"] = relationship("Simulacion", back_populates="respuestas")
+    gemelo: Mapped["Gemelo"] = relationship("Gemelo", back_populates="respuestas_simulacion")
     persona: Mapped["Persona"] = relationship("Persona")

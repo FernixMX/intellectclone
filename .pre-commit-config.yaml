@@ -40,14 +40,15 @@ repos:
 
   # ---------------------------------------------------------------------------
   # Frontend: prettier
+  # Usamos local para que el binario de frontend/node_modules resuelva
+  # prettier-plugin-tailwindcss correctamente (prettier 3.x requiere que el
+  # plugin esté en node_modules accesible desde donde corre el proceso).
   # ---------------------------------------------------------------------------
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v4.0.0-alpha.8
+  - repo: local
     hooks:
       - id: prettier
+        name: prettier
+        entry: bash -c 'cd frontend && exec node_modules/.bin/prettier --write "${@#frontend/}"' --
+        language: system
         files: ^frontend/src/
         types_or: [ts, tsx, json, css]
-        additional_dependencies:
-          - prettier@3.5.0
-          - prettier-plugin-tailwindcss@0.6.0
-          - tailwindcss@4.1.5

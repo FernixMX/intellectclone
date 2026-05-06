@@ -18,7 +18,7 @@ from intellectclone.schemas.dependencia import DependenciaRead
 router = APIRouter(prefix="/dependencias", tags=["dependencias"])
 
 
-@router.get("", response_model=RespuestaPaginada[DependenciaRead])
+@router.get("", response_model=RespuestaPaginada[DependenciaRead])  # type: ignore[misc]
 async def listar_dependencias(
     limit: int = 50,
     offset: int = 0,
@@ -37,7 +37,7 @@ async def listar_dependencias(
     )
 
 
-@router.get("/{id}", response_model=DependenciaRead)
+@router.get("/{id}", response_model=DependenciaRead)  # type: ignore[misc]
 async def obtener_dependencia(
     id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
