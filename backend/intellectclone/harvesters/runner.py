@@ -8,6 +8,7 @@ Uso:
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from datetime import date
 from typing import Any
@@ -52,17 +53,14 @@ async def ejecutar_cosecha(
     config: dict[str, Any],
     session: AsyncSession,
     *,
-    max_errores_consecutivos: int = 5,
+    max_errores_consecutivos: int = 10,
 ) -> dict[str, Any]:
     """
     Orquesta una sesión de cosecha completa para el fuente_tipo dado.
 
-    Flujo:
-    1. Instancia el harvester y lo configura.
-    2. Itera el generador async `cosechar()`.
-    3. Persiste cada ResultadoCosecha en DB (upsert Paper + Persona + Coautoria).
-    4. Ante error, llama a `manejar_error()` y actúa según la decisión.
-    5. Devuelve un resumen al finalizar.
+    Cada registro se envuelve en un SAVEPOINT individual para que un error
+    de integridad (DOI/ORCID duplicado) solo descarte ese registro, sin
+    hacer rollback del batch completo.
     """
     clase = obtener_harvester(fuente_tipo)
     harvester = clase()
@@ -79,7 +77,8 @@ async def ejecutar_cosecha(
     try:
         async for resultado in harvester.cosechar(cosecha_id, modo, parametros):
             try:
-                es_nuevo = await _persistir_resultado(resultado, session, cosecha_id)
+                async with session.begin_nested():
+                    es_nuevo = await _persistir_resultado(resultado, session, cosecha_id)
                 total += 1
                 if es_nuevo:
                     nuevos += 1
@@ -97,15 +96,13 @@ async def ejecutar_cosecha(
                     log.debug("cosecha.batch_commit", total=total)
 
             except IntegrityError as exc:
-                await session.rollback()
                 errores += 1
                 log.warning(
                     "cosecha.integridad_saltada",
                     fuente_id=resultado.fuente_id,
-                    error=str(exc.orig),
+                    error=str(getattr(exc, "orig", exc)),
                 )
             except Exception as exc:
-                await session.rollback()
                 errores += 1
                 errores_consecutivos += 1
                 log.error(
@@ -128,12 +125,8 @@ async def ejecutar_cosecha(
     except Exception as exc:
         await session.rollback()
 
-        contexto: dict[str, Any] = {
-            "cosecha_id": cosecha_id,
-            "fuente_tipo": fuente_tipo,
-        }
-        intento = errores_consecutivos
-        decision = harvester.manejar_error(exc, contexto, intento)
+        contexto: dict[str, Any] = {"cosecha_id": cosecha_id, "fuente_tipo": fuente_tipo}
+        decision = harvester.manejar_error(exc, contexto, errores_consecutivos)
 
         if decision.accion == AccionIntento.abortar:
             await _registrar_error_en_cosecha(session, cosecha_id, str(exc), NivelError.critical)
@@ -141,8 +134,6 @@ async def ejecutar_cosecha(
             raise
 
         if decision.accion == AccionIntento.reintentar:
-            import asyncio
-
             log.info("cosecha.esperando_reintento", delay=decision.delay_segundos)
             await asyncio.sleep(decision.delay_segundos)
 
@@ -164,7 +155,12 @@ async def _persistir_resultado(
     session: AsyncSession,
     cosecha_id: str,
 ) -> bool:
-    """Persiste un resultado de cosecha: upsert Paper + Persona + Coautoria. Retorna True si fue nuevo."""
+    """
+    Upsert Paper + Persona + Coautoria para un resultado de cosecha.
+
+    Para conflictos de DOI (paper) u ORCID (persona), reintenta sin ese campo
+    dentro de un savepoint anidado para no perder el registro.
+    """
     datos = resultado.datos
 
     openalex_id: str | None = str(datos.get("openalex_id") or "").strip() or None
@@ -181,60 +177,19 @@ async def _persistir_resultado(
     else:
         fecha_pub = fecha_pub_raw
 
-    paper_id = uuid.uuid4()
-    paper_stmt = pg_insert(Paper).values(
-        id=paper_id,
+    doi: str | None = datos.get("doi")
+
+    paper_db_id, is_nuevo = await _upsert_paper(
+        session=session,
         openalex_id=openalex_id,
-        doi=datos.get("doi"),
+        doi=doi,
         titulo=titulo,
-        titulo_normalizado=datos.get("titulo_normalizado"),
-        abstract_texto=datos.get("abstract_texto"),
-        año=datos.get("año"),
-        fecha_publicacion=fecha_pub,
-        idioma=datos.get("idioma"),
-        revista=datos.get("revista"),
-        issn=datos.get("issn"),
-        editorial=datos.get("editorial"),
-        volumen=datos.get("volumen"),
-        numero=datos.get("numero"),
-        paginas=datos.get("paginas"),
-        open_access=datos.get("open_access"),
-        url_pdf=datos.get("url_pdf"),
-        url_landing=datos.get("url_landing"),
-        total_citas=int(datos.get("total_citas") or 0),
-        citas_por_año=datos.get("citas_por_año"),
-        conceptos=datos.get("conceptos"),
-        tipo=datos.get("tipo", "otro"),
-        fuente_origen=TipoFuente.openalex.value,
-        cosecha_id=uuid.UUID(cosecha_id),
-        metadatos={},
+        fecha_pub=fecha_pub,
+        datos=datos,
+        cosecha_id=cosecha_id,
     )
-
-    if openalex_id:
-        paper_stmt = paper_stmt.on_conflict_do_update(
-            index_elements=["openalex_id"],
-            set_={
-                "titulo": paper_stmt.excluded.titulo,
-                "abstract_texto": paper_stmt.excluded.abstract_texto,
-                "total_citas": paper_stmt.excluded.total_citas,
-                "citas_por_año": paper_stmt.excluded.citas_por_año,
-                "url_pdf": paper_stmt.excluded.url_pdf,
-                "url_landing": paper_stmt.excluded.url_landing,
-                "open_access": paper_stmt.excluded.open_access,
-                "updated_at": func.now(),
-            },
-        ).returning(Paper.id, Paper.created_at, Paper.updated_at)
-    else:
-        paper_stmt = paper_stmt.on_conflict_do_nothing().returning(
-            Paper.id, Paper.created_at, Paper.updated_at
-        )
-
-    paper_row = (await session.execute(paper_stmt)).first()
-    if paper_row is None:
+    if paper_db_id is None:
         return False
-
-    paper_db_id: uuid.UUID = paper_row[0]
-    is_nuevo: bool = paper_row[1] == paper_row[2]  # created_at == updated_at → nuevo
 
     autorships: list[dict[str, Any]] = list(datos.get("autorships") or [])
     for idx, authorship in enumerate(autorships):
@@ -254,40 +209,22 @@ async def _persistir_resultado(
             "raw_affiliation_strings"
         )
         if isinstance(raw_aff_raw, list):
-            raw_aff = "; ".join(str(x) for x in raw_aff_raw)[:500] or None
+            raw_aff: str | None = "; ".join(str(x) for x in raw_aff_raw)[:500] or None
         else:
             raw_aff = str(raw_aff_raw or "")[:500] or None
 
-        persona_values: dict[str, Any] = {
-            "id": uuid.uuid4(),
-            "nombre_completo": display_name,
-            "nombre_normalizado": display_name.lower(),
-            "tipo": TipoPersona.investigador.value,
-            "fuente_principal": TipoFuente.openalex.value,
-            "metadatos": {},
-        }
-        if author_oa_id:
-            persona_values["openalex_id"] = author_oa_id
-        if orcid:
-            persona_values["orcid"] = orcid
-
-        p_ins = pg_insert(Persona).values(**persona_values)
-        if author_oa_id:
-            persona_stmt = p_ins.on_conflict_do_update(
-                index_elements=["openalex_id"],
-                set_={"nombre_completo": p_ins.excluded.nombre_completo},
-            ).returning(Persona.id)
-        else:
-            persona_stmt = p_ins.on_conflict_do_nothing().returning(Persona.id)
-
-        persona_result = await session.execute(persona_stmt)
-        persona_id_row = persona_result.scalar()
-        if persona_id_row is None:
+        persona_id = await _upsert_persona(
+            session=session,
+            author_oa_id=author_oa_id,
+            display_name=display_name,
+            orcid=orcid,
+        )
+        if persona_id is None:
             continue
 
         coautoria_stmt = pg_insert(Coautoria).values(
             id=uuid.uuid4(),
-            persona_id=persona_id_row,
+            persona_id=persona_id,
             paper_id=paper_db_id,
             posicion=idx + 1,
             total_autores=len(autorships),
@@ -298,10 +235,118 @@ async def _persistir_resultado(
             confianza_match=1.0,
             metodo_match="openalex",
         )
-        coautoria_stmt = coautoria_stmt.on_conflict_do_nothing()
-        await session.execute(coautoria_stmt)
+        await session.execute(coautoria_stmt.on_conflict_do_nothing())
 
     return is_nuevo
+
+
+async def _upsert_paper(
+    *,
+    session: AsyncSession,
+    openalex_id: str | None,
+    doi: str | None,
+    titulo: str,
+    fecha_pub: date | None,
+    datos: dict[str, Any],
+    cosecha_id: str,
+) -> tuple[uuid.UUID | None, bool]:
+    """Upsert Paper. Si hay conflicto de DOI, reintenta sin DOI."""
+
+    def _build_stmt(use_doi: str | None) -> Any:
+        ins = pg_insert(Paper).values(
+            id=uuid.uuid4(),
+            openalex_id=openalex_id,
+            doi=use_doi,
+            titulo=titulo,
+            titulo_normalizado=datos.get("titulo_normalizado"),
+            abstract_texto=datos.get("abstract_texto"),
+            año=datos.get("año"),
+            fecha_publicacion=fecha_pub,
+            idioma=datos.get("idioma"),
+            revista=datos.get("revista"),
+            issn=datos.get("issn"),
+            editorial=datos.get("editorial"),
+            volumen=datos.get("volumen"),
+            numero=datos.get("numero"),
+            paginas=datos.get("paginas"),
+            open_access=datos.get("open_access"),
+            url_pdf=datos.get("url_pdf"),
+            url_landing=datos.get("url_landing"),
+            total_citas=int(datos.get("total_citas") or 0),
+            citas_por_año=datos.get("citas_por_año"),
+            conceptos=datos.get("conceptos"),
+            tipo=datos.get("tipo", "otro"),
+            fuente_origen=TipoFuente.openalex.value,
+            cosecha_id=uuid.UUID(cosecha_id),
+            metadatos={},
+        )
+        if openalex_id:
+            return ins.on_conflict_do_update(
+                index_elements=["openalex_id"],
+                set_={
+                    "titulo": ins.excluded.titulo,
+                    "abstract_texto": ins.excluded.abstract_texto,
+                    "total_citas": ins.excluded.total_citas,
+                    "citas_por_año": ins.excluded.citas_por_año,
+                    "url_pdf": ins.excluded.url_pdf,
+                    "url_landing": ins.excluded.url_landing,
+                    "open_access": ins.excluded.open_access,
+                    "updated_at": func.now(),
+                },
+            ).returning(Paper.id, Paper.created_at, Paper.updated_at)
+        return ins.on_conflict_do_nothing().returning(Paper.id, Paper.created_at, Paper.updated_at)
+
+    try:
+        async with session.begin_nested():
+            row = (await session.execute(_build_stmt(doi))).first()
+    except IntegrityError:
+        # DOI conflict with a different paper: retry without DOI
+        row = (await session.execute(_build_stmt(None))).first()
+
+    if row is None:
+        return None, False
+    return row[0], row[1] == row[2]
+
+
+async def _upsert_persona(
+    *,
+    session: AsyncSession,
+    author_oa_id: str | None,
+    display_name: str,
+    orcid: str | None,
+) -> uuid.UUID | None:
+    """Upsert Persona. Si hay conflicto de ORCID, reintenta sin ORCID."""
+
+    def _build_stmt(use_orcid: str | None) -> Any:
+        values: dict[str, Any] = {
+            "id": uuid.uuid4(),
+            "nombre_completo": display_name,
+            "nombre_normalizado": display_name.lower(),
+            "tipo": TipoPersona.investigador.value,
+            "fuente_principal": TipoFuente.openalex.value,
+            "metadatos": {},
+        }
+        if author_oa_id:
+            values["openalex_id"] = author_oa_id
+        if use_orcid:
+            values["orcid"] = use_orcid
+
+        ins = pg_insert(Persona).values(**values)
+        if author_oa_id:
+            return ins.on_conflict_do_update(
+                index_elements=["openalex_id"],
+                set_={"nombre_completo": ins.excluded.nombre_completo},
+            ).returning(Persona.id)
+        return ins.on_conflict_do_nothing().returning(Persona.id)
+
+    try:
+        async with session.begin_nested():
+            row = (await session.execute(_build_stmt(orcid))).scalar()
+    except IntegrityError:
+        # ORCID conflict: retry without ORCID
+        row = (await session.execute(_build_stmt(None))).scalar()
+
+    return uuid.UUID(str(row)) if row is not None else None
 
 
 def _short_id(url: str) -> str | None:
