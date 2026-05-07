@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cuerpos Académicos UAT - Producción Científica</title>
+</head>
+<body>
+<form method="post" action="CampusCA.aspx" id="form1">
+<input type="hidden" name="__VIEWSTATE" value="abc123viewstate" />
+<input type="hidden" name="__EVENTVALIDATION" value="xyz789validation" />
+
+<div id="ContentPlaceHolder1">
+  <h2>Cuerpos Académicos por Campus</h2>
+
+  <div class="filtros">
+    <label for="ContentPlaceHolder1_ddlCampus">Campus:</label>
+    <select id="ContentPlaceHolder1_ddlCampus" name="ctl00$ContentPlaceHolder1$ddlCampus">
+      <option value="">-- Todos --</option>
+      <option value="victoria" selected="selected">Cd. Victoria</option>
+      <option value="tampico">Tampico</option>
+      <option value="reynosa">Reynosa</option>
+    </select>
+    <input type="submit" id="ContentPlaceHolder1_btnBuscar" value="Buscar" />
+  </div>
+
+  <table id="ContentPlaceHolder1_GridView1" cellpadding="4" cellspacing="0"
+         style="border-collapse:collapse;width:100%;">
+    <tr style="background-color:#4472C4;color:White;font-weight:bold;">
+      <th scope="col">Campus</th>
+      <th scope="col">Nombre del CA</th>
+      <th scope="col">Clave</th>
+      <th scope="col">Grado de Consolidación</th>
+      <th scope="col">Disciplina</th>
+      <th scope="col">Responsable</th>
+    </tr>
+    <tr style="background-color:#E8EEFF;">
+      <td>Cd. Victoria</td>
+      <td>Biotecnología Agropecuaria</td>
+      <td>UAT-CA-001</td>
+      <td>Consolidado</td>
+      <td>Ciencias Agropecuarias y Biotecnología</td>
+      <td>García López, Juan</td>
+    </tr>
+    <tr style="background-color:White;">
+      <td>Cd. Victoria</td>
+      <td>Matemáticas Aplicadas y Cómputo</td>
+      <td>UAT-CA-012</td>
+      <td>En Consolidación</td>
+      <td>Matemáticas</td>
+      <td>Pérez Torres, Carlos</td>
+    </tr>
+    <tr style="background-color:#E8EEFF;">
+      <td>Cd. Victoria</td>
+      <td>Nanomateriales y Energía Sustentable</td>
+      <td>UAT-CA-028</td>
+      <td>En Formación</td>
+      <td>Ingeniería y Tecnología</td>
+      <td>Rodríguez Sánchez, Pedro</td>
+    </tr>
+  </table>
+
+</div>
+</form>
+</body>
+</html>

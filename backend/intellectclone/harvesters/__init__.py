@@ -23,6 +23,7 @@ from intellectclone.harvesters.runner import (
     obtener_harvester,
     registrar_harvester,
 )
+from intellectclone.harvesters.snii_uat import SNIIUATHarvester
 from intellectclone.harvesters.tipos import (
     AccionIntento,
     NivelError,
@@ -39,6 +40,7 @@ __all__ = [
     "ORCIDEnricher",
     "OpenAlexHarvester",
     "RIUATHarvester",
+    "SNIIUATHarvester",
     "VuFindUATHarvester",
     "ResultadoCosecha",
     "ResultadoDeduplicacion",

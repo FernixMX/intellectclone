@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Buscador de Investigadores SNII - UAT</title>
+</head>
+<body>
+<form method="post" action="Buscador.aspx" id="form1">
+<input type="hidden" name="__VIEWSTATE" value="buscadorviewstate" />
+<input type="hidden" name="__EVENTVALIDATION" value="buscadorvalidation" />
+
+<div id="ContentPlaceHolder1">
+  <h2>Investigadores SNII</h2>
+
+  <div class="filtros">
+    <label for="ContentPlaceHolder1_ddlDependencia">Dependencia:</label>
+    <select id="ContentPlaceHolder1_ddlDependencia" name="ctl00$ContentPlaceHolder1$ddlDependencia">
+      <option value="">-- Todas --</option>
+      <option value="FCAT" selected="selected">Fac. Ciencias Agropecuarias y Tecnología</option>
+      <option value="FCITEC">Fac. de Ingeniería y Ciencias</option>
+      <option value="FMEDIC">Fac. de Medicina</option>
+    </select>
+    <input type="submit" id="ContentPlaceHolder1_btnBuscar" value="Buscar" />
+  </div>
+
+  <table id="ContentPlaceHolder1_GridViewInvestigadores" cellpadding="4" cellspacing="0"
+         style="border-collapse:collapse;width:100%;">
+    <tr style="background-color:#4472C4;color:White;font-weight:bold;">
+      <th scope="col">Nombre del Investigador</th>
+      <th scope="col">Campus</th>
+      <th scope="col">Cuerpo Académico</th>
+      <th scope="col">Nivel SNII</th>
+      <th scope="col">Vigencia</th>
+    </tr>
+    <tr style="background-color:#E8EEFF;">
+      <td>García López, Juan</td>
+      <td>Cd. Victoria</td>
+      <td>Biotecnología Agropecuaria</td>
+      <td>Nivel I</td>
+      <td>2025</td>
+    </tr>
+    <tr style="background-color:White;">
+      <td>Martínez Reyes, Ana</td>
+      <td>Tampico</td>
+      <td>Ingeniería Computacional</td>
+      <td>Candidato</td>
+      <td>2024</td>
+    </tr>
+    <tr style="background-color:#E8EEFF;">
+      <td>López Hernández, María</td>
+      <td>Matamoros</td>
+      <td></td>
+      <td>Nivel II</td>
+      <td>2026</td>
+    </tr>
+  </table>
+
+</div>
+</form>
+</body>
+</html>
