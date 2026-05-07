@@ -23,7 +23,7 @@ from intellectclone.models.enums import TipoFuente, TipoPaper
 logger: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
 
 _BASE_URL = "https://api.openalex.org"
-_ROR_UAT_DEFAULT = "https://ror.org/00qm7vk32"
+_ROR_UAT_DEFAULT = "https://ror.org/04hhneb29"
 _PER_PAGE = 200
 
 _OPENALEX_TIPO: dict[str, str] = {

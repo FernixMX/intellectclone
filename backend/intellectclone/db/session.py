@@ -44,6 +44,13 @@ def _get_session_factory() -> async_sessionmaker[AsyncSession]:
     return _session_factory
 
 
+def reset_engine() -> None:
+    """Resetea engine y factory cacheados. Llamar al inicio de cada tarea Celery tras fork."""
+    global _engine, _session_factory
+    _engine = None
+    _session_factory = None
+
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependencia FastAPI que provee una sesión de base de datos por request.

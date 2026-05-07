@@ -69,7 +69,7 @@ class Settings(BaseSettings):
     # Cosecha
     # -------------------------------------------------------------------------
     openalex_polite_email: str = ""
-    ror_id_uat: str = "https://ror.org/00qm7vk32"
+    ror_id_uat: str = "https://ror.org/04hhneb29"
 
     @field_validator("jwt_secret")
     @classmethod

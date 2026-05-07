@@ -13,7 +13,7 @@ from typing import Any
 import structlog
 
 from intellectclone.celery_app import celery_app
-from intellectclone.db.session import _get_session_factory
+from intellectclone.db.session import _get_session_factory, reset_engine
 from intellectclone.harvesters.runner import ejecutar_cosecha
 from intellectclone.models.enums import EstadoCosecha
 from intellectclone.models.sistema import Cosecha
@@ -38,6 +38,7 @@ def cosechar_fuente(
     Tarea Celery sincrónica que envuelve el flujo async de cosecha.
     Actualiza el registro Cosecha en DB antes y después de ejecutar.
     """
+    reset_engine()
     return asyncio.run(
         _ejecutar_cosecha_async(self.request.id, cosecha_id, fuente_tipo, modo, parametros, config)
     )
