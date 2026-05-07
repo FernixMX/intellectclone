@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -174,13 +174,22 @@ def test_obtener_harvester_no_registrado() -> None:
 # ---------------------------------------------------------------------------
 
 
+def _make_session_mock() -> MagicMock:
+    """Crea un mock de AsyncSession con commit/rollback/begin_nested configurados."""
+    session = MagicMock()
+    session.commit = AsyncMock()
+    session.rollback = AsyncMock()
+    nested_cm = MagicMock()
+    nested_cm.__aenter__ = AsyncMock(return_value=None)
+    nested_cm.__aexit__ = AsyncMock(return_value=False)
+    session.begin_nested = MagicMock(return_value=nested_cm)
+    return session
+
+
 @pytest.mark.asyncio
 async def test_ejecutar_cosecha_sin_resultados() -> None:
     registrar_harvester("vacio_test", HarvesterConDatos)
     HarvesterConDatos._resultados = []
-
-    session = MagicMock()
-    session.add = MagicMock()
 
     resumen = await ejecutar_cosecha(
         cosecha_id="cosecha-001",
@@ -188,7 +197,7 @@ async def test_ejecutar_cosecha_sin_resultados() -> None:
         modo="total",
         parametros={},
         config={},
-        session=session,
+        session=_make_session_mock(),
     )
 
     assert resumen["total"] == 0
@@ -206,15 +215,18 @@ async def test_ejecutar_cosecha_con_resultados() -> None:
         ResultadoCosecha(datos={"id": "3"}, fuente_id="f3", es_nuevo=True),
     ]
 
-    session = MagicMock()
-    resumen = await ejecutar_cosecha(
-        cosecha_id="cosecha-002",
-        fuente_tipo="datos_test",
-        modo="incremental",
-        parametros={},
-        config={},
-        session=session,
-    )
+    with patch(
+        "intellectclone.harvesters.runner._persistir_resultado",
+        new=AsyncMock(side_effect=[True, False, True]),
+    ):
+        resumen = await ejecutar_cosecha(
+            cosecha_id="cosecha-002",
+            fuente_tipo="datos_test",
+            modo="incremental",
+            parametros={},
+            config={},
+            session=_make_session_mock(),
+        )
 
     assert resumen["total"] == 3
     assert resumen["nuevos"] == 2

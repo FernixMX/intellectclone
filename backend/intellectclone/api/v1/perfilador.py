@@ -13,9 +13,34 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from intellectclone.db.session import get_db
+from intellectclone.perfilador.metricas import actualizar_metricas_todas
 
 router = APIRouter(prefix="/perfilador", tags=["perfilador"])
+
+
+class MetricasResultado(BaseModel):
+    personas_actualizadas: int
+
+
+@router.post(  # type: ignore[misc]
+    "/metricas/recalcular",
+    response_model=MetricasResultado,
+    summary="Recalcular métricas bibliométricas de todas las personas",
+)
+async def recalcular_metricas(
+    session: AsyncSession = Depends(get_db),
+) -> MetricasResultado:
+    """
+    Recalcula indice_h, indice_i10, primera_publicacion, ultima_publicacion,
+    total_publicaciones y total_citas para todas las personas con coautorias.
+    """
+    n = await actualizar_metricas_todas(session)
+    return MetricasResultado(personas_actualizadas=n)
 
 
 @router.post(  # type: ignore[misc]
