@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
+                             http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2024-01-15T10:00:01Z</responseDate>
+  <request verb="ListRecords" resumptionToken="token-pagina-2-xyz">https://riuat.uat.edu.mx/oai/request</request>
+  <ListRecords>
+
+    <record>
+      <header>
+        <identifier>oai:riuat.uat.edu.mx:123456789/78</identifier>
+        <datestamp>2020-09-15T00:00:00Z</datestamp>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/
+                                       http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+          <dc:title>Análisis genómico de variedades de sorgo resistentes a sequía</dc:title>
+          <dc:creator>López Hernández, María</dc:creator>
+          <dc:contributor>Pérez Torres, Carlos</dc:contributor>
+          <dc:contributor>Ramírez Castro, Luisa</dc:contributor>
+          <dc:description>Tesis que analiza el genoma de sorgo (Sorghum bicolor) bajo condiciones de estrés hídrico.</dc:description>
+          <dc:date>2020-09-15</dc:date>
+          <dc:type>Tesis de Maestría</dc:type>
+          <dc:identifier>https://riuat.uat.edu.mx/handle/123456789/78</dc:identifier>
+          <dc:language>es</dc:language>
+        </oai_dc:dc>
+      </metadata>
+    </record>
+
+    <resumptionToken/>
+  </ListRecords>
+</OAI-PMH>

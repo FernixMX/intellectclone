@@ -15,6 +15,7 @@ from intellectclone.harvesters.normalizer import (
     ratio_similitud,
 )
 from intellectclone.harvesters.openalex import OpenAlexHarvester, reconstruir_abstract
+from intellectclone.harvesters.riuat import RIUATHarvester
 from intellectclone.harvesters.runner import (
     ejecutar_cosecha,
     obtener_harvester,
@@ -33,6 +34,7 @@ __all__ = [
     "BaseHarvester",
     "NivelError",
     "OpenAlexHarvester",
+    "RIUATHarvester",
     "VuFindUATHarvester",
     "ResultadoCosecha",
     "ResultadoDeduplicacion",

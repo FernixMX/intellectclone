@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
+                             http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2024-01-15T10:00:00Z</responseDate>
+  <request verb="ListRecords" metadataPrefix="oai_dc">https://riuat.uat.edu.mx/oai/request</request>
+  <ListRecords>
+
+    <record>
+      <header>
+        <identifier>oai:riuat.uat.edu.mx:123456789/42</identifier>
+        <datestamp>2022-03-10T00:00:00Z</datestamp>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/
+                                       http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+          <dc:title>Impacto de la nanotecnología en la agricultura sustentable</dc:title>
+          <dc:creator>García López, Juan</dc:creator>
+          <dc:creator>Martínez Reyes, Ana</dc:creator>
+          <dc:description>Este artículo analiza el impacto de nanopartículas en cultivos de maíz.</dc:description>
+          <dc:date>2022-03-10</dc:date>
+          <dc:type>Article</dc:type>
+          <dc:identifier>https://riuat.uat.edu.mx/handle/123456789/42</dc:identifier>
+          <dc:identifier>https://doi.org/10.1016/j.nano.2022.42</dc:identifier>
+          <dc:language>es</dc:language>
+        </oai_dc:dc>
+      </metadata>
+    </record>
+
+    <record>
+      <header status="deleted">
+        <identifier>oai:riuat.uat.edu.mx:123456789/10</identifier>
+        <datestamp>2023-01-01T00:00:00Z</datestamp>
+      </header>
+    </record>
+
+    <record>
+      <header>
+        <identifier>oai:riuat.uat.edu.mx:123456789/55</identifier>
+        <datestamp>2021-06-01T00:00:00Z</datestamp>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/
+                                       http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+          <dc:title>Modelado estadístico de variables climáticas en Tamaulipas</dc:title>
+          <dc:creator>Rodríguez Sánchez, Pedro</dc:creator>
+          <dc:description>Análisis de series temporales de temperatura y precipitación.</dc:description>
+          <dc:date>2021-06-01</dc:date>
+          <dc:type>Journal Article</dc:type>
+          <dc:identifier>https://riuat.uat.edu.mx/handle/123456789/55</dc:identifier>
+          <dc:language>es</dc:language>
+        </oai_dc:dc>
+      </metadata>
+    </record>
+
+    <resumptionToken completeListSize="3" cursor="0">token-pagina-2-xyz</resumptionToken>
+  </ListRecords>
+</OAI-PMH>

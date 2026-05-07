@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
+                             http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2024-01-15T10:00:00Z</responseDate>
+  <request verb="ListRecords" metadataPrefix="oai_dc" set="col_999">https://riuat.uat.edu.mx/oai/request</request>
+  <error code="noRecordsMatch">No records found matching the criteria.</error>
+</OAI-PMH>
