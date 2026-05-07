@@ -1,0 +1,96 @@
+{
+  "last-modified-date": {"value": 1700000000000},
+  "group": [
+    {
+      "last-modified-date": {"value": 1700000000000},
+      "work-summary": [
+        {
+          "put-code": 12345,
+          "path": "/0000-0001-5109-3700/work/12345",
+          "title": {
+            "title": {"value": "Impacto de la nanotecnología en la agricultura sustentable"},
+            "subtitle": null,
+            "translated-title": null
+          },
+          "type": "journal-article",
+          "publication-date": {
+            "year": {"value": "2022"},
+            "month": {"value": "03"},
+            "day": {"value": "10"}
+          },
+          "journal-title": {"value": "Nanomaterials"},
+          "external-ids": {
+            "external-id": [
+              {
+                "external-id-type": "doi",
+                "external-id-value": "10.1016/j.nano.2022.42",
+                "external-id-url": {"value": "https://doi.org/10.1016/j.nano.2022.42"},
+                "external-id-relationship": "self"
+              }
+            ]
+          },
+          "visibility": "public",
+          "source": {
+            "source-client-id": null,
+            "source-orcid": {"path": "0000-0001-5109-3700"}
+          }
+        }
+      ]
+    },
+    {
+      "last-modified-date": {"value": 1680000000000},
+      "work-summary": [
+        {
+          "put-code": 12346,
+          "path": "/0000-0001-5109-3700/work/12346",
+          "title": {
+            "title": {"value": "Modelado estadístico de variables climáticas en Tamaulipas"},
+            "subtitle": null,
+            "translated-title": null
+          },
+          "type": "journal-article",
+          "publication-date": {
+            "year": {"value": "2021"},
+            "month": null,
+            "day": null
+          },
+          "journal-title": {"value": "Atmósfera"},
+          "external-ids": {
+            "external-id": []
+          },
+          "visibility": "public",
+          "source": {
+            "source-client-id": null,
+            "source-orcid": {"path": "0000-0001-5109-3700"}
+          }
+        }
+      ]
+    },
+    {
+      "last-modified-date": {"value": 1620000000000},
+      "work-summary": [
+        {
+          "put-code": 12347,
+          "path": "/0000-0001-5109-3700/work/12347",
+          "title": {
+            "title": {"value": ""},
+            "subtitle": null,
+            "translated-title": null
+          },
+          "type": "other",
+          "publication-date": null,
+          "journal-title": null,
+          "external-ids": {
+            "external-id": []
+          },
+          "visibility": "public",
+          "source": {
+            "source-client-id": null,
+            "source-orcid": {"path": "0000-0001-5109-3700"}
+          }
+        }
+      ]
+    }
+  ],
+  "path": "/0000-0001-5109-3700/works"
+}

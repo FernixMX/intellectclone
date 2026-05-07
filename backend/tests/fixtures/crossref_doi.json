@@ -1,0 +1,46 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "DOI": "10.1016/j.nano.2022.42",
+    "title": ["Impacto de la nanotecnología en la agricultura sustentable"],
+    "author": [
+      {
+        "family": "García López",
+        "given": "Juan",
+        "sequence": "first",
+        "affiliation": []
+      },
+      {
+        "family": "Martínez Reyes",
+        "given": "Ana",
+        "sequence": "additional",
+        "affiliation": []
+      }
+    ],
+    "type": "journal-article",
+    "published": {
+      "date-parts": [[2022, 3, 10]]
+    },
+    "container-title": ["Nanomaterials"],
+    "ISSN": ["2079-4991"],
+    "publisher": "MDPI AG",
+    "volume": "12",
+    "issue": "6",
+    "page": "42",
+    "is-referenced-by-count": 15,
+    "language": "es",
+    "deposited": {
+      "date-parts": [[2023, 1, 15]],
+      "timestamp": 1673740800000
+    },
+    "score": 1.0,
+    "resource": {
+      "primary": {
+        "URL": "https://www.mdpi.com/2079-4991/12/6/42"
+      }
+    },
+    "URL": "http://dx.doi.org/10.1016/j.nano.2022.42"
+  }
+}

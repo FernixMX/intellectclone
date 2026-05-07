@@ -6,6 +6,7 @@ Importar harvesters concretos aquí activa su auto-registro en el registry.
 """
 
 from intellectclone.harvesters.base import BaseHarvester
+from intellectclone.harvesters.crossref_enricher import CrossrefEnricher
 from intellectclone.harvesters.deduplicator import ResultadoDeduplicacion, deduplicar_paper
 from intellectclone.harvesters.disambiguator import ResultadoDesambiguacion, desambiguar_autor
 from intellectclone.harvesters.normalizer import (
@@ -15,6 +16,7 @@ from intellectclone.harvesters.normalizer import (
     ratio_similitud,
 )
 from intellectclone.harvesters.openalex import OpenAlexHarvester, reconstruir_abstract
+from intellectclone.harvesters.orcid_enricher import ORCIDEnricher
 from intellectclone.harvesters.riuat import RIUATHarvester
 from intellectclone.harvesters.runner import (
     ejecutar_cosecha,
@@ -32,7 +34,9 @@ from intellectclone.harvesters.vufind_uat import VuFindUATHarvester
 __all__ = [
     "AccionIntento",
     "BaseHarvester",
+    "CrossrefEnricher",
     "NivelError",
+    "ORCIDEnricher",
     "OpenAlexHarvester",
     "RIUATHarvester",
     "VuFindUATHarvester",
