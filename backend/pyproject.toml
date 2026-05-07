@@ -89,6 +89,7 @@ ignore = ["E501"]
 "intellectclone/api/**/*.py" = ["B008"]
 # Excepciones de dominio en español — sufijo Error no aplica a nombres de dominio UAT
 "intellectclone/api/excepciones.py" = ["N818"]
+"intellectclone/llm/tipos.py" = ["N818"]
 # Alembic requiere sys.path manipulation antes de imports — patrón estándar del framework
 "alembic/env.py" = ["E402"]
 
