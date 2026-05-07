@@ -76,7 +76,7 @@ class OpenAlexHarvester(BaseHarvester):
     # Configurados en configurar()
     _email: str = ""
     _ror_id: str = _ROR_UAT_DEFAULT
-    _max_works: int = 5000
+    _max_works: int = 10000
     _headers: dict[str, str] = {}
 
     # ------------------------------------------------------------------
@@ -86,7 +86,7 @@ class OpenAlexHarvester(BaseHarvester):
     def configurar(self, config: dict[str, Any]) -> None:
         self._email = config.get("polite_pool_email", "")
         self._ror_id = config.get("ror_id_uat", _ROR_UAT_DEFAULT)
-        self._max_works = int(config.get("max_works_por_corrida", 5000))
+        self._max_works = int(config.get("max_works_por_corrida", 10000))
         ua = config.get("user_agent", "IntellectClone/1.0")
         if self._email:
             ua = f"{ua} (mailto:{self._email})"

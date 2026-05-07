@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field
+from typing import Any
 
 
 class AccionIntento(str, enum.Enum):
@@ -34,7 +35,7 @@ class ResultadoCosecha:
     Los datos ya están parseados al formato canónico del sistema.
     """
 
-    datos: dict[str, object]
+    datos: dict[str, Any]
     fuente_id: str
     es_nuevo: bool = True
     advertencias: list[str] = field(default_factory=list)
