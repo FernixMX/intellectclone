@@ -78,3 +78,11 @@ class EstadoFuenteResponse(BaseModel):
     ultima_completada_at: datetime | None
     registros_procesados: int
     errores_count: int
+
+
+class SniiApiResultadoResponse(BaseModel):
+    """Resultado de cosecha SNII vía API JSON pública."""
+
+    dependencias: int
+    personas_actualizadas: int
+    sin_match: int

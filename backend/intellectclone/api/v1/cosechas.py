@@ -5,6 +5,7 @@ GET  /api/v1/cosechas/estado-fuentes
 GET  /api/v1/cosechas/{id}
 GET  /api/v1/cosechas/{id}/progreso
 POST /api/v1/cosechas/disparar
+POST /api/v1/cosechas/snii-api
 POST /api/v1/cosechas/{id}/cancelar
 """
 
@@ -19,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from intellectclone.api.excepciones import EntidadNoEncontrada, EstadoInvalido
 from intellectclone.db import get_db
 from intellectclone.db.repositorios.cosecha import RepositorioCosecha
+from intellectclone.harvesters.snii_api import ejecutar_cosecha_snii_api
 from intellectclone.models.enums import EstadoCosecha, TipoFuente
 from intellectclone.schemas.comun import RespuestaPaginada
 from intellectclone.schemas.cosecha import (
@@ -27,6 +29,7 @@ from intellectclone.schemas.cosecha import (
     CosechaProgresoResponse,
     CosechaRead,
     EstadoFuenteResponse,
+    SniiApiResultadoResponse,
 )
 from intellectclone.tasks.cosecha import cosechar_fuente
 
@@ -136,6 +139,22 @@ async def disparar_cosecha(
         tarea_celery_id=tarea.id,
         estimacion_duracion_minutos=estimacion,
     )
+
+
+@router.post(  # type: ignore[misc]
+    "/snii-api",
+    response_model=SniiApiResultadoResponse,
+    summary="Cosecha SNII vía API JSON pública de produccioncientifica.uat.edu.mx",
+)
+async def disparar_cosecha_snii_api(
+    session: AsyncSession = Depends(get_db),
+) -> SniiApiResultadoResponse:
+    """
+    Cosecha sincrónica de investigadores SNII y dependencias de la UAT.
+    Actualiza nivel_snii y dependencia_id en personas ya existentes.
+    """
+    resultado = await ejecutar_cosecha_snii_api(session)
+    return SniiApiResultadoResponse(**resultado)
 
 
 @router.get("/{id}", response_model=CosechaRead)  # type: ignore[misc]
