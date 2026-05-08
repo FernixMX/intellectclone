@@ -45,6 +45,7 @@ export default function Directorio() {
   const [snii, setSnii] = useState("");
   const [sort, setSort] = useState("relevancia");
   const [page, setPage] = useState(1);
+  const [soloUat, setSoloUat] = useState(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -54,6 +55,7 @@ export default function Directorio() {
         offset: (page - 1) * PER_PAGE,
         q: search || undefined,
         nivel_snii: snii || undefined,
+        solo_uat: soloUat || undefined,
       });
       setData(result);
     } catch {
@@ -61,7 +63,7 @@ export default function Directorio() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, snii]);
+  }, [page, search, snii, soloUat]);
 
   useEffect(() => {
     void fetchData();
@@ -134,6 +136,39 @@ export default function Directorio() {
         {/* Main */}
         <div className="dir-main">
           <div className="dir-toolbar">
+            {/* Toggle Solo UAT / Todos */}
+            <div
+              style={{
+                display: "flex",
+                background: "var(--bg-muted)",
+                borderRadius: "var(--radius-sm)",
+                padding: 2,
+                gap: 2,
+                flexShrink: 0,
+              }}
+            >
+              <button
+                className={soloUat ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm"}
+                style={{ height: 30, fontSize: 12 }}
+                onClick={() => {
+                  setSoloUat(true);
+                  setPage(1);
+                }}
+              >
+                Solo UAT
+              </button>
+              <button
+                className={!soloUat ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm"}
+                style={{ height: 30, fontSize: 12 }}
+                onClick={() => {
+                  setSoloUat(false);
+                  setPage(1);
+                }}
+              >
+                Todos
+              </button>
+            </div>
+
             <div className="input-group" style={{ flex: 1, maxWidth: 400 }}>
               <span className="input-icon-left" style={{ fontSize: 15 }}>
                 🔍

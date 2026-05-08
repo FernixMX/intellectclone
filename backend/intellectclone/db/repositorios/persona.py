@@ -26,6 +26,7 @@ class RepositorioPersona(RepositorioBase[Persona]):
         cuerpo_academico_id: uuid.UUID | None = None,
         nivel_snii: NivelSnii | None = None,
         tiene_gemelo_validado: bool | None = None,
+        solo_uat: bool | None = None,
         q: str | None = None,
         limit: int = 20,
         offset: int = 0,
@@ -44,6 +45,8 @@ class RepositorioPersona(RepositorioBase[Persona]):
             stmt = stmt.where(Persona.cuerpo_academico_id == cuerpo_academico_id)
         if nivel_snii is not None:
             stmt = stmt.where(Persona.nivel_snii == nivel_snii)
+        if solo_uat is True:
+            stmt = stmt.where(Persona.dependencia_id.is_not(None))
         if q is not None:
             pattern = f"%{q}%"
             stmt = stmt.where(
