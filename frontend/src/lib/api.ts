@@ -11,12 +11,14 @@ import type {
   TopInvestigadorItem,
 } from "@/types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 async function get<T>(path: string, params?: Record<string, string | number>): Promise<T> {
   const url = new URL(`${API_URL}${path}`);
   if (params) {
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
+    Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== null && v !== "")
+      .forEach(([k, v]) => url.searchParams.set(k, String(v)));
   }
   const res = await fetch(url.toString(), { cache: "no-store" });
   if (!res.ok) {
