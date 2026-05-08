@@ -49,6 +49,7 @@ export const api = {
     q?: string;
     tipo?: string;
     activa?: string;
+    nivel_snii?: string;
   }) =>
     get<Paginated<PersonaListItem>>("/api/v1/personas", params as Record<string, string | number>),
 

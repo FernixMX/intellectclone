@@ -8,7 +8,14 @@ import type { PersonaListItem, Paginated } from "@/types";
 
 const PER_PAGE = 12;
 
-const SNII_OPTS = ["Todos", "C", "I", "II", "III", "SNI 1", "SNI 2", "SNI 3"];
+const SNII_OPTS: { label: string; value: string }[] = [
+  { label: "Todos", value: "" },
+  { label: "Candidato", value: "candidato" },
+  { label: "Nivel 1", value: "nivel_1" },
+  { label: "Nivel 2", value: "nivel_2" },
+  { label: "Nivel 3", value: "nivel_3" },
+  { label: "Emérito", value: "emerito" },
+];
 const SORT_OPTS = [
   { value: "relevancia", label: "Relevancia" },
   { value: "alfabetico", label: "Alfabético" },
@@ -35,7 +42,7 @@ export default function Directorio() {
   const [data, setData] = useState<Paginated<PersonaListItem> | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [snii, setSnii] = useState("Todos");
+  const [snii, setSnii] = useState("");
   const [sort, setSort] = useState("relevancia");
   const [page, setPage] = useState(1);
 
@@ -46,6 +53,7 @@ export default function Directorio() {
         limit: PER_PAGE,
         offset: (page - 1) * PER_PAGE,
         q: search || undefined,
+        nivel_snii: snii || undefined,
       });
       setData(result);
     } catch {
@@ -53,7 +61,7 @@ export default function Directorio() {
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, search, snii]);
 
   useEffect(() => {
     void fetchData();
@@ -61,11 +69,10 @@ export default function Directorio() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, snii, sort]);
+  }, [search, sort]);
 
   const items = data?.items ?? [];
-  const filteredItems = snii !== "Todos" ? items.filter((p) => p.nivel_snii === snii) : items;
-  const sortedItems = [...filteredItems].sort((a, b) => {
+  const sortedItems = [...items].sort((a, b) => {
     if (sort === "alfabetico") return a.nombre_completo.localeCompare(b.nombre_completo);
     if (sort === "productividad") return b.total_publicaciones - a.total_publicaciones;
     return 0;
@@ -97,21 +104,27 @@ export default function Directorio() {
             <div className="filter-chips">
               {SNII_OPTS.map((s) => (
                 <button
-                  key={s}
-                  className={snii === s ? "chip active" : "chip"}
-                  onClick={() => setSnii(s)}
+                  key={s.value}
+                  className={snii === s.value ? "chip active" : "chip"}
+                  onClick={() => {
+                    setSnii(s.value);
+                    setPage(1);
+                  }}
                 >
-                  {s}
+                  {s.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {snii !== "Todos" && (
+          {snii !== "" && (
             <button
               className="btn btn-ghost btn-sm"
               style={{ marginTop: "var(--sp-3)", color: "var(--red)" }}
-              onClick={() => setSnii("Todos")}
+              onClick={() => {
+                setSnii("");
+                setPage(1);
+              }}
             >
               ✕ Limpiar filtros
             </button>
