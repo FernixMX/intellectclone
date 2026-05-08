@@ -54,8 +54,13 @@ export const api = {
 
   persona: (id: string) => get<PersonaRead>(`/api/v1/personas/${id}`),
 
-  papers: (params?: { limit?: number; offset?: number; q?: string; año?: number }) =>
-    get<Paginated<PaperListItem>>("/api/v1/papers", params as Record<string, string | number>),
+  papers: (params?: {
+    limit?: number;
+    offset?: number;
+    q?: string;
+    año?: number;
+    persona_id?: string;
+  }) => get<Paginated<PaperListItem>>("/api/v1/papers", params as Record<string, string | number>),
 
   topInvestigadores: (params?: { limite?: number; orden?: string }) =>
     get<{ items: TopInvestigadorItem[] }>(

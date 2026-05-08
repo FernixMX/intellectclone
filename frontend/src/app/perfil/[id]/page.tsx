@@ -33,6 +33,13 @@ export default async function PerfilPage({ params }: Props) {
     notFound();
   }
 
+  let papersData = null;
+  try {
+    papersData = await api.papers({ persona_id: id, limit: 20, offset: 0 });
+  } catch {
+    // no crítico — se muestra sección vacía
+  }
+
   const color = avatarColor(persona.id);
   const inits = initials(persona.nombre_completo);
 
@@ -163,7 +170,7 @@ export default async function PerfilPage({ params }: Props) {
               </div>
             )}
 
-            {/* Publications placeholder */}
+            {/* Publications */}
             <div
               id="publicaciones"
               className="section-card"
@@ -181,28 +188,61 @@ export default async function PerfilPage({ params }: Props) {
                   {persona.total_publicaciones} total
                 </span>
               </div>
-              <div
-                className="section-card-body"
-                style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6 }}
-              >
-                {persona.primera_publicacion && (
-                  <p style={{ marginBottom: 8 }}>
-                    Primera publicación: <strong>{persona.primera_publicacion}</strong>
-                    {persona.ultima_publicacion && (
-                      <>
-                        {" "}
-                        · Última: <strong>{persona.ultima_publicacion}</strong>
-                      </>
+              <div className="section-card-body">
+                {papersData && papersData.items.length > 0 ? (
+                  <>
+                    {papersData.items.map((p) => (
+                      <div key={p.id} className="pub-item">
+                        <div className="pub-title">
+                          {p.doi ? (
+                            <a
+                              href={`https://doi.org/${p.doi}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {p.titulo}
+                            </a>
+                          ) : (
+                            p.titulo
+                          )}
+                        </div>
+                        <div className="pub-meta">
+                          {p.año && <span>{p.año}</span>}
+                          {p.revista && <span>{p.revista}</span>}
+                          {p.total_citas > 0 && (
+                            <span className="pub-citas">🗣 {p.total_citas} citas</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {papersData.total > 20 && (
+                      <div
+                        style={{
+                          paddingTop: "var(--sp-3)",
+                          fontSize: 13,
+                          color: "var(--text-muted)",
+                        }}
+                      >
+                        Mostrando 20 de {papersData.total} publicaciones.
+                      </div>
                     )}
-                  </p>
+                  </>
+                ) : (
+                  <div style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6 }}>
+                    {persona.primera_publicacion && (
+                      <p style={{ marginBottom: 8 }}>
+                        Primera publicación: <strong>{persona.primera_publicacion}</strong>
+                        {persona.ultima_publicacion && (
+                          <>
+                            {" "}
+                            · Última: <strong>{persona.ultima_publicacion}</strong>
+                          </>
+                        )}
+                      </p>
+                    )}
+                    <p>No se encontraron publicaciones indexadas para este investigador.</p>
+                  </div>
                 )}
-                <Link
-                  href={`/directorio?q=${encodeURIComponent(persona.nombre_completo)}`}
-                  className="btn btn-ghost btn-sm"
-                  style={{ color: "var(--blue)" }}
-                >
-                  Ver en directorio →
-                </Link>
               </div>
             </div>
 

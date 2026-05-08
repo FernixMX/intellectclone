@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from intellectclone.api.excepciones import EntidadNoEncontrada
 from intellectclone.db import get_db
 from intellectclone.models.enums import TipoPaper
-from intellectclone.models.produccion import Paper
+from intellectclone.models.produccion import Coautoria, Paper
 from intellectclone.schemas.comun import RespuestaPaginada
 from intellectclone.schemas.paper import PaperListItem, PaperRead
 
@@ -25,6 +25,7 @@ async def listar_papers(
     año: int | None = Query(default=None),
     tipo: TipoPaper | None = Query(default=None),
     q: str | None = Query(default=None, description="Búsqueda en título"),
+    persona_id: uuid.UUID | None = Query(default=None, description="Filtrar por autor"),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     session: AsyncSession = Depends(get_db),
@@ -32,6 +33,10 @@ async def listar_papers(
     """Lista papers con filtros básicos y paginación."""
     stmt = select(Paper)
 
+    if persona_id is not None:
+        stmt = stmt.join(Coautoria, Coautoria.paper_id == Paper.id).where(
+            Coautoria.persona_id == persona_id
+        )
     if año is not None:
         stmt = stmt.where(Paper.año == año)
     if tipo is not None:
