@@ -1,0 +1,116 @@
+# =============================================================================
+# Docker Compose — producción IntellectClone
+# VPS IONOS: postgres:5433 | redis:6380 | backend:8001 | frontend:3001
+# Levantar: docker compose -f docker-compose.prod.yml up -d --build
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 con pgvector, pg_trgm, unaccent, pgcrypto
+  # Puerto externo 5433 (el 5432 lo ocupa MariaDB/Plesk en el host)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: intellectclone_postgres_prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Redis 7 — broker Celery y cache JWT
+  # Puerto externo 6380 (el 6379 podría estar ocupado en el host)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: intellectclone_redis_prod
+    restart: always
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data_prod:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Backend FastAPI — 4 workers uvicorn
+  # Puerto externo 8001 → contenedor 8000
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: intellectclone_backend_prod
+    restart: always
+    env_file: .env.production
+    ports:
+      - "8001:8000"
+    volumes:
+      - storage_data:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["uv", "run", "uvicorn", "intellectclone.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+
+  # ---------------------------------------------------------------------------
+  # Celery worker — tareas de cosecha
+  # Misma imagen que backend, comando diferente
+  # ---------------------------------------------------------------------------
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: intellectclone_celery_prod
+    restart: always
+    env_file: .env.production
+    volumes:
+      - storage_data:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["uv", "run", "celery", "-A", "intellectclone.celery_app:celery_app", "worker", "--loglevel=info", "--concurrency=4"]
+
+  # ---------------------------------------------------------------------------
+  # Frontend Next.js
+  # Puerto externo 3001 → contenedor 3000
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: intellectclone_frontend_prod
+    restart: always
+    env_file: .env.production
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data_prod:
+    driver: local
+  redis_data_prod:
+    driver: local
+  storage_data:
+    driver: local
