@@ -1,9 +1,13 @@
 import type {
+  CosechaRead,
   EstadisticasGlobales,
+  MetricasResultado,
   Paginated,
+  PaperListItem,
   PersonaListItem,
   PersonaRead,
-  PaperListItem,
+  RedCoautoria,
+  SniiApiResultado,
   TopInvestigadorItem,
 } from "@/types";
 
@@ -15,6 +19,19 @@ async function get<T>(path: string, params?: Record<string, string | number>): P
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
   }
   const res = await fetch(url.toString(), { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`API ${res.status} en ${path}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+async function post<T>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    cache: "no-store",
+  });
   if (!res.ok) {
     throw new Error(`API ${res.status} en ${path}`);
   }
@@ -43,4 +60,14 @@ export const api = {
       "/api/v1/analitica/top-investigadores",
       params as Record<string, string | number>
     ),
+
+  redCoautoria: (params?: { persona_id?: string; limite_nodos?: number }) =>
+    get<RedCoautoria>("/api/v1/analitica/red-coautoria", params as Record<string, string | number>),
+
+  cosechas: (params?: { limit?: number; offset?: number }) =>
+    get<Paginated<CosechaRead>>("/api/v1/cosechas", params as Record<string, string | number>),
+
+  recalcularMetricas: () => post<MetricasResultado>("/api/v1/perfilador/metricas/recalcular"),
+
+  cosechaSniiApi: () => post<SniiApiResultado>("/api/v1/cosechas/snii-api"),
 };

@@ -84,3 +84,47 @@ export interface TopInvestigadorItem {
   total_citas: number;
   indice_h: number;
 }
+
+export interface NodoCoautoria {
+  persona_id: string;
+  nombre_completo: string;
+  dependencia_id: string | null;
+  grado: number;
+}
+
+export interface AristaCoautoria {
+  persona_a_id: string;
+  persona_b_id: string;
+  n_papers_comunes: number;
+}
+
+export interface RedCoautoria {
+  nodos: NodoCoautoria[];
+  aristas: AristaCoautoria[];
+  total_nodos: number;
+  total_aristas: number;
+}
+
+export interface CosechaRead {
+  id: string;
+  fuente: string;
+  estado: string;
+  iniciada_at: string | null;
+  completada_at: string | null;
+  duracion_ms: number | null;
+  registros_procesados: number;
+  registros_nuevos: number;
+  errores_count: number;
+  disparada_manual: boolean;
+  created_at: string;
+}
+
+export interface MetricasResultado {
+  personas_actualizadas: number;
+}
+
+export interface SniiApiResultado {
+  dependencias: number;
+  personas_actualizadas: number;
+  sin_match: number;
+}
