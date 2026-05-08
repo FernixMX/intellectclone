@@ -26,6 +26,7 @@ class PersonaRead(BaseModel):
     cvu_conacyt: str | None
     google_scholar_id: str | None
     dependencia_id: uuid.UUID | None
+    dependencia_nombre: str | None = None
     cuerpo_academico_id: uuid.UUID | None
     cargo: str | None
     nivel_snii: NivelSnii | None

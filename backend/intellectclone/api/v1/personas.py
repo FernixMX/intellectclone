@@ -9,6 +9,7 @@ PATCH /api/v1/personas/{id}
 import uuid
 
 from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from intellectclone.api.excepciones import EntidadNoEncontrada
@@ -72,7 +73,35 @@ async def obtener_persona(
     instancia = await repo.obtener_con_relaciones(id)
     if instancia is None:
         raise EntidadNoEncontrada("Persona", id)
-    return PersonaRead.model_validate(instancia)
+    data = PersonaRead.model_validate(instancia)
+    if instancia.dependencia is not None:
+        data = data.model_copy(update={"dependencia_nombre": instancia.dependencia.nombre})
+    return data
+
+
+@router.get("/{id}/conceptos", response_model=list[str])  # type: ignore[misc]
+async def conceptos_persona(
+    id: uuid.UUID,
+    limite: int = Query(default=5, ge=1, le=20),
+    session: AsyncSession = Depends(get_db),
+) -> list[str]:
+    """Devuelve los conceptos/topics más frecuentes en los papers del investigador."""
+    rows = await session.execute(
+        text(
+            """
+            SELECT unnest(p.conceptos) AS concepto, count(*) AS n
+            FROM paper p
+            JOIN coautoria c ON c.paper_id = p.id
+            WHERE c.persona_id = :persona_id
+              AND p.conceptos IS NOT NULL
+            GROUP BY concepto
+            ORDER BY n DESC
+            LIMIT :limite
+            """
+        ),
+        {"persona_id": str(id), "limite": limite},
+    )
+    return [row.concepto for row in rows]
 
 
 @router.post("", response_model=PersonaRead, status_code=status.HTTP_201_CREATED)  # type: ignore[misc]

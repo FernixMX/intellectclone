@@ -32,6 +32,7 @@ export interface PersonaRead {
   cvu_conacyt: string | null;
   google_scholar_id: string | null;
   dependencia_id: string | null;
+  dependencia_nombre: string | null;
   cuerpo_academico_id: string | null;
   cargo: string | null;
   nivel_snii: string | null;

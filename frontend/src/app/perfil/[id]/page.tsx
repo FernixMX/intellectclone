@@ -19,6 +19,17 @@ function initials(name: string): string {
     .join("");
 }
 
+const SNII_LABELS: Record<string, string> = {
+  candidato: "SNI Candidato",
+  nivel_1: "SNI Nivel I",
+  nivel_2: "SNI Nivel II",
+  nivel_3: "SNI Nivel III",
+  emerito: "SNI Emérito",
+};
+function formatSnii(nivel: string): string {
+  return SNII_LABELS[nivel] ?? nivel;
+}
+
 interface Props {
   params: Promise<{ id: string }>;
 }
@@ -38,6 +49,13 @@ export default async function PerfilPage({ params }: Props) {
     papersData = await api.papers({ persona_id: id, limit: 20, offset: 0 });
   } catch {
     // no crítico — se muestra sección vacía
+  }
+
+  let conceptos: string[] = [];
+  try {
+    conceptos = await api.conceptosPersona(id, 5);
+  } catch {
+    // no crítico
   }
 
   const color = avatarColor(persona.id);
@@ -93,9 +111,29 @@ export default async function PerfilPage({ params }: Props) {
               {persona.cargo ?? persona.tipo}
               {persona.grado_maximo ? ` · ${persona.grado_maximo}` : ""}
             </div>
+            <div style={{ fontSize: 13, color: "#8da2b5", marginBottom: 8 }}>
+              🏛 {persona.dependencia_nombre ?? "Sin dependencia asignada"}
+            </div>
+            {conceptos.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                {conceptos.map((c) => (
+                  <span
+                    key={c}
+                    className="badge"
+                    style={{
+                      background: "rgba(255,255,255,0.08)",
+                      color: "rgba(255,255,255,0.65)",
+                      fontSize: 11,
+                    }}
+                  >
+                    {c}
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="profile-badges">
               {persona.nivel_snii && (
-                <span className="badge badge-blue">SNII {persona.nivel_snii}</span>
+                <span className="badge badge-blue">{formatSnii(persona.nivel_snii)}</span>
               )}
               {persona.activa ? (
                 <span className="badge badge-green">Perfil activo</span>

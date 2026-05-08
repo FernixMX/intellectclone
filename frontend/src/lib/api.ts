@@ -76,6 +76,9 @@ export const api = {
   cosechas: (params?: { limit?: number; offset?: number }) =>
     get<Paginated<CosechaRead>>("/api/v1/cosechas", params as Record<string, string | number>),
 
+  conceptosPersona: (id: string, limite = 5) =>
+    get<string[]>(`/api/v1/personas/${id}/conceptos`, { limite }),
+
   recalcularMetricas: () => post<MetricasResultado>("/api/v1/perfilador/metricas/recalcular"),
 
   cosechaSniiApi: () => post<SniiApiResultado>("/api/v1/cosechas/snii-api"),
