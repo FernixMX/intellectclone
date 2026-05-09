@@ -157,6 +157,44 @@ async def disparar_cosecha_snii_api(
     return SniiApiResultadoResponse(**resultado)
 
 
+@router.post(  # type: ignore[misc]
+    "/openalex-completa",
+    status_code=202,
+    response_model=CosechaDispararResponse,
+    summary="Dispara cosecha completa OpenAlex UAT (async Celery)",
+)
+async def disparar_cosecha_openalex_completa(
+    session: AsyncSession = Depends(get_db),
+) -> CosechaDispararResponse:
+    """
+    Crea un registro de cosecha con fuente=openalex / modo=completa y encola
+    la tarea Celery. Devuelve 202 con cosecha_id y tarea_celery_id.
+    """
+    repo = RepositorioCosecha(session)
+    cosecha = await repo.crear_cosecha(
+        fuente=TipoFuente.openalex,
+        modo="completa",
+        parametros={},
+        configuracion={},
+        disparada_por=None,
+    )
+    await session.commit()
+
+    tarea = cosechar_fuente.delay(
+        cosecha_id=str(cosecha.id),
+        fuente_tipo=TipoFuente.openalex.value,
+        modo="completa",
+        parametros={},
+        config={},
+    )
+
+    return CosechaDispararResponse(
+        cosecha_id=cosecha.id,
+        tarea_celery_id=tarea.id,
+        estimacion_duracion_minutos=30,
+    )
+
+
 @router.get("/{id}", response_model=CosechaRead)  # type: ignore[misc]
 async def obtener_cosecha(
     id: uuid.UUID,

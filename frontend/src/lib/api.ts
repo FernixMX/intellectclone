@@ -1,4 +1,5 @@
 import type {
+  CosechaDispararResponse,
   CosechaRead,
   EstadisticasGlobales,
   MetricasResultado,
@@ -82,4 +83,7 @@ export const api = {
   recalcularMetricas: () => post<MetricasResultado>("/api/v1/perfilador/metricas/recalcular"),
 
   cosechaSniiApi: () => post<SniiApiResultado>("/api/v1/cosechas/snii-api"),
+
+  cosechaOpenAlexCompleta: () =>
+    post<CosechaDispararResponse>("/api/v1/cosechas/openalex-completa"),
 };

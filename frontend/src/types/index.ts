@@ -129,3 +129,9 @@ export interface SniiApiResultado {
   personas_actualizadas: number;
   sin_match: number;
 }
+
+export interface CosechaDispararResponse {
+  cosecha_id: string;
+  tarea_celery_id: string;
+  estimacion_duracion_minutos: number;
+}

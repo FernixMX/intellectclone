@@ -3,7 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import { api } from "@/lib/api";
-import type { CosechaRead, EstadisticasGlobales, Paginated, SniiApiResultado } from "@/types";
+import type {
+  CosechaDispararResponse,
+  CosechaRead,
+  EstadisticasGlobales,
+  Paginated,
+  SniiApiResultado,
+} from "@/types";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -23,16 +29,18 @@ function fmtMs(ms: number | null): string {
 
 const ESTADO_COLOR: Record<string, string> = {
   completada: "var(--green)",
+  completada_con_errores: "var(--orange)",
   en_curso: "var(--blue)",
-  error: "var(--red)",
+  fallida: "var(--red)",
   cancelada: "var(--text-muted)",
   programada: "var(--orange)",
 };
 
 const ESTADO_BG: Record<string, string> = {
   completada: "var(--green-light)",
+  completada_con_errores: "var(--orange-light)",
   en_curso: "var(--blue-light)",
-  error: "var(--red-light)",
+  fallida: "var(--red-light)",
   cancelada: "var(--bg-muted)",
   programada: "var(--orange-light)",
 };
@@ -126,11 +134,29 @@ function CosechasTab() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Actualización silenciosa sin spinner para polling y post-acción
+  const silentRefresh = useCallback(() => {
+    api
+      .cosechas({ limit: 20 })
+      .then(setCosechas)
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     refresh();
   }, [refresh]);
 
   const items = cosechas?.items ?? [];
+
+  // Auto-refresh cada 10 segundos mientras haya una cosecha en_curso
+  const hayCosechaEnCurso = items.some((c) => c.estado === "en_curso" || c.estado === "programada");
+  useEffect(() => {
+    if (!hayCosechaEnCurso) return;
+    const id = setInterval(() => {
+      void silentRefresh();
+    }, 10_000);
+    return () => clearInterval(id);
+  }, [hayCosechaEnCurso, silentRefresh]);
 
   return (
     <div>
@@ -143,14 +169,37 @@ function CosechasTab() {
         }}
       >
         <div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)" }}>
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: 600,
+              color: "var(--text-primary)",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
             Historial de cosechas
+            {hayCosechaEnCurso && (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "var(--blue)",
+                  background: "var(--blue-light)",
+                  borderRadius: "var(--radius-full)",
+                  padding: "2px 8px",
+                }}
+              >
+                ● auto-refresh 10s
+              </span>
+            )}
           </div>
           <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 2 }}>
             Últimas 20 cosechas registradas
           </div>
         </div>
-        <button className="btn btn-outline btn-sm" onClick={refresh}>
+        <button className="btn btn-outline btn-sm" onClick={silentRefresh}>
           ↻ Actualizar
         </button>
       </div>
@@ -188,6 +237,21 @@ function CosechasTab() {
             onClick={async () => {
               const r: SniiApiResultado = await api.cosechaSniiApi();
               void r;
+            }}
+            variant="primary"
+          />
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>
+            OpenAlex UAT — cosecha completa (~30 min)
+          </div>
+          <ActionBtn
+            label="Cosecha OpenAlex completa"
+            loadingLabel="Encolando…"
+            onClick={async () => {
+              const r: CosechaDispararResponse = await api.cosechaOpenAlexCompleta();
+              void r;
+              silentRefresh();
             }}
             variant="primary"
           />
