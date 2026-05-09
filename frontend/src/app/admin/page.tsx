@@ -256,6 +256,49 @@ function CosechasTab() {
             variant="primary"
           />
         </div>
+        <div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>
+            VuFind UAT — cosecha completa (~45 min)
+          </div>
+          <ActionBtn
+            label="Cosecha VuFind completa"
+            loadingLabel="Encolando…"
+            onClick={async () => {
+              const r: CosechaDispararResponse = await api.cosechaVuFindCompleta();
+              void r;
+              silentRefresh();
+            }}
+            variant="primary"
+          />
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>
+            Crossref — enriquecer papers con DOI (~20 min)
+          </div>
+          <ActionBtn
+            label="Enriquecer con Crossref"
+            loadingLabel="Encolando…"
+            onClick={async () => {
+              const r: CosechaDispararResponse = await api.cosechaCrossrefEnrich();
+              void r;
+              silentRefresh();
+            }}
+          />
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>
+            ORCID — enriquecer investigadores (~30 min)
+          </div>
+          <ActionBtn
+            label="Enriquecer con ORCID"
+            loadingLabel="Encolando…"
+            onClick={async () => {
+              const r: CosechaDispararResponse = await api.cosechaOrcidEnrich();
+              void r;
+              silentRefresh();
+            }}
+          />
+        </div>
       </div>
 
       {/* Table */}

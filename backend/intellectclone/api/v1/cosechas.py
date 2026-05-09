@@ -195,6 +195,122 @@ async def disparar_cosecha_openalex_completa(
     )
 
 
+@router.post(  # type: ignore[misc]
+    "/vufind-completa",
+    status_code=202,
+    response_model=CosechaDispararResponse,
+    summary="Dispara cosecha completa VuFind UAT (async Celery)",
+)
+async def disparar_cosecha_vufind_completa(
+    session: AsyncSession = Depends(get_db),
+) -> CosechaDispararResponse:
+    """
+    Crea un registro de cosecha con fuente=vufind_uat / modo=completa y encola
+    la tarea Celery. Itera todas las páginas de publicaciones.uat.edu.mx/vufind.
+    """
+    repo = RepositorioCosecha(session)
+    cosecha = await repo.crear_cosecha(
+        fuente=TipoFuente.vufind_uat,
+        modo="completa",
+        parametros={},
+        configuracion={},
+        disparada_por=None,
+    )
+    await session.commit()
+
+    tarea = cosechar_fuente.delay(
+        cosecha_id=str(cosecha.id),
+        fuente_tipo=TipoFuente.vufind_uat.value,
+        modo="completa",
+        parametros={},
+        config={},
+    )
+
+    return CosechaDispararResponse(
+        cosecha_id=cosecha.id,
+        tarea_celery_id=tarea.id,
+        estimacion_duracion_minutos=45,
+    )
+
+
+@router.post(  # type: ignore[misc]
+    "/crossref-enrich",
+    status_code=202,
+    response_model=CosechaDispararResponse,
+    summary="Dispara enriquecimiento Crossref (async Celery)",
+)
+async def disparar_crossref_enrich(
+    session: AsyncSession = Depends(get_db),
+) -> CosechaDispararResponse:
+    """
+    Crea un registro de cosecha con fuente=crossref / modo=enrich_pendiente y encola
+    la tarea Celery. El enriquecimiento bulk requiere que CrossrefEnricher soporte
+    modo=enrich_pendiente para iterar papers con DOI en la BD.
+    """
+    repo = RepositorioCosecha(session)
+    cosecha = await repo.crear_cosecha(
+        fuente=TipoFuente.crossref,
+        modo="enrich_pendiente",
+        parametros={},
+        configuracion={},
+        disparada_por=None,
+    )
+    await session.commit()
+
+    tarea = cosechar_fuente.delay(
+        cosecha_id=str(cosecha.id),
+        fuente_tipo=TipoFuente.crossref.value,
+        modo="enrich_pendiente",
+        parametros={},
+        config={},
+    )
+
+    return CosechaDispararResponse(
+        cosecha_id=cosecha.id,
+        tarea_celery_id=tarea.id,
+        estimacion_duracion_minutos=20,
+    )
+
+
+@router.post(  # type: ignore[misc]
+    "/orcid-enrich",
+    status_code=202,
+    response_model=CosechaDispararResponse,
+    summary="Dispara enriquecimiento ORCID (async Celery)",
+)
+async def disparar_orcid_enrich(
+    session: AsyncSession = Depends(get_db),
+) -> CosechaDispararResponse:
+    """
+    Crea un registro de cosecha con fuente=orcid / modo=enrich_pendiente y encola
+    la tarea Celery. El enriquecimiento bulk requiere que ORCIDEnricher soporte
+    modo=enrich_pendiente para iterar investigadores con ORCID en la BD.
+    """
+    repo = RepositorioCosecha(session)
+    cosecha = await repo.crear_cosecha(
+        fuente=TipoFuente.orcid,
+        modo="enrich_pendiente",
+        parametros={},
+        configuracion={},
+        disparada_por=None,
+    )
+    await session.commit()
+
+    tarea = cosechar_fuente.delay(
+        cosecha_id=str(cosecha.id),
+        fuente_tipo=TipoFuente.orcid.value,
+        modo="enrich_pendiente",
+        parametros={},
+        config={},
+    )
+
+    return CosechaDispararResponse(
+        cosecha_id=cosecha.id,
+        tarea_celery_id=tarea.id,
+        estimacion_duracion_minutos=30,
+    )
+
+
 @router.get("/{id}", response_model=CosechaRead)  # type: ignore[misc]
 async def obtener_cosecha(
     id: uuid.UUID,

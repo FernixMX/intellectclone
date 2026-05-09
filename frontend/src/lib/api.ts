@@ -92,6 +92,12 @@ export const api = {
   cosechaOpenAlexCompleta: () =>
     post<CosechaDispararResponse>("/api/v1/cosechas/openalex-completa"),
 
+  cosechaVuFindCompleta: () => post<CosechaDispararResponse>("/api/v1/cosechas/vufind-completa"),
+
+  cosechaCrossrefEnrich: () => post<CosechaDispararResponse>("/api/v1/cosechas/crossref-enrich"),
+
+  cosechaOrcidEnrich: () => post<CosechaDispararResponse>("/api/v1/cosechas/orcid-enrich"),
+
   dependencias: (params?: { limit?: number; offset?: number }) =>
     get<Paginated<Dependencia>>("/api/v1/dependencias", params as Record<string, string | number>),
 };
