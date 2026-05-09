@@ -12,6 +12,7 @@ interface SimNode extends d3.SimulationNodeDatum {
   nombre_completo: string;
   dependencia_id: string | null;
   grado: number;
+  es_externo: boolean;
 }
 
 interface SimEdge extends d3.SimulationLinkDatum<SimNode> {
@@ -51,10 +52,11 @@ interface GraphProps {
   nodos: NodoCoautoria[];
   aristas: AristaCoautoria[];
   depOrder: Map<string, number>;
+  isFiltered: boolean;
   onNavigate: (id: string) => void;
 }
 
-function NetworkGraph({ nodos, aristas, depOrder, onNavigate }: GraphProps) {
+function NetworkGraph({ nodos, aristas, depOrder, isFiltered, onNavigate }: GraphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
@@ -103,7 +105,10 @@ function NetworkGraph({ nodos, aristas, depOrder, onNavigate }: GraphProps) {
     svg.call(zoom);
     zoomRef.current = zoom;
 
-    const simNodes: SimNode[] = nodos.map((d) => ({ ...d }));
+    const simNodes: SimNode[] = nodos.map((d) => ({
+      ...d,
+      es_externo: d.es_externo ?? false,
+    }));
     const nodeById = Object.fromEntries(simNodes.map((d) => [d.persona_id, d]));
 
     const simEdges: SimEdge[] = aristas
@@ -130,12 +135,17 @@ function NetworkGraph({ nodos, aristas, depOrder, onNavigate }: GraphProps) {
         d3.forceCollide<SimNode>((d) => rScale(d.grado) + 4)
       );
 
+    // Edge color: lighter when connecting to an external node in filtered mode
     g.append("g")
       .selectAll("line")
       .data(simEdges)
       .join("line")
-      .attr("stroke", "#dde3ef")
-      .attr("stroke-opacity", 0.7)
+      .attr("stroke", (d) => {
+        const src = d.source as SimNode;
+        const tgt = d.target as SimNode;
+        return src.es_externo || tgt.es_externo ? "#e2e8f0" : "#dde3ef";
+      })
+      .attr("stroke-opacity", 0.8)
       .attr("stroke-width", (d) => wScale(d.n_papers_comunes));
 
     const node = g
@@ -170,9 +180,13 @@ function NetworkGraph({ nodos, aristas, depOrder, onNavigate }: GraphProps) {
     node
       .append("circle")
       .attr("r", (d) => rScale(d.grado))
-      .attr("fill", (d) => depColor(d.dependencia_id, depOrder) + "33")
-      .attr("stroke", (d) => depColor(d.dependencia_id, depOrder))
-      .attr("stroke-width", 1.5);
+      .attr("fill", (d) => {
+        if (d.es_externo) return "#e2e8f0";
+        const color = depColor(d.dependencia_id, depOrder);
+        return isFiltered ? color : color + "33";
+      })
+      .attr("stroke", (d) => (d.es_externo ? "#94a3b8" : depColor(d.dependencia_id, depOrder)))
+      .attr("stroke-width", (d) => (d.es_externo ? 1 : isFiltered ? 2 : 1.5));
 
     node
       .append("text")
@@ -182,13 +196,12 @@ function NetworkGraph({ nodos, aristas, depOrder, onNavigate }: GraphProps) {
       .attr("font-size", (d) => Math.max(6, rScale(d.grado) * 0.55))
       .attr("font-family", "var(--font-sans)")
       .attr("font-weight", "600")
-      .attr("fill", (d) => depColor(d.dependencia_id, depOrder))
+      .attr("fill", (d) => (d.es_externo ? "#94a3b8" : depColor(d.dependencia_id, depOrder)))
       .attr("pointer-events", "none");
 
     node.append("title").text((d) => `${d.nombre_completo} — ${d.grado} papers`);
 
     const linkSel = g.selectAll<SVGLineElement, SimEdge>("line");
-    const nodeSel = node;
 
     sim.on("tick", () => {
       linkSel
@@ -196,13 +209,13 @@ function NetworkGraph({ nodos, aristas, depOrder, onNavigate }: GraphProps) {
         .attr("y1", (d) => (d.source as SimNode).y ?? 0)
         .attr("x2", (d) => (d.target as SimNode).x ?? 0)
         .attr("y2", (d) => (d.target as SimNode).y ?? 0);
-      nodeSel.attr("transform", (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
+      node.attr("transform", (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
     });
 
     return () => {
       sim.stop();
     };
-  }, [nodos, aristas, depOrder, onNavigate]);
+  }, [nodos, aristas, depOrder, isFiltered, onNavigate]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -233,9 +246,25 @@ export default function RedPage() {
   const [dependencias, setDependencias] = useState<Dependencia[]>([]);
   const [filtroDepId, setFiltroDepId] = useState<string>("");
 
+  // Fetch dependencias once for the filter dropdown
   useEffect(() => {
     api
-      .redCoautoria({ limite_nodos: 100 })
+      .dependencias({ limit: 50 })
+      .then((data) => setDependencias(data.items))
+      .catch(() => {});
+  }, []);
+
+  // Re-fetch graph whenever filter changes
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    const params: Parameters<typeof api.redCoautoria>[0] = filtroDepId
+      ? { dependencia_id: filtroDepId, limite_nodos: 200 }
+      : { limite_nodos: 100 };
+
+    api
+      .redCoautoria(params)
       .then((data) => {
         setNodos(data.nodos);
         setAristas(data.aristas);
@@ -244,14 +273,8 @@ export default function RedPage() {
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Error al cargar la red"))
       .finally(() => setLoading(false));
+  }, [filtroDepId]);
 
-    api
-      .dependencias({ limit: 50 })
-      .then((data) => setDependencias(data.items))
-      .catch(() => {});
-  }, []);
-
-  // Assign palette index by frequency in the loaded nodes
   const depOrder = (() => {
     const freq = new Map<string, number>();
     nodos.forEach((n) => {
@@ -265,14 +288,8 @@ export default function RedPage() {
 
   const depNameMap = new Map(dependencias.map((d) => [d.id, d.nombre_corto ?? d.nombre]));
 
-  const nodosVisible =
-    filtroDepId === "" ? nodos : nodos.filter((n) => n.dependencia_id === filtroDepId);
-
-  const aristasVisible = aristas.filter(
-    (a) =>
-      nodosVisible.some((n) => n.persona_id === a.persona_a_id) &&
-      nodosVisible.some((n) => n.persona_id === a.persona_b_id)
-  );
+  const primaryCount = nodos.filter((n) => !n.es_externo).length;
+  const externalCount = nodos.filter((n) => n.es_externo).length;
 
   const uniqueDeps = Array.from(depOrder.entries())
     .sort((a, b) => a[1] - b[1])
@@ -286,7 +303,7 @@ export default function RedPage() {
     [router]
   );
 
-  const depsConNodos = Array.from(new Set(nodos.map((n) => n.dependencia_id).filter(Boolean)));
+  const isFiltered = filtroDepId !== "";
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -326,15 +343,16 @@ export default function RedPage() {
               {error}
             </div>
           )}
-          {!loading && !error && nodosVisible.length > 0 && (
+          {!loading && !error && nodos.length > 0 && (
             <NetworkGraph
-              nodos={nodosVisible}
-              aristas={aristasVisible}
+              nodos={nodos}
+              aristas={aristas}
               depOrder={depOrder}
+              isFiltered={isFiltered}
               onNavigate={handleNavigate}
             />
           )}
-          {!loading && !error && nodosVisible.length === 0 && (
+          {!loading && !error && nodos.length === 0 && (
             <div
               style={{
                 position: "absolute",
@@ -347,7 +365,7 @@ export default function RedPage() {
                 color: "var(--text-muted)",
               }}
             >
-              Sin nodos para el filtro seleccionado.
+              Sin coautorías registradas para esta dependencia.
             </div>
           )}
         </div>
@@ -356,16 +374,35 @@ export default function RedPage() {
         <aside className="net-panel">
           {/* Stats */}
           <div className="panel-sec">
-            <div className="panel-sec-title">Red global</div>
-            <div style={{ display: "flex", gap: 20 }}>
-              <div className="person-stat">
-                <div className="person-stat-val">{totalNodos.toLocaleString("es-MX")}</div>
-                <div className="person-stat-lbl">nodos</div>
-              </div>
-              <div className="person-stat">
-                <div className="person-stat-val">{totalAristas.toLocaleString("es-MX")}</div>
-                <div className="person-stat-lbl">aristas</div>
-              </div>
+            <div className="panel-sec-title">{isFiltered ? "Dependencia" : "Red global"}</div>
+            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+              {isFiltered ? (
+                <>
+                  <div className="person-stat">
+                    <div className="person-stat-val">{primaryCount}</div>
+                    <div className="person-stat-lbl">primarios</div>
+                  </div>
+                  <div className="person-stat">
+                    <div className="person-stat-val">{externalCount}</div>
+                    <div className="person-stat-lbl">externos</div>
+                  </div>
+                  <div className="person-stat">
+                    <div className="person-stat-val">{totalAristas.toLocaleString("es-MX")}</div>
+                    <div className="person-stat-lbl">aristas</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="person-stat">
+                    <div className="person-stat-val">{totalNodos.toLocaleString("es-MX")}</div>
+                    <div className="person-stat-lbl">nodos</div>
+                  </div>
+                  <div className="person-stat">
+                    <div className="person-stat-val">{totalAristas.toLocaleString("es-MX")}</div>
+                    <div className="person-stat-lbl">aristas</div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -385,40 +422,50 @@ export default function RedPage() {
                 width: "100%",
               }}
             >
-              <option value="">Todas las dependencias</option>
-              {depsConNodos.map((depId) => (
-                <option key={depId} value={depId ?? ""}>
-                  {depId ? (depNameMap.get(depId) ?? depId.slice(-8)) : "Sin dependencia"}
+              <option value="">Todas (top 100 global)</option>
+              {dependencias.map((dep) => (
+                <option key={dep.id} value={dep.id}>
+                  {dep.nombre_corto ?? dep.nombre}
                 </option>
               ))}
             </select>
-            {filtroDepId && (
-              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                {nodosVisible.length} nodos · {aristasVisible.length} aristas
-              </div>
-            )}
           </div>
 
           {/* Legend */}
           <div className="panel-sec">
-            <div className="panel-sec-title">Dependencias (top 8)</div>
-            {uniqueDeps.map((depId) => (
-              <div key={depId} className="legend-row">
-                <div className="legend-dot" style={{ background: depColor(depId, depOrder) }} />
-                <div className="legend-lbl">
-                  {depNameMap.get(depId)
-                    ? depNameMap.get(depId)!.length > 28
-                      ? depNameMap.get(depId)!.slice(0, 26) + "…"
-                      : depNameMap.get(depId)
-                    : depId.slice(-8)}
+            <div className="panel-sec-title">{isFiltered ? "Leyenda" : "Dependencias (top 8)"}</div>
+            {isFiltered ? (
+              <>
+                <div className="legend-row">
+                  <div
+                    className="legend-dot"
+                    style={{ background: PALETTE[0], width: 10, height: 10 }}
+                  />
+                  <div className="legend-lbl">
+                    {depNameMap.get(filtroDepId) ?? "Dependencia seleccionada"}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {uniqueDeps.length === 0 && (
-              <div className="legend-row">
-                <div className="legend-dot" style={{ background: "#94a3b8" }} />
-                <div className="legend-lbl">Sin dependencia asignada</div>
-              </div>
+                <div className="legend-row">
+                  <div
+                    className="legend-dot"
+                    style={{ background: "#94a3b8", width: 10, height: 10 }}
+                  />
+                  <div className="legend-lbl">Coautores externos</div>
+                </div>
+              </>
+            ) : (
+              uniqueDeps.map((depId) => (
+                <div key={depId} className="legend-row">
+                  <div className="legend-dot" style={{ background: depColor(depId, depOrder) }} />
+                  <div className="legend-lbl">
+                    {(() => {
+                      const name = depNameMap.get(depId);
+                      if (!name) return depId.slice(-8);
+                      return name.length > 28 ? name.slice(0, 26) + "…" : name;
+                    })()}
+                  </div>
+                </div>
+              ))
             )}
           </div>
 
@@ -434,7 +481,6 @@ export default function RedPage() {
               }}
             >
               <strong style={{ color: "var(--text-secondary)" }}>Clic en nodo</strong> → ver perfil
-              del investigador
               <br />
               <strong style={{ color: "var(--text-secondary)" }}>Arrastra</strong> para reposicionar
               <br />

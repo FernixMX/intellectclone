@@ -95,17 +95,25 @@ class RepositorioAnalitica:
     async def red_coautoria(
         self,
         persona_id: uuid.UUID | None = None,
+        dependencia_id: uuid.UUID | None = None,
         limite_nodos: int = 100,
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """
         Nodos + aristas para visualización de red de coautoría.
-        Si persona_id es dado, devuelve la red ego de esa persona.
+
+        - dependencia_id: devuelve TODOS los investigadores de esa dependencia con
+          coautorías, más sus coautores externos. Nodos primarios marcados es_externo=False,
+          externos es_externo=True.
+        - persona_id: red ego de esa persona.
+        - (ninguno): top N personas más productivas globales.
         """
         c1 = aliased(Coautoria, flat=True)
         c2 = aliased(Coautoria, flat=True)
 
+        if dependencia_id is not None:
+            return await self._red_coautoria_dependencia(dependencia_id, limite_nodos, c1, c2)
+
         if persona_id is not None:
-            # Red ego: papers de la persona + todos sus coautores
             subq_papers = (
                 sa.select(Coautoria.paper_id)
                 .where(Coautoria.persona_id == persona_id)
@@ -117,17 +125,15 @@ class RepositorioAnalitica:
                 .scalar_subquery()
             )
         else:
-            # Red completa: todas las personas con coautoría
             personas_en_red = sa.select(sa.func.distinct(Coautoria.persona_id)).scalar_subquery()
-            subq_papers = None
 
-        # Nodos
         nodos_stmt = (
             sa.select(
                 Persona.id.label("persona_id"),
                 Persona.nombre_completo,
                 Persona.dependencia_id,
                 sa.func.count(sa.func.distinct(Coautoria.paper_id)).label("grado"),
+                sa.literal(False).label("es_externo"),
             )
             .join(Coautoria, Coautoria.persona_id == Persona.id)
             .where(Persona.id.in_(personas_en_red))
@@ -138,7 +144,81 @@ class RepositorioAnalitica:
         nodos_result = await self._session.execute(nodos_stmt)
         nodos = [dict(r._mapping) for r in nodos_result.all()]
 
-        # Aristas: pares de personas con coautoría (sin duplicados: a_id < b_id)
+        ids_en_red = [n["persona_id"] for n in nodos]
+        if not ids_en_red:
+            return nodos, []
+
+        aristas_stmt = (
+            sa.select(
+                c1.persona_id.label("persona_a_id"),
+                c2.persona_id.label("persona_b_id"),
+                sa.func.count(sa.func.distinct(c1.paper_id)).label("n_papers_comunes"),
+            )
+            .join(c2, c1.paper_id == c2.paper_id)
+            .where(c1.persona_id < c2.persona_id)
+            .where(c1.persona_id.in_(ids_en_red))
+            .where(c2.persona_id.in_(ids_en_red))
+            .group_by(c1.persona_id, c2.persona_id)
+            .order_by(sa.func.count(sa.func.distinct(c1.paper_id)).desc())
+        )
+        aristas_result = await self._session.execute(aristas_stmt)
+        aristas = [dict(r._mapping) for r in aristas_result.all()]
+
+        return nodos, aristas
+
+    async def _red_coautoria_dependencia(
+        self,
+        dependencia_id: uuid.UUID,
+        limite_nodos: int,
+        c1: Coautoria,
+        c2: Coautoria,
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """
+        Red de coautoría para una dependencia específica.
+        Primarios: todos los investigadores de la dependencia con coautorías.
+        Externos: sus coautores de otras dependencias, hasta completar el límite.
+        """
+        # Papers que tienen al menos un autor de esta dependencia
+        dep_papers_subq = (
+            sa.select(Coautoria.paper_id)
+            .join(Persona, Persona.id == Coautoria.persona_id)
+            .where(Persona.dependencia_id == dependencia_id)
+            .scalar_subquery()
+        )
+
+        # Todas las personas en esos papers (primarios + externos)
+        all_personas_subq = (
+            sa.select(sa.func.distinct(Coautoria.persona_id))
+            .where(Coautoria.paper_id.in_(dep_papers_subq))
+            .scalar_subquery()
+        )
+
+        is_external = sa.case(
+            (Persona.dependencia_id == dependencia_id, False),
+            else_=True,
+        )
+
+        nodos_stmt = (
+            sa.select(
+                Persona.id.label("persona_id"),
+                Persona.nombre_completo,
+                Persona.dependencia_id,
+                sa.func.count(sa.func.distinct(Coautoria.paper_id)).label("grado"),
+                is_external.label("es_externo"),
+            )
+            .join(Coautoria, Coautoria.persona_id == Persona.id)
+            .where(Persona.id.in_(all_personas_subq))
+            .group_by(Persona.id, Persona.nombre_completo, Persona.dependencia_id)
+            .order_by(
+                # Primarios primero (es_externo=False → 0), luego por grado desc
+                is_external.asc(),
+                sa.func.count(sa.func.distinct(Coautoria.paper_id)).desc(),
+            )
+            .limit(limite_nodos)
+        )
+        nodos_result = await self._session.execute(nodos_stmt)
+        nodos = [dict(r._mapping) for r in nodos_result.all()]
+
         ids_en_red = [n["persona_id"] for n in nodos]
         if not ids_en_red:
             return nodos, []

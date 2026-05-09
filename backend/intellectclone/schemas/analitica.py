@@ -50,6 +50,7 @@ class NodoCoautoria(BaseModel):
     nombre_completo: str
     dependencia_id: uuid.UUID | None
     grado: int
+    es_externo: bool = False
 
 
 class AristaCoautoria(BaseModel):

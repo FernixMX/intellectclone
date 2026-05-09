@@ -72,7 +72,11 @@ export const api = {
       params as Record<string, string | number>
     ),
 
-  redCoautoria: (params?: { persona_id?: string; limite_nodos?: number }) =>
+  redCoautoria: (params?: {
+    persona_id?: string;
+    dependencia_id?: string;
+    limite_nodos?: number;
+  }) =>
     get<RedCoautoria>("/api/v1/analitica/red-coautoria", params as Record<string, string | number>),
 
   cosechas: (params?: { limit?: number; offset?: number }) =>

@@ -91,6 +91,7 @@ export interface NodoCoautoria {
   nombre_completo: string;
   dependencia_id: string | null;
   grado: number;
+  es_externo?: boolean;
 }
 
 export interface AristaCoautoria {

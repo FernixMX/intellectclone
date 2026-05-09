@@ -91,16 +91,19 @@ async def top_investigadores(
 )
 async def red_coautoria(
     persona_id: uuid.UUID | None = Query(default=None),
+    dependencia_id: uuid.UUID | None = Query(default=None),
     limite_nodos: int = Query(default=100, ge=1, le=200),
     session: AsyncSession = Depends(get_db),
 ) -> RedCoautoriaResponse:
     """
     Devuelve la red de coautoría como lista de nodos (investigadores) y aristas (colaboraciones).
-    Si se proporciona `persona_id`, devuelve la red ego de esa persona.
+    - dependencia_id: todos los investigadores de esa dependencia + coautores externos.
+    - persona_id: red ego de esa persona.
+    - (ninguno): top N más productivos global.
     """
     repo = RepositorioAnalitica(session)
     nodos_raw, aristas_raw = await repo.red_coautoria(
-        persona_id=persona_id, limite_nodos=limite_nodos
+        persona_id=persona_id, dependencia_id=dependencia_id, limite_nodos=limite_nodos
     )
     nodos = [NodoCoautoria(**n) for n in nodos_raw]
     aristas = [AristaCoautoria(**a) for a in aristas_raw]
