@@ -129,17 +129,22 @@ async def _populate_enrich_pendiente(
     factory: Any,
 ) -> dict[str, Any]:
     """Consulta la DB para pre-poblar la lista de IDs a enriquecer en batch."""
-    async with factory() as session:
-        if fuente_tipo == TipoFuente.crossref.value:
-            rows = await session.execute(sa.select(Paper.doi).where(Paper.doi.isnot(None)))
-            dois = [str(r[0]) for r in rows]
-            logger.info("enrich_pendiente.crossref.dois_encontrados", total=len(dois))
-            return {**parametros, "dois": dois}
+    if fuente_tipo == TipoFuente.crossref.value:
+        async with factory() as session:
+            result = await session.scalars(
+                sa.select(Paper.doi).where(Paper.doi.isnot(None), Paper.doi != "")
+            )
+            dois = list(result)
+        logger.info("enrich_pendiente.crossref.dois_encontrados", total=len(dois))
+        return {**parametros, "dois": dois}
 
-        if fuente_tipo == TipoFuente.orcid.value:
-            rows = await session.execute(sa.select(Persona.orcid).where(Persona.orcid.isnot(None)))
-            orcids = [str(r[0]) for r in rows]
-            logger.info("enrich_pendiente.orcid.orcids_encontrados", total=len(orcids))
-            return {**parametros, "orcids": orcids}
+    if fuente_tipo == TipoFuente.orcid.value:
+        async with factory() as session:
+            result = await session.scalars(
+                sa.select(Persona.orcid).where(Persona.orcid.isnot(None), Persona.orcid != "")
+            )
+            orcids = list(result)
+        logger.info("enrich_pendiente.orcid.orcids_encontrados", total=len(orcids))
+        return {**parametros, "orcids": orcids}
 
     return parametros
