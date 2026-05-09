@@ -1,6 +1,7 @@
 import type {
   CosechaDispararResponse,
   CosechaRead,
+  Dependencia,
   EstadisticasGlobales,
   MetricasResultado,
   Paginated,
@@ -86,4 +87,7 @@ export const api = {
 
   cosechaOpenAlexCompleta: () =>
     post<CosechaDispararResponse>("/api/v1/cosechas/openalex-completa"),
+
+  dependencias: (params?: { limit?: number; offset?: number }) =>
+    get<Paginated<Dependencia>>("/api/v1/dependencias", params as Record<string, string | number>),
 };

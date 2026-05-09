@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import * as d3 from "d3";
 import Header from "@/components/Header";
 import { api } from "@/lib/api";
-import type { NodoCoautoria, AristaCoautoria } from "@/types";
+import type { NodoCoautoria, AristaCoautoria, Dependencia } from "@/types";
 
-// D3 simulation node shape
 interface SimNode extends d3.SimulationNodeDatum {
   persona_id: string;
   nombre_completo: string;
@@ -22,15 +22,17 @@ const PALETTE = [
   "#0d6efd",
   "#02c27a",
   "#fd7e14",
-  "#6c757d",
   "#8b5cf6",
   "#0dcaf0",
   "#fc185a",
   "#ffc107",
+  "#20c997",
 ];
 
-function depColor(depId: string | null): string {
+function depColor(depId: string | null, depOrder: Map<string, number>): string {
   if (!depId) return "#94a3b8";
+  const idx = depOrder.get(depId);
+  if (idx !== undefined) return PALETTE[idx % PALETTE.length];
   let h = 0;
   for (let i = 0; i < depId.length; i++) h = (h * 31 + depId.charCodeAt(i)) & 0xffff;
   return PALETTE[h % PALETTE.length];
@@ -48,11 +50,11 @@ function initials(name: string): string {
 interface GraphProps {
   nodos: NodoCoautoria[];
   aristas: AristaCoautoria[];
-  selected: string | null;
-  onSelect: (id: string | null) => void;
+  depOrder: Map<string, number>;
+  onNavigate: (id: string) => void;
 }
 
-function NetworkGraph({ nodos, aristas, selected, onSelect }: GraphProps) {
+function NetworkGraph({ nodos, aristas, depOrder, onNavigate }: GraphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
@@ -73,28 +75,30 @@ function NetworkGraph({ nodos, aristas, selected, onSelect }: GraphProps) {
 
   useEffect(() => {
     if (!svgRef.current || !nodos.length) return;
-    const container = svgRef.current.parentElement!;
-    const W = container.clientWidth;
-    const H = container.clientHeight;
 
-    d3.select(svgRef.current).selectAll("*").remove();
+    const svgEl = svgRef.current;
+    const rect = svgEl.getBoundingClientRect();
+    const W = rect.width > 0 ? rect.width : window.innerWidth - 280;
+    const H = rect.height > 0 ? rect.height : window.innerHeight - 60;
+
+    d3.select(svgEl).selectAll("*").remove();
 
     const rScale = d3
       .scaleLinear()
       .domain([d3.min(nodos, (d) => d.grado) ?? 1, d3.max(nodos, (d) => d.grado) ?? 10])
-      .range([8, 22]);
+      .range([7, 22]);
 
     const wScale = d3
       .scaleLinear()
       .domain([1, d3.max(aristas, (d) => d.n_papers_comunes) ?? 10])
       .range([1, 4]);
 
-    const svg = d3.select(svgRef.current).attr("width", W).attr("height", H);
+    const svg = d3.select(svgEl).attr("width", W).attr("height", H);
     const g = svg.append("g");
 
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.2, 4])
+      .scaleExtent([0.15, 5])
       .on("zoom", (e) => g.attr("transform", String(e.transform)));
     svg.call(zoom);
     zoomRef.current = zoom;
@@ -117,22 +121,21 @@ function NetworkGraph({ nodos, aristas, selected, onSelect }: GraphProps) {
         d3
           .forceLink<SimNode, SimEdge>(simEdges)
           .id((d) => d.persona_id)
-          .distance(90)
+          .distance(80)
       )
-      .force("charge", d3.forceManyBody().strength(-220))
+      .force("charge", d3.forceManyBody().strength(-200))
       .force("center", d3.forceCenter(W / 2, H / 2))
       .force(
         "collision",
-        d3.forceCollide<SimNode>((d) => rScale(d.grado) + 5)
+        d3.forceCollide<SimNode>((d) => rScale(d.grado) + 4)
       );
 
-    const link = g
-      .append("g")
+    g.append("g")
       .selectAll("line")
       .data(simEdges)
       .join("line")
       .attr("stroke", "#dde3ef")
-      .attr("stroke-opacity", 0.8)
+      .attr("stroke-opacity", 0.7)
       .attr("stroke-width", (d) => wScale(d.n_papers_comunes));
 
     const node = g
@@ -143,7 +146,7 @@ function NetworkGraph({ nodos, aristas, selected, onSelect }: GraphProps) {
       .attr("cursor", "pointer")
       .on("click", (e, d) => {
         e.stopPropagation();
-        onSelect(d.persona_id === selected ? null : d.persona_id);
+        onNavigate(d.persona_id);
       })
       .call(
         d3
@@ -167,40 +170,39 @@ function NetworkGraph({ nodos, aristas, selected, onSelect }: GraphProps) {
     node
       .append("circle")
       .attr("r", (d) => rScale(d.grado))
-      .attr("fill", (d) =>
-        d.persona_id === selected ? "var(--blue-light)" : depColor(d.dependencia_id) + "22"
-      )
-      .attr("stroke", (d) =>
-        d.persona_id === selected ? "var(--blue)" : depColor(d.dependencia_id)
-      )
-      .attr("stroke-width", (d) => (d.persona_id === selected ? 2.5 : 1.5));
+      .attr("fill", (d) => depColor(d.dependencia_id, depOrder) + "33")
+      .attr("stroke", (d) => depColor(d.dependencia_id, depOrder))
+      .attr("stroke-width", 1.5);
 
     node
       .append("text")
       .text((d) => initials(d.nombre_completo))
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
-      .attr("font-size", (d) => Math.max(7, rScale(d.grado) * 0.55))
+      .attr("font-size", (d) => Math.max(6, rScale(d.grado) * 0.55))
       .attr("font-family", "var(--font-sans)")
       .attr("font-weight", "600")
-      .attr("fill", (d) => (d.persona_id === selected ? "var(--blue)" : depColor(d.dependencia_id)))
+      .attr("fill", (d) => depColor(d.dependencia_id, depOrder))
       .attr("pointer-events", "none");
 
-    svg.on("click", () => onSelect(null));
+    node.append("title").text((d) => `${d.nombre_completo} — ${d.grado} papers`);
+
+    const linkSel = g.selectAll<SVGLineElement, SimEdge>("line");
+    const nodeSel = node;
 
     sim.on("tick", () => {
-      link
+      linkSel
         .attr("x1", (d) => (d.source as SimNode).x ?? 0)
         .attr("y1", (d) => (d.source as SimNode).y ?? 0)
         .attr("x2", (d) => (d.target as SimNode).x ?? 0)
         .attr("y2", (d) => (d.target as SimNode).y ?? 0);
-      node.attr("transform", (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
+      nodeSel.attr("transform", (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
     });
 
     return () => {
       sim.stop();
     };
-  }, [nodos, aristas, selected, onSelect]);
+  }, [nodos, aristas, depOrder, onNavigate]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -221,13 +223,15 @@ function NetworkGraph({ nodos, aristas, selected, onSelect }: GraphProps) {
 }
 
 export default function RedPage() {
+  const router = useRouter();
   const [nodos, setNodos] = useState<NodoCoautoria[]>([]);
   const [aristas, setAristas] = useState<AristaCoautoria[]>([]);
   const [totalNodos, setTotalNodos] = useState(0);
   const [totalAristas, setTotalAristas] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dependencias, setDependencias] = useState<Dependencia[]>([]);
+  const [filtroDepId, setFiltroDepId] = useState<string>("");
 
   useEffect(() => {
     api
@@ -237,19 +241,52 @@ export default function RedPage() {
         setAristas(data.aristas);
         setTotalNodos(data.total_nodos);
         setTotalAristas(data.total_aristas);
-        if (data.nodos.length > 0) setSelected(data.nodos[0].persona_id);
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Error al cargar la red"))
       .finally(() => setLoading(false));
+
+    api
+      .dependencias({ limit: 50 })
+      .then((data) => setDependencias(data.items))
+      .catch(() => {});
   }, []);
 
-  const selNode = nodos.find((n) => n.persona_id === selected) ?? null;
-  const selEdges = aristas.filter(
-    (a) => a.persona_a_id === selected || a.persona_b_id === selected
+  // Assign palette index by frequency in the loaded nodes
+  const depOrder = (() => {
+    const freq = new Map<string, number>();
+    nodos.forEach((n) => {
+      if (n.dependencia_id) freq.set(n.dependencia_id, (freq.get(n.dependencia_id) ?? 0) + 1);
+    });
+    const sorted = Array.from(freq.entries()).sort((a, b) => b[1] - a[1]);
+    const m = new Map<string, number>();
+    sorted.forEach(([id], i) => m.set(id, i));
+    return m;
+  })();
+
+  const depNameMap = new Map(dependencias.map((d) => [d.id, d.nombre_corto ?? d.nombre]));
+
+  const nodosVisible =
+    filtroDepId === "" ? nodos : nodos.filter((n) => n.dependencia_id === filtroDepId);
+
+  const aristasVisible = aristas.filter(
+    (a) =>
+      nodosVisible.some((n) => n.persona_id === a.persona_a_id) &&
+      nodosVisible.some((n) => n.persona_id === a.persona_b_id)
   );
 
-  // Unique dependencias for legend
-  const uniqueDeps = Array.from(new Set(nodos.map((n) => n.dependencia_id))).slice(0, 8);
+  const uniqueDeps = Array.from(depOrder.entries())
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, 8)
+    .map(([id]) => id);
+
+  const handleNavigate = useCallback(
+    (id: string) => {
+      router.push(`/perfil/${id}`);
+    },
+    [router]
+  );
+
+  const depsConNodos = Array.from(new Set(nodos.map((n) => n.dependencia_id).filter(Boolean)));
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -289,13 +326,29 @@ export default function RedPage() {
               {error}
             </div>
           )}
-          {!loading && !error && (
+          {!loading && !error && nodosVisible.length > 0 && (
             <NetworkGraph
-              nodos={nodos}
-              aristas={aristas}
-              selected={selected}
-              onSelect={setSelected}
+              nodos={nodosVisible}
+              aristas={aristasVisible}
+              depOrder={depOrder}
+              onNavigate={handleNavigate}
             />
+          )}
+          {!loading && !error && nodosVisible.length === 0 && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#f8fafc",
+                fontSize: 14,
+                color: "var(--text-muted)",
+              }}
+            >
+              Sin nodos para el filtro seleccionado.
+            </div>
           )}
         </div>
 
@@ -316,145 +369,77 @@ export default function RedPage() {
             </div>
           </div>
 
-          {/* Dep legend */}
+          {/* Filter */}
           <div className="panel-sec">
-            <div className="panel-sec-title">Dependencias</div>
-            {uniqueDeps.map((depId, i) => (
-              <div key={depId ?? `null-${i}`} className="legend-row">
-                <div className="legend-dot" style={{ background: depColor(depId) }} />
-                <div className="legend-lbl">{depId ? depId.slice(-8) : "Sin dependencia"}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Selected node */}
-          <div className="panel-sec" style={{ flex: 1 }}>
-            <div className="panel-sec-title">
-              {selNode ? "Seleccionado" : "Haz clic en un nodo"}
-            </div>
-            {selNode && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      background: depColor(selNode.dependencia_id) + "22",
-                      border: `2px solid ${depColor(selNode.dependencia_id)}`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: depColor(selNode.dependencia_id),
-                      flexShrink: 0,
-                    }}
-                  >
-                    {initials(selNode.nombre_completo)}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
-                      {selNode.nombre_completo}
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                      {selNode.dependencia_id
-                        ? `Dep. ${selNode.dependencia_id.slice(-8)}`
-                        : "Sin dependencia"}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div className="person-stat">
-                    <div className="person-stat-val">{selNode.grado}</div>
-                    <div className="person-stat-lbl">conexiones</div>
-                  </div>
-                  <div className="person-stat">
-                    <div className="person-stat-val">{selEdges.length}</div>
-                    <div className="person-stat-lbl">coautorías</div>
-                  </div>
-                </div>
-
-                {selEdges.length > 0 && (
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        color: "var(--text-muted)",
-                        marginBottom: 8,
-                      }}
-                    >
-                      Colabora con
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {selEdges.slice(0, 8).map((e) => {
-                        const otherId =
-                          e.persona_a_id === selected ? e.persona_b_id : e.persona_a_id;
-                        const other = nodos.find((n) => n.persona_id === otherId);
-                        return (
-                          <div
-                            key={otherId}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 8,
-                              cursor: "pointer",
-                            }}
-                            onClick={() => setSelected(otherId)}
-                          >
-                            <div
-                              style={{
-                                width: 24,
-                                height: 24,
-                                borderRadius: "50%",
-                                background: depColor(other?.dependencia_id ?? null) + "22",
-                                border: `1.5px solid ${depColor(other?.dependencia_id ?? null)}`,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: 9,
-                                fontWeight: 700,
-                                color: depColor(other?.dependencia_id ?? null),
-                                flexShrink: 0,
-                              }}
-                            >
-                              {initials(other?.nombre_completo ?? "")}
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div
-                                style={{
-                                  fontSize: 12,
-                                  color: "var(--text-primary)",
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                }}
-                              >
-                                {other?.nombre_completo ?? otherId.slice(-8)}
-                              </div>
-                            </div>
-                            <span
-                              style={{
-                                fontFamily: "var(--font-mono)",
-                                fontSize: 11,
-                                color: "var(--text-muted)",
-                                flexShrink: 0,
-                              }}
-                            >
-                              ×{e.n_papers_comunes}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+            <div className="panel-sec-title">Filtrar por dependencia</div>
+            <select
+              value={filtroDepId}
+              onChange={(e) => setFiltroDepId(e.target.value)}
+              style={{
+                fontSize: 12,
+                padding: "5px 8px",
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid var(--border-color)",
+                background: "var(--bg-card)",
+                color: "var(--text-secondary)",
+                width: "100%",
+              }}
+            >
+              <option value="">Todas las dependencias</option>
+              {depsConNodos.map((depId) => (
+                <option key={depId} value={depId ?? ""}>
+                  {depId ? (depNameMap.get(depId) ?? depId.slice(-8)) : "Sin dependencia"}
+                </option>
+              ))}
+            </select>
+            {filtroDepId && (
+              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                {nodosVisible.length} nodos · {aristasVisible.length} aristas
               </div>
             )}
+          </div>
+
+          {/* Legend */}
+          <div className="panel-sec">
+            <div className="panel-sec-title">Dependencias (top 8)</div>
+            {uniqueDeps.map((depId) => (
+              <div key={depId} className="legend-row">
+                <div className="legend-dot" style={{ background: depColor(depId, depOrder) }} />
+                <div className="legend-lbl">
+                  {depNameMap.get(depId)
+                    ? depNameMap.get(depId)!.length > 28
+                      ? depNameMap.get(depId)!.slice(0, 26) + "…"
+                      : depNameMap.get(depId)
+                    : depId.slice(-8)}
+                </div>
+              </div>
+            ))}
+            {uniqueDeps.length === 0 && (
+              <div className="legend-row">
+                <div className="legend-dot" style={{ background: "#94a3b8" }} />
+                <div className="legend-lbl">Sin dependencia asignada</div>
+              </div>
+            )}
+          </div>
+
+          {/* Instructions */}
+          <div className="panel-sec" style={{ marginTop: "auto" }}>
+            <div
+              style={{
+                fontSize: 12,
+                color: "var(--text-muted)",
+                lineHeight: 1.55,
+                borderTop: "1px solid var(--border-color)",
+                paddingTop: "var(--sp-4)",
+              }}
+            >
+              <strong style={{ color: "var(--text-secondary)" }}>Clic en nodo</strong> → ver perfil
+              del investigador
+              <br />
+              <strong style={{ color: "var(--text-secondary)" }}>Arrastra</strong> para reposicionar
+              <br />
+              <strong style={{ color: "var(--text-secondary)" }}>Scroll</strong> para zoom
+            </div>
           </div>
         </aside>
       </div>

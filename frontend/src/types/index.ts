@@ -135,3 +135,13 @@ export interface CosechaDispararResponse {
   tarea_celery_id: string;
   estimacion_duracion_minutos: number;
 }
+
+export interface Dependencia {
+  id: string;
+  codigo: string;
+  nombre: string;
+  nombre_corto: string | null;
+  tipo: string;
+  campus: string | null;
+  activa: boolean;
+}
