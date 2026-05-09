@@ -197,7 +197,8 @@ class TestTieneSiguientePagina:
 class TestParsearCard:
     def test_card_completa_desde_fixture(self) -> None:
         soup = _soup("vufind_pagina1.html")
-        cards = soup.find_all("div", class_="result")
+        # VuFind UAT usa <li class="result">, no <div class="result">
+        cards = soup.find_all("li", class_="result")
         assert len(cards) == 2
 
         datos = parsear_card(cards[0], "https://publicaciones.uat.edu.mx/vufind")
@@ -211,7 +212,7 @@ class TestParsearCard:
 
     def test_card_tesis_doctoral(self) -> None:
         soup = _soup("vufind_pagina1.html")
-        cards = soup.find_all("div", class_="result")
+        cards = soup.find_all("li", class_="result")
         datos = parsear_card(cards[1], "https://publicaciones.uat.edu.mx/vufind")
 
         assert datos["vufind_id"] == "UAT-2021-042"
@@ -220,7 +221,7 @@ class TestParsearCard:
 
     def test_card_libro_pagina2(self) -> None:
         soup = _soup("vufind_pagina2.html")
-        cards = soup.find_all("div", class_="result")
+        cards = soup.find_all("li", class_="result")
         datos = parsear_card(cards[0], "https://publicaciones.uat.edu.mx/vufind")
 
         assert datos["vufind_id"] == "UAT-2020-007"
@@ -228,15 +229,16 @@ class TestParsearCard:
         assert datos["año"] == 2020
 
     def test_card_sin_year_devuelve_none(self) -> None:
+        # parsear_card recibe un Tag aislado; el tag puede ser cualquier elemento
         html = """
-        <div class="result">
+        <li class="result">
           <div class="media-body">
             <a class="title" href="/vufind/Record/X-001">Título sin año</a>
             <div class="format">Artículo</div>
           </div>
-        </div>"""
+        </li>"""
         soup = BeautifulSoup(html, "html.parser")
-        card = soup.find("div", class_="result")
+        card = soup.find("li", class_="result")
         datos = parsear_card(card, "https://base.example.com")  # type: ignore[arg-type]
 
         assert datos["año"] is None
@@ -244,21 +246,21 @@ class TestParsearCard:
 
     def test_card_sin_href_da_id_vacio(self) -> None:
         html = """
-        <div class="result">
+        <li class="result">
           <div class="media-body">
             <a class="title">Sin href</a>
             <div class="format">Artículo</div>
           </div>
-        </div>"""
+        </li>"""
         soup = BeautifulSoup(html, "html.parser")
-        card = soup.find("div", class_="result")
+        card = soup.find("li", class_="result")
         datos = parsear_card(card, "https://base.example.com")  # type: ignore[arg-type]
 
         assert datos["vufind_id"] == ""
 
     def test_url_detalle_construida_correctamente(self) -> None:
         soup = _soup("vufind_pagina1.html")
-        cards = soup.find_all("div", class_="result")
+        cards = soup.find_all("li", class_="result")
         datos = parsear_card(cards[0], "https://publicaciones.uat.edu.mx/vufind")
 
         assert datos["url_detalle"] == (
@@ -267,7 +269,7 @@ class TestParsearCard:
 
     def test_titulo_normalizado_presente(self) -> None:
         soup = _soup("vufind_pagina1.html")
-        card = soup.find_all("div", class_="result")[0]
+        card = soup.find_all("li", class_="result")[0]
         datos = parsear_card(card, "https://publicaciones.uat.edu.mx/vufind")
 
         assert datos["titulo_normalizado"] is not None

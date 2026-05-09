@@ -8,36 +8,61 @@
 <div id="search-results-container">
   <h2>Resultados: 3 registros encontrados</h2>
 
-  <div class="result">
-    <div class="media">
-      <div class="media-body">
-        <a class="title" href="/vufind/Record/UAT-2022-001">
-          Redes Neuronales Artificiales en Diagnóstico Médico: Revisión Sistemática
-        </a>
-        <div class="format badge">Artículo</div>
-        <span class="summaryAuthor">Cárdenas Ruiz, María Elena; Pérez López, Juan Carlos</span>
-        <span class="summaryPublicationDate">2022</span>
-      </div>
-    </div>
-  </div>
+  <ul id="result-list-placeholder">
 
-  <div class="result">
-    <div class="media">
-      <div class="media-body">
-        <a class="title" href="/vufind/Record/UAT-2021-042">
-          Gestión del conocimiento en instituciones de educación superior
-        </a>
-        <div class="format badge">Tesis Doctoral</div>
-        <span class="summaryAuthor">Rodríguez Hernández, Carlos Alberto</span>
-        <span class="summaryPublicationDate">2021</span>
+    <li class="result" id="result0">
+      <input class="hiddenId" type="hidden" value="UAT-2022-001"/>
+      <div class="media">
+        <div class="media-body">
+          <div class="result-body">
+            <div>
+              <a class="title getFull" href="/vufind/Record/UAT-2022-001">
+                Redes Neuronales Artificiales en Diagnóstico Médico: Revisión Sistemática
+              </a>
+            </div>
+            <div>Published 2022</div>
+            <div class="result-formats">
+              <span class="format artculo">Artículo</span>
+            </div>
+            <span class="summaryAuthor">Cárdenas Ruiz, María Elena; Pérez López, Juan Carlos</span>
+            <span class="Z3988" title="rft.date=2022&amp;rft.creator=C%C3%A1rdenas+Ruiz"></span>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+    </li>
 
+    <li class="result" id="result1">
+      <input class="hiddenId" type="hidden" value="UAT-2021-042"/>
+      <div class="media">
+        <div class="media-body">
+          <div class="result-body">
+            <div>
+              <a class="title getFull" href="/vufind/Record/UAT-2021-042">
+                Gestión del conocimiento en instituciones de educación superior
+              </a>
+            </div>
+            <div>Published 2021</div>
+            <div class="result-formats">
+              <span class="format tesis-doctoral">Tesis Doctoral</span>
+            </div>
+            <span class="summaryAuthor">Rodríguez Hernández, Carlos Alberto</span>
+            <span class="Z3988" title="rft.date=2021&amp;rft.creator=Rodr%C3%ADguez+Hern%C3%A1ndez"></span>
+          </div>
+        </div>
+      </div>
+    </li>
+
+  </ul>
 </div>
 
-<nav class="pagination-simple">
-  <a href="/vufind/Search/Results?page=2" rel="next">Siguiente</a>
-</nav>
+<ul class="pagination" aria-label="Pagination">
+  <li class="active"><span>1</span></li>
+  <li><a aria-label="page_no" href="/vufind/Search/Results?page=2">2</a></li>
+  <li>
+    <a class="page-next" aria-label="Go to Next Page" href="/vufind/Search/Results?page=2">
+      Next
+    </a>
+  </li>
+</ul>
 </body>
 </html>

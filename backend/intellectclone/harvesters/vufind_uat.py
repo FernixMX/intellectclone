@@ -78,29 +78,57 @@ def _extraer_año(texto: str) -> int | None:
     return int(m.group(0)) if m else None
 
 
+def _extraer_año_coins(card: Tag) -> int | None:
+    """Extrae año de los metadatos COinS (span.Z3988 title=rft.date=YYYY)."""
+    z = card.find("span", class_="Z3988")
+    if z:
+        m = re.search(r"rft\.date=(\d{4})", z.get("title", ""))
+        if m:
+            return int(m.group(1))
+    return None
+
+
 def parsear_card(card: Tag, base_url: str) -> dict[str, Any]:
     """
-    Extrae metadatos básicos de una card `<div class="result">` de VuFind.
-    Devuelve None para campos ausentes.
+    Extrae metadatos básicos de un elemento `<li class="result">` de VuFind.
+
+    VuFind UAT usa <li class="result">, no <div class="result">.
+    El año viene en los metadatos COinS (span.Z3988) o en <div>Published YYYY</div>.
     """
-    titulo_tag = card.find("a", class_="title")
-    titulo: str = titulo_tag.get_text(strip=True) if titulo_tag else ""
-    href: str = titulo_tag.get("href", "") if titulo_tag else ""
-    record_id = _extraer_record_id(href)
+    # record_id: preferir input.hiddenId, fallback al href del enlace de portada/título
+    hidden_id = card.find("input", class_="hiddenId")
+    if hidden_id:
+        record_id = str(hidden_id.get("value", "")).strip()
+    else:
+        titulo_tag = card.find("a", class_="title")
+        href: str = titulo_tag.get("href", "") if titulo_tag else ""
+        record_id = _extraer_record_id(href)
+
     url_detalle = urljoin(base_url.rstrip("/") + "/", f"Record/{record_id}") if record_id else None
 
+    # Título: <a class="title ...">
+    titulo_tag = card.find("a", class_="title")
+    titulo: str = titulo_tag.get_text(strip=True) if titulo_tag else ""
+
+    # Formato: <span class="format ...">
     formato_tag = card.find(class_="format")
     tipo_texto: str = formato_tag.get_text(strip=True) if formato_tag else ""
 
-    autor_tag = card.find("span", class_="summaryAuthor")
-    if not autor_tag:
-        autor_tag = card.find(class_=re.compile(r"author", re.I))
+    # Autor: presente sólo en lista si la plantilla lo incluye
+    autor_tag = card.find("span", class_=re.compile(r"summaryAuthor|author", re.I))
     autores_texto: str | None = autor_tag.get_text(strip=True) if autor_tag else None
 
-    año_tag = card.find("span", class_="summaryPublicationDate")
-    año: int | None = None
-    if año_tag:
-        año = _extraer_año(año_tag.get_text(strip=True))
+    # Año: COinS (rft.date) → "Published YYYY" → regex en texto completo
+    año: int | None = _extraer_año_coins(card)
+    if año is None:
+        for div in card.find_all("div"):
+            texto = div.get_text(strip=True)
+            if re.match(r"^Published\s+\d{4}", texto, re.I):
+                año = _extraer_año(texto)
+                break
+    if año is None:
+        año = _extraer_año(card.get_text(" "))
+
     return {
         "vufind_id": record_id,
         "url_detalle": url_detalle,
@@ -176,8 +204,13 @@ def parsear_detalle(soup: BeautifulSoup, base_url: str, vufind_id: str) -> dict[
 
 
 def _tiene_siguiente_pagina(soup: BeautifulSoup) -> bool:
-    """Devuelve True si existe un enlace de página siguiente en la paginación."""
+    """Devuelve True si existe un enlace de página siguiente en la paginación.
+
+    VuFind UAT usa <a class="page-next"> o texto "Next"/"Siguiente".
+    """
     if soup.find("a", rel="next"):
+        return True
+    if soup.find("a", class_="page-next"):
         return True
     for a in soup.find_all("a"):
         texto = a.get_text(strip=True).lower()
@@ -255,7 +288,8 @@ class VuFindUATHarvester(BaseHarvester):
                 resp.raise_for_status()
 
                 soup = BeautifulSoup(resp.text, "html.parser")
-                cards = soup.find_all("div", class_="result")
+                # VuFind UAT usa <li class="result">, no <div class="result">
+                cards = soup.find_all("li", class_="result")
                 log.debug("vufind.pagina", pagina=pagina, n_cards=len(cards))
 
                 if not cards:

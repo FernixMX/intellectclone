@@ -8,23 +8,36 @@
 <div id="search-results-container">
   <h2>Resultados: 3 registros encontrados</h2>
 
-  <div class="result">
-    <div class="media">
-      <div class="media-body">
-        <a class="title" href="/vufind/Record/UAT-2020-007">
-          Impacto del cambio climático en la agricultura del noreste de México
-        </a>
-        <div class="format badge">Libro</div>
-        <span class="summaryAuthor">Torres Villanueva, Ana Lucía</span>
-        <span class="summaryPublicationDate">2020</span>
-      </div>
-    </div>
-  </div>
+  <ul id="result-list-placeholder">
 
+    <li class="result" id="result0">
+      <input class="hiddenId" type="hidden" value="UAT-2020-007"/>
+      <div class="media">
+        <div class="media-body">
+          <div class="result-body">
+            <div>
+              <a class="title getFull" href="/vufind/Record/UAT-2020-007">
+                Impacto del cambio climático en la agricultura del noreste de México
+              </a>
+            </div>
+            <div>Published 2020</div>
+            <div class="result-formats">
+              <span class="format book">Libro</span>
+            </div>
+            <span class="summaryAuthor">Torres Villanueva, Ana Lucía</span>
+            <span class="Z3988" title="rft.date=2020&amp;rft.creator=Torres+Villanueva"></span>
+          </div>
+        </div>
+      </div>
+    </li>
+
+  </ul>
 </div>
 
-<nav class="pagination-simple">
-  <!-- No hay enlace "siguiente" — esta es la última página -->
-</nav>
+<ul class="pagination" aria-label="Pagination">
+  <li><a aria-label="page_no" href="/vufind/Search/Results?page=1">1</a></li>
+  <li class="active"><span>2</span></li>
+  <!-- Sin enlace "siguiente" — última página -->
+</ul>
 </body>
 </html>
