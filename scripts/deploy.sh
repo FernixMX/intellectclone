@@ -71,8 +71,19 @@ fi
 # ---------------------------------------------------------------------------
 # Construir imágenes y levantar contenedores
 # ---------------------------------------------------------------------------
-log "Construyendo imágenes y levantando contenedores..."
-docker compose -f "${APP_DIR}/${COMPOSE_FILE}" up -d --build
+log "Construyendo imagen frontend con NEXT_PUBLIC_API_URL inyectado..."
+docker build \
+    -t intellectclone-frontend \
+    --build-arg NEXT_PUBLIC_API_URL=https://elegant-keller.212-227-239-140.plesk.page/ \
+    --no-cache \
+    -f "${APP_DIR}/frontend/Dockerfile" \
+    "${APP_DIR}/frontend/"
+
+log "Construyendo imagen backend..."
+docker compose -f "${APP_DIR}/${COMPOSE_FILE}" --env-file "${APP_DIR}/${ENV_FILE}" build --no-cache backend
+
+log "Levantando contenedores..."
+docker compose -f "${APP_DIR}/${COMPOSE_FILE}" --env-file "${APP_DIR}/${ENV_FILE}" up -d
 
 # ---------------------------------------------------------------------------
 # Esperar a que el backend esté listo (healthcheck interno de postgres)

@@ -10,12 +10,15 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+import sqlalchemy as sa
 import structlog
 
 from intellectclone.celery_app import celery_app
 from intellectclone.db.session import _get_session_factory, reset_engine
 from intellectclone.harvesters.runner import ejecutar_cosecha
-from intellectclone.models.enums import EstadoCosecha
+from intellectclone.models.enums import EstadoCosecha, TipoFuente
+from intellectclone.models.persona import Persona
+from intellectclone.models.produccion import Paper
 from intellectclone.models.sistema import Cosecha
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
@@ -67,6 +70,9 @@ async def _ejecutar_cosecha_async(
         await session.commit()
         log.info("cosecha.task.iniciada")
 
+    if modo == "enrich_pendiente":
+        parametros = await _populate_enrich_pendiente(fuente_tipo, parametros, factory)
+
     try:
         async with factory() as session:
             resumen = await ejecutar_cosecha(
@@ -115,3 +121,25 @@ async def _ejecutar_cosecha_async(
 
         log.error("cosecha.task.fallida", error=str(exc))
         raise
+
+
+async def _populate_enrich_pendiente(
+    fuente_tipo: str,
+    parametros: dict[str, Any],
+    factory: Any,
+) -> dict[str, Any]:
+    """Consulta la DB para pre-poblar la lista de IDs a enriquecer en batch."""
+    async with factory() as session:
+        if fuente_tipo == TipoFuente.crossref.value:
+            rows = await session.execute(sa.select(Paper.doi).where(Paper.doi.isnot(None)))
+            dois = [str(r[0]) for r in rows]
+            logger.info("enrich_pendiente.crossref.dois_encontrados", total=len(dois))
+            return {**parametros, "dois": dois}
+
+        if fuente_tipo == TipoFuente.orcid.value:
+            rows = await session.execute(sa.select(Persona.orcid).where(Persona.orcid.isnot(None)))
+            orcids = [str(r[0]) for r in rows]
+            logger.info("enrich_pendiente.orcid.orcids_encontrados", total=len(orcids))
+            return {**parametros, "orcids": orcids}
+
+    return parametros

@@ -173,6 +173,33 @@ class ORCIDEnricher(BaseHarvester):
         except Exception:
             return False
 
+    async def _cosechar_orcid(
+        self,
+        client: httpx.AsyncClient,
+        orcid: str,
+        intervalo: float,
+        log: structlog.stdlib.BoundLogger,
+    ) -> AsyncGenerator[ResultadoCosecha, None]:
+        """Fetches and yields works for a single ORCID."""
+        await asyncio.sleep(intervalo)
+        resp = await client.get(f"{self._base_url}/v3.0/{orcid}/works")
+        resp.raise_for_status()
+        payload: dict[str, Any] = resp.json()
+        groups: list[dict[str, Any]] = payload.get("group") or []
+        for group in groups:
+            summaries: list[dict[str, Any]] = group.get("work-summary") or []
+            if not summaries:
+                continue
+            summary = summaries[0]
+            datos = parsear_work_orcid(summary, orcid)
+            if datos is None:
+                continue
+            parsed = self.parsear_registro(datos)
+            yield ResultadoCosecha(
+                datos=parsed,
+                fuente_id=str(parsed.get("orcid_put_code") or parsed.get("doi") or orcid),
+            )
+
     async def cosechar(
         self,
         cosecha_id: str,
@@ -180,49 +207,50 @@ class ORCIDEnricher(BaseHarvester):
         parametros: dict[str, Any],
     ) -> AsyncGenerator[ResultadoCosecha, None]:
         """
-        Cosecha todos los works de un ORCID.
-        parametros["orcid"] es obligatorio.
-        Emite un ResultadoCosecha por each work válido.
+        - modo normal: cosecha works de parametros["orcid"].
+        - modo enrich_pendiente: itera parametros["orcids"] (lista pre-poblada por la tarea).
         """
         log = logger.bind(cosecha_id=cosecha_id, fuente=self.fuente_tipo)
-        orcid: str = str(parametros.get("orcid", "")).strip()
+        intervalo = 1.0 / self.rate_limit_requests_por_segundo
 
+        if modo == "enrich_pendiente":
+            orcids: list[str] = list(parametros.get("orcids") or [])
+            log.info("orcid.batch_inicio", total=len(orcids))
+            async with httpx.AsyncClient(
+                headers=self._headers,
+                timeout=self._timeout,
+                follow_redirects=True,
+            ) as client:
+                for orcid_item in orcids:
+                    orcid_item = orcid_item.strip()
+                    if not validar_orcid(orcid_item):
+                        log.debug("orcid.invalido_en_batch", orcid=orcid_item)
+                        continue
+                    try:
+                        async for resultado in self._cosechar_orcid(
+                            client, orcid_item, intervalo, log
+                        ):
+                            yield resultado
+                    except Exception as exc:
+                        log.warning("orcid.error_en_batch", orcid=orcid_item, error=str(exc))
+            log.info("orcid.batch_fin")
+            return
+
+        orcid: str = str(parametros.get("orcid", "")).strip()
         if not validar_orcid(orcid):
             log.warning("orcid.invalido", orcid=orcid)
             return
 
         log.info("orcid.cosecha_inicio", orcid=orcid)
-        intervalo = 1.0 / self.rate_limit_requests_por_segundo
         total = 0
-
         async with httpx.AsyncClient(
             headers=self._headers,
             timeout=self._timeout,
             follow_redirects=True,
         ) as client:
-            await asyncio.sleep(intervalo)
-            resp = await client.get(f"{self._base_url}/v3.0/{orcid}/works")
-            resp.raise_for_status()
-
-            payload: dict[str, Any] = resp.json()
-            groups: list[dict[str, Any]] = payload.get("group") or []
-
-            for group in groups:
-                summaries: list[dict[str, Any]] = group.get("work-summary") or []
-                if not summaries:
-                    continue
-                # Tomar el primer summary del grupo (el más reciente / preferente)
-                summary = summaries[0]
-                datos = parsear_work_orcid(summary, orcid)
-                if datos is None:
-                    continue
-                parsed = self.parsear_registro(datos)
-                yield ResultadoCosecha(
-                    datos=parsed,
-                    fuente_id=str(parsed.get("orcid_put_code") or parsed.get("doi") or orcid),
-                )
+            async for resultado in self._cosechar_orcid(client, orcid, intervalo, log):
+                yield resultado
                 total += 1
-
         log.info("orcid.cosecha_fin", orcid=orcid, total=total)
 
     def parsear_registro(self, raw_data: dict[str, Any]) -> dict[str, Any]:

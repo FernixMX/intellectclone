@@ -158,20 +158,53 @@ class CrossrefEnricher(BaseHarvester):
         parametros: dict[str, Any],
     ) -> AsyncGenerator[ResultadoCosecha, None]:
         """
-        Resuelve un DOI y emite un único ResultadoCosecha con metadatos completos.
-        parametros["doi"] es obligatorio.
-        Si el DOI no existe en Crossref (404), no emite nada.
+        - modo normal: resuelve el DOI en parametros["doi"].
+        - modo enrich_pendiente: itera parametros["dois"] (lista pre-poblada por la tarea).
         """
         log = logger.bind(cosecha_id=cosecha_id, fuente=self.fuente_tipo)
-        doi_raw: str = str(parametros.get("doi", "")).strip()
+        intervalo = 1.0 / self.rate_limit_requests_por_segundo
 
+        if modo == "enrich_pendiente":
+            dois: list[str] = list(parametros.get("dois") or [])
+            log.info("crossref.batch_inicio", total=len(dois))
+            async with httpx.AsyncClient(
+                headers=self._headers,
+                timeout=self._timeout,
+                follow_redirects=True,
+            ) as client:
+                for doi_raw in dois:
+                    doi_raw = doi_raw.strip()
+                    if not doi_raw:
+                        continue
+                    doi = normalizar_doi(doi_raw)
+                    await asyncio.sleep(intervalo)
+                    try:
+                        resp = await client.get(f"{self._base_url}/works/{doi}")
+                        if resp.status_code == 404:
+                            log.debug("crossref.doi_no_encontrado", doi=doi)
+                            continue
+                        resp.raise_for_status()
+                        message: dict[str, Any] = resp.json().get("message") or {}
+                        datos = parsear_crossref_work(message)
+                        if datos is None:
+                            continue
+                        parsed = self.parsear_registro(datos)
+                        yield ResultadoCosecha(
+                            datos=parsed,
+                            fuente_id=parsed.get("doi") or doi,
+                        )
+                    except Exception as exc:
+                        log.warning("crossref.error_doi", doi=doi, error=str(exc))
+            log.info("crossref.batch_fin")
+            return
+
+        doi_raw = str(parametros.get("doi", "")).strip()
         if not doi_raw:
             log.warning("crossref.doi_vacio")
             return
 
         doi = normalizar_doi(doi_raw)
         log.info("crossref.resolucion_inicio", doi=doi)
-        intervalo = 1.0 / self.rate_limit_requests_por_segundo
 
         async with httpx.AsyncClient(
             headers=self._headers,
@@ -187,7 +220,7 @@ class CrossrefEnricher(BaseHarvester):
 
             resp.raise_for_status()
             payload: dict[str, Any] = resp.json()
-            message: dict[str, Any] = payload.get("message") or {}
+            message = payload.get("message") or {}
             datos = parsear_crossref_work(message)
 
             if datos is None:
