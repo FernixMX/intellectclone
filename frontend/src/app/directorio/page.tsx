@@ -185,7 +185,9 @@ export default function Directorio() {
             <div
               style={{ fontWeight: 500, fontSize: 14, color: "var(--text-primary)", marginLeft: 8 }}
             >
-              <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}>{total}</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}>
+                {loading ? "…" : total.toLocaleString("es-MX")}
+              </span>
               <span style={{ color: "var(--text-muted)", fontWeight: 400 }}> investigadores</span>
             </div>
 

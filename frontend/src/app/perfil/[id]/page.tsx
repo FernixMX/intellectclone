@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import { api } from "@/lib/api";
+import { translateConcept } from "@/lib/translations";
 
 const AVATAR_COLORS = ["blue", "green", "orange", "purple", "red", "teal"];
 function avatarColor(id: string): string {
@@ -126,7 +127,7 @@ export default async function PerfilPage({ params }: Props) {
                       fontSize: 11,
                     }}
                   >
-                    {c}
+                    {translateConcept(c)}
                   </span>
                 ))}
               </div>
@@ -201,7 +202,7 @@ export default async function PerfilPage({ params }: Props) {
                 >
                   {areas.map((a) => (
                     <span key={a} className="badge badge-muted">
-                      {a}
+                      {translateConcept(a)}
                     </span>
                   ))}
                 </div>
