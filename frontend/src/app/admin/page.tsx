@@ -407,55 +407,57 @@ function CosechasTab({ adminKey }: { adminKey: string }) {
             Sin cosechas registradas
           </div>
         ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                {["Fuente", "Estado", "Inicio", "Duración", "Registros", "Nuevos", "Errores"].map(
-                  (h) => (
-                    <th key={h} className="table-th">
-                      {h}
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((c) => (
-                <tr key={c.id} className="table-tr">
-                  <td className="table-td strong">{c.fuente}</td>
-                  <td className="table-td">
-                    <span
-                      className="badge"
-                      style={{
-                        color: ESTADO_COLOR[c.estado] ?? "var(--text-muted)",
-                        background: ESTADO_BG[c.estado] ?? "var(--bg-muted)",
-                      }}
-                    >
-                      {c.estado}
-                    </span>
-                  </td>
-                  <td className="table-td mono" style={{ fontSize: 11 }}>
-                    {fmtDate(c.iniciada_at)}
-                  </td>
-                  <td className="table-td mono" style={{ fontSize: 11 }}>
-                    {fmtMs(c.duracion_ms)}
-                  </td>
-                  <td className="table-td mono">
-                    {c.registros_procesados.toLocaleString("es-MX")}
-                  </td>
-                  <td className="table-td mono" style={{ color: "var(--green)" }}>
-                    +{c.registros_nuevos.toLocaleString("es-MX")}
-                  </td>
-                  <td
-                    className="table-td mono"
-                    style={{ color: c.errores_count > 0 ? "var(--red)" : "var(--text-muted)" }}
-                  >
-                    {c.errores_count}
-                  </td>
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  {["Fuente", "Estado", "Inicio", "Duración", "Registros", "Nuevos", "Errores"].map(
+                    (h) => (
+                      <th key={h} className="table-th">
+                        {h}
+                      </th>
+                    )
+                  )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {items.map((c) => (
+                  <tr key={c.id} className="table-tr">
+                    <td className="table-td strong">{c.fuente}</td>
+                    <td className="table-td">
+                      <span
+                        className="badge"
+                        style={{
+                          color: ESTADO_COLOR[c.estado] ?? "var(--text-muted)",
+                          background: ESTADO_BG[c.estado] ?? "var(--bg-muted)",
+                        }}
+                      >
+                        {c.estado}
+                      </span>
+                    </td>
+                    <td className="table-td mono" style={{ fontSize: 11 }}>
+                      {fmtDate(c.iniciada_at)}
+                    </td>
+                    <td className="table-td mono" style={{ fontSize: 11 }}>
+                      {fmtMs(c.duracion_ms)}
+                    </td>
+                    <td className="table-td mono">
+                      {c.registros_procesados.toLocaleString("es-MX")}
+                    </td>
+                    <td className="table-td mono" style={{ color: "var(--green)" }}>
+                      +{c.registros_nuevos.toLocaleString("es-MX")}
+                    </td>
+                    <td
+                      className="table-td mono"
+                      style={{ color: c.errores_count > 0 ? "var(--red)" : "var(--text-muted)" }}
+                    >
+                      {c.errores_count}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

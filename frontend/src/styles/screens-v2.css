@@ -1492,6 +1492,68 @@
   color: var(--teal);
 }
 
+/* ── PUB-NAV (base, controlled by Header) ── */
+.pub-nav {
+  display: flex;
+  align-items: center;
+  margin-left: 24px;
+  gap: 4px;
+}
+
+/* ── HAMBURGER (hidden on desktop) ── */
+.pub-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: #8da2b5;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.pub-hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+}
+
+/* ── DIRECTORIO MOBILE HELPERS (hidden on desktop) ── */
+.dir-filters-toggle {
+  display: none;
+}
+.dir-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  top: 60px;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 48;
+}
+.dir-sidebar-overlay.open {
+  display: block;
+}
+.dir-sidebar-close {
+  display: none;
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+.dir-sidebar-close:hover {
+  background: var(--bg-hover);
+}
+
 /* ── DIRECTORIO PAGE (/directorio) ── */
 .dir-layout {
   display: flex;
@@ -1907,4 +1969,151 @@
   color: var(--text-light);
   width: 26px;
   text-align: right;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE  375 px – 767 px
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  /* ─ Public header ─ */
+  .pub-header {
+    padding: 0 var(--sp-4);
+    gap: var(--sp-3);
+  }
+  .pub-nav {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: #14243c;
+    border-bottom: 1px solid #1e3350;
+    padding: var(--sp-3) var(--sp-4);
+    flex-direction: column;
+    gap: 2px;
+    z-index: 99;
+    margin-left: 0;
+  }
+  .pub-nav.open {
+    display: flex;
+  }
+  .pub-hamburger {
+    display: flex;
+  }
+  .pub-header-login {
+    display: none;
+  }
+
+  /* ─ Directorio: sidebar collapses behind overlay ─ */
+  .dir-filters-toggle {
+    display: flex;
+    flex-shrink: 0;
+  }
+  .dir-sidebar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 280px;
+    height: calc(100vh - 60px);
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 250ms ease;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+  }
+  .dir-sidebar.open {
+    transform: translateX(0);
+  }
+  .dir-sidebar-close {
+    display: block;
+  }
+  .dir-toolbar {
+    padding: var(--sp-3) var(--sp-4);
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+  .dir-search {
+    order: 10;
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+  .results-grid {
+    grid-template-columns: 1fr;
+    padding: var(--sp-4);
+  }
+  .pagination {
+    flex-direction: column;
+    gap: var(--sp-2);
+    align-items: center;
+  }
+
+  /* ─ Profile ─ */
+  .profile-shell {
+    padding-left: var(--sp-4);
+    padding-right: var(--sp-4);
+    padding-bottom: 40px;
+  }
+  .profile-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-4);
+    padding: var(--sp-5);
+  }
+  .profile-name {
+    font-size: 20px;
+  }
+  .profile-hero-actions {
+    margin-left: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .stats-row-4 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+  .coauthor-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* ─ Network: panel stacks below canvas ─ */
+  .net-body {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .net-canvas {
+    flex: none;
+    height: 55vh;
+    min-height: 280px;
+  }
+  .net-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    padding: var(--sp-4);
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+
+  /* ─ Admin ─ */
+  .grid-4 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ─ Acerca / Editorial ─ */
+  .editorial {
+    padding: 80px var(--sp-4) 40px;
+  }
+  .toc {
+    display: none;
+  }
+  .source-grid {
+    grid-template-columns: 1fr;
+  }
 }

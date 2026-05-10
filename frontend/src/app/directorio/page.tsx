@@ -48,6 +48,7 @@ export default function Directorio() {
   const [sort, setSort] = useState("relevancia");
   const [page, setPage] = useState(1);
   const [soloUat, setSoloUat] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [dependencias, setDependencias] = useState<Dependencia[]>([]);
   const [conceptos, setConceptos] = useState<string[]>([]);
@@ -100,9 +101,20 @@ export default function Directorio() {
     <div style={{ background: "var(--bg-body)", minHeight: "100vh" }}>
       <Header />
 
+      <div
+        className={sidebarOpen ? "dir-sidebar-overlay open" : "dir-sidebar-overlay"}
+        onClick={() => setSidebarOpen(false)}
+      />
+
       <div className="dir-layout">
         {/* Sidebar */}
-        <aside className="dir-sidebar">
+        <aside
+          className={sidebarOpen ? "dir-sidebar open" : "dir-sidebar"}
+          style={{ position: "relative" }}
+        >
+          <button className="dir-sidebar-close" onClick={() => setSidebarOpen(false)}>
+            ✕
+          </button>
           <div
             style={{
               fontWeight: 600,
@@ -191,6 +203,14 @@ export default function Directorio() {
         {/* Main */}
         <div className="dir-main">
           <div className="dir-toolbar">
+            {/* Mobile: open filter sidebar */}
+            <button
+              className="dir-filters-toggle btn btn-outline btn-sm"
+              onClick={() => setSidebarOpen(true)}
+            >
+              ⚙ Filtros{hasFilters ? " •" : ""}
+            </button>
+
             {/* Toggle Solo UAT / Todos */}
             <div
               style={{
@@ -224,7 +244,7 @@ export default function Directorio() {
               </button>
             </div>
 
-            <div className="input-group" style={{ flex: 1, maxWidth: 400 }}>
+            <div className="input-group dir-search" style={{ flex: 1, maxWidth: 400 }}>
               <span className="input-icon-left" style={{ fontSize: 15 }}>
                 🔍
               </span>
