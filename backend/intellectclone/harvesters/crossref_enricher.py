@@ -164,6 +164,14 @@ class CrossrefEnricher(BaseHarvester):
         log = logger.bind(cosecha_id=cosecha_id, fuente=self.fuente_tipo)
         intervalo = 1.0 / self.rate_limit_requests_por_segundo
 
+        log.info(
+            "crossref.cosechar_entrada",
+            modo=repr(modo),
+            es_batch=(modo == "enrich_pendiente"),
+            tiene_dois=("dois" in parametros),
+            dois_count=len(parametros.get("dois") or []),
+        )
+
         if modo == "enrich_pendiente":
             dois: list[str] = list(parametros.get("dois") or [])
             log.info("crossref.batch_inicio", total=len(dois))

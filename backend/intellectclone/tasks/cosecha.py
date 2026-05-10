@@ -13,6 +13,9 @@ from typing import Any
 import sqlalchemy as sa
 import structlog
 
+# Importar el paquete harvesters garantiza que todos los harvesters concretos
+# se auto-registren en el runner (cada módulo llama registrar_harvester al importarse).
+import intellectclone.harvesters  # noqa: F401
 from intellectclone.celery_app import celery_app
 from intellectclone.db.session import _get_session_factory, reset_engine
 from intellectclone.harvesters.runner import ejecutar_cosecha
@@ -70,8 +73,22 @@ async def _ejecutar_cosecha_async(
         await session.commit()
         log.info("cosecha.task.iniciada")
 
+    log.info(
+        "cosecha.task.modo_recibido",
+        modo=repr(modo),
+        fuente_tipo=repr(fuente_tipo),
+        es_enrich_pendiente=(modo == "enrich_pendiente"),
+    )
+
     if modo == "enrich_pendiente":
+        log.info("cosecha.task.populate_inicio", fuente_tipo=fuente_tipo)
         parametros = await _populate_enrich_pendiente(fuente_tipo, parametros, factory)
+        log.info(
+            "cosecha.task.populate_fin",
+            parametros_keys=list(parametros.keys()),
+            dois_count=len(parametros.get("dois") or []),
+            orcids_count=len(parametros.get("orcids") or []),
+        )
 
     try:
         async with factory() as session:
@@ -129,13 +146,22 @@ async def _populate_enrich_pendiente(
     factory: Any,
 ) -> dict[str, Any]:
     """Consulta la DB para pre-poblar la lista de IDs a enriquecer en batch."""
+    logger.info(
+        "populate.entrada",
+        fuente_tipo=repr(fuente_tipo),
+        crossref_value=repr(TipoFuente.crossref.value),
+        orcid_value=repr(TipoFuente.orcid.value),
+        es_crossref=(fuente_tipo == TipoFuente.crossref.value),
+        es_orcid=(fuente_tipo == TipoFuente.orcid.value),
+    )
+
     if fuente_tipo == TipoFuente.crossref.value:
         async with factory() as session:
             result = await session.scalars(
                 sa.select(Paper.doi).where(Paper.doi.isnot(None), Paper.doi != "")
             )
             dois = list(result)
-        logger.info("enrich_pendiente.crossref.dois_encontrados", total=len(dois))
+        logger.info("populate.crossref.dois_encontrados", total=len(dois))
         return {**parametros, "dois": dois}
 
     if fuente_tipo == TipoFuente.orcid.value:
@@ -144,7 +170,8 @@ async def _populate_enrich_pendiente(
                 sa.select(Persona.orcid).where(Persona.orcid.isnot(None), Persona.orcid != "")
             )
             orcids = list(result)
-        logger.info("enrich_pendiente.orcid.orcids_encontrados", total=len(orcids))
+        logger.info("populate.orcid.orcids_encontrados", total=len(orcids))
         return {**parametros, "orcids": orcids}
 
+    logger.warning("populate.fuente_no_reconocida", fuente_tipo=fuente_tipo)
     return parametros
