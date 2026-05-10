@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import Header from "@/components/Header";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
@@ -56,12 +65,14 @@ function StatCard({
   icon,
   label,
   value,
+  subvalue,
   color,
   bg,
 }: {
   icon: string;
   label: string;
   value: string | number;
+  subvalue?: string;
   color: string;
   bg: string;
 }) {
@@ -74,6 +85,11 @@ function StatCard({
         <div className="stat-value">
           {typeof value === "number" ? value.toLocaleString("es-MX") : value}
         </div>
+        {subvalue && (
+          <div style={{ fontSize: 11, color: "var(--text-light)", marginTop: 1, lineHeight: 1.3 }}>
+            {subvalue}
+          </div>
+        )}
         <div className="stat-label">{label}</div>
       </div>
     </div>
@@ -254,11 +270,19 @@ function shortDepName(nombre: string, nombreCorto: string | null): string {
 
 // ─── Dashboard tab ───────────────────────────────────────────────────────────
 
+const TOOLTIP_STYLE = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border-color)",
+  borderRadius: 6,
+  fontSize: 12,
+} as const;
+
 function DashboardTab() {
   const [papersData, setPapersData] = useState<PapersPorAnio[]>([]);
   const [depsData, setDepsData] = useState<TopDependenciaItem[]>([]);
   const [invData, setInvData] = useState<TopInvestigadorItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [soloUat, setSoloUat] = useState(true);
 
   useEffect(() => {
     setLoading(true);
@@ -288,6 +312,12 @@ function DashboardTab() {
     );
   }
 
+  // Stacked chart: bottom = externos, top = UAT
+  const papersChart = papersData.map((d) => ({
+    ...d,
+    papers_externos: d.total_papers - d.total_papers_uat,
+  }));
+
   const depsChart = depsData.map((d) => ({
     name: shortDepName(d.nombre, d.nombre_corto),
     fullName: d.nombre,
@@ -303,6 +333,51 @@ function DashboardTab() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
+      {/* Toggle Solo UAT / Todos */}
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-4)", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            background: "var(--bg-muted)",
+            borderRadius: "var(--radius-sm)",
+            padding: 2,
+            gap: 2,
+          }}
+        >
+          <button
+            className={soloUat ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm"}
+            style={{ height: 30, fontSize: 12 }}
+            onClick={() => setSoloUat(true)}
+          >
+            Solo UAT
+          </button>
+          <button
+            className={!soloUat ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm"}
+            style={{ height: 30, fontSize: 12 }}
+            onClick={() => setSoloUat(false)}
+          >
+            UAT + externos
+          </button>
+        </div>
+        <div
+          style={{
+            fontSize: 12,
+            color: "var(--text-muted)",
+            background: "var(--bg-muted)",
+            borderRadius: "var(--radius-sm)",
+            padding: "6px 10px",
+            lineHeight: 1.4,
+            maxWidth: 560,
+          }}
+        >
+          <strong style={{ color: "var(--text-secondary)" }}>UAT</strong> = publicaciones donde al
+          menos un autor pertenece a una dependencia/facultad confirmada de la UAT. &nbsp;
+          <strong style={{ color: "var(--text-secondary)" }}>Externos</strong> = publicaciones de
+          coautores que colaboraron con investigadores UAT pero no están adscritos a ninguna
+          dependencia UAT.
+        </div>
+      </div>
+
       {/* Papers por año */}
       <div className="card" style={{ padding: "var(--sp-5)" }}>
         <div
@@ -315,20 +390,26 @@ function DashboardTab() {
         >
           Publicaciones por año
         </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={papersData} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={papersChart} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
             <XAxis dataKey="año" tick={{ fontSize: 11, fill: "var(--text-muted)" }} />
             <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} width={40} />
-            <Tooltip
-              contentStyle={{
-                background: "var(--bg-card)",
-                border: "1px solid var(--border-color)",
-                borderRadius: 6,
-                fontSize: 12,
-              }}
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            {!soloUat && (
+              <Bar dataKey="papers_externos" name="Externos" fill="#e2e8f0" stackId="a" />
+            )}
+            <Bar
+              dataKey="total_papers_uat"
+              name="UAT"
+              fill="var(--blue)"
+              stackId="a"
+              radius={[3, 3, 0, 0]}
             />
-            <Bar dataKey="total_papers" name="Papers" fill="var(--blue)" radius={[3, 3, 0, 0]} />
+            <Legend
+              iconSize={10}
+              wrapperStyle={{ fontSize: 11, paddingTop: 8, color: "var(--text-muted)" }}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -344,7 +425,7 @@ function DashboardTab() {
               marginBottom: "var(--sp-4)",
             }}
           >
-            Top dependencias (papers)
+            Top dependencias (papers UAT)
           </div>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart
@@ -368,12 +449,7 @@ function DashboardTab() {
                 labelFormatter={(_, payload) =>
                   (payload?.[0]?.payload as { fullName?: string } | undefined)?.fullName ?? ""
                 }
-                contentStyle={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: 6,
-                  fontSize: 12,
-                }}
+                contentStyle={TOOLTIP_STYLE}
               />
               <Bar dataKey="papers" name="Papers" fill="var(--green)" radius={[0, 3, 3, 0]} />
             </BarChart>
@@ -389,7 +465,7 @@ function DashboardTab() {
               marginBottom: "var(--sp-4)",
             }}
           >
-            Top investigadores (papers)
+            Top investigadores UAT (papers)
           </div>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={invChart} margin={{ top: 4, right: 8, bottom: 20, left: 0 }}>
@@ -402,14 +478,7 @@ function DashboardTab() {
                 interval={0}
               />
               <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} width={36} />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: 6,
-                  fontSize: 12,
-                }}
-              />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Bar dataKey="papers" name="Papers" fill="var(--purple)" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -801,8 +870,9 @@ export default function AdminPage() {
             />
             <StatCard
               icon="📄"
-              label="Papers"
-              value={stats.total_papers}
+              label="Papers UAT"
+              value={stats.total_papers_uat}
+              subvalue={`${stats.total_papers.toLocaleString("es-MX")} total (con externos)`}
               color="var(--green)"
               bg="var(--green-light)"
             />

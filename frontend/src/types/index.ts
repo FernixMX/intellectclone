@@ -1,6 +1,7 @@
 export interface EstadisticasGlobales {
   total_personas: number;
   total_papers: number;
+  total_papers_uat: number;
   total_coautorias: number;
   total_dependencias: number;
   total_cuerpos_academicos: number;
@@ -150,6 +151,7 @@ export interface Dependencia {
 export interface PapersPorAnio {
   año: number;
   total_papers: number;
+  total_papers_uat: number;
   total_citas: number;
 }
 

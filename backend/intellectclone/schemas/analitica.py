@@ -12,6 +12,7 @@ from pydantic import BaseModel
 class PuntoPapersPorAnio(BaseModel):
     año: int
     total_papers: int
+    total_papers_uat: int = 0
     total_citas: int
 
 
@@ -69,6 +70,7 @@ class RedCoautoriaResponse(BaseModel):
 class EstadisticasGlobalesResponse(BaseModel):
     total_personas: int
     total_papers: int
+    total_papers_uat: int
     total_coautorias: int
     total_dependencias: int
     total_cuerpos_academicos: int

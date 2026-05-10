@@ -24,8 +24,8 @@ class RepositorioAnalitica:
         self._session = session
 
     async def papers_por_anio(self) -> list[dict[str, Any]]:
-        """Serie temporal: papers agrupados por año con suma de citas."""
-        stmt = (
+        """Serie temporal: papers agrupados por año. Incluye conteo UAT (>=1 autor con dependencia)."""
+        stmt_all = (
             sa.select(
                 Paper.año,
                 sa.func.count(Paper.id).label("total_papers"),
@@ -35,8 +35,37 @@ class RepositorioAnalitica:
             .group_by(Paper.año)
             .order_by(Paper.año)
         )
-        result = await self._session.execute(stmt)
-        return [dict(r._mapping) for r in result.all()]
+
+        # Papers con al menos un autor UAT (persona con dependencia_id asignada)
+        uat_ids_sq = (
+            sa.select(sa.func.distinct(Coautoria.paper_id))
+            .join(Persona, Persona.id == Coautoria.persona_id)
+            .where(Persona.dependencia_id.is_not(None))
+            .scalar_subquery()
+        )
+        stmt_uat = (
+            sa.select(
+                Paper.año,
+                sa.func.count(Paper.id).label("n"),
+            )
+            .where(Paper.año.is_not(None))
+            .where(Paper.id.in_(uat_ids_sq))
+            .group_by(Paper.año)
+        )
+
+        result_all = await self._session.execute(stmt_all)
+        result_uat = await self._session.execute(stmt_uat)
+
+        uat_by_year: dict[int, int] = {r.año: r.n for r in result_uat.all()}
+        return [
+            {
+                "año": r.año,
+                "total_papers": r.total_papers,
+                "total_papers_uat": uat_by_year.get(r.año, 0),
+                "total_citas": r.total_citas,
+            }
+            for r in result_all.all()
+        ]
 
     async def top_dependencias(self, limite: int = 10) -> list[dict[str, Any]]:
         """Top N dependencias por número de papers únicos de sus investigadores."""
@@ -248,6 +277,12 @@ class RepositorioAnalitica:
         for nombre, stmt in [
             ("total_personas", sa.select(sa.func.count(Persona.id)).where(Persona.activa == True)),  # noqa: E712
             ("total_papers", sa.select(sa.func.count(Paper.id))),
+            (
+                "total_papers_uat",
+                sa.select(sa.func.count(sa.func.distinct(Coautoria.paper_id)))
+                .join(Persona, Persona.id == Coautoria.persona_id)
+                .where(Persona.dependencia_id.is_not(None)),
+            ),
             ("total_coautorias", sa.select(sa.func.count(Coautoria.id))),
             (
                 "total_dependencias",
