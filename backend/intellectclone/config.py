@@ -71,6 +71,11 @@ class Settings(BaseSettings):
     openalex_polite_email: str = ""
     ror_id_uat: str = "https://ror.org/04hhneb29"
 
+    # -------------------------------------------------------------------------
+    # Admin
+    # -------------------------------------------------------------------------
+    admin_secret_key: str = ""
+
     @field_validator("jwt_secret")
     @classmethod
     def jwt_secret_must_not_be_empty(cls, v: str) -> str:

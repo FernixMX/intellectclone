@@ -17,6 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from intellectclone.api.deps import verificar_admin_key
 from intellectclone.db.session import get_db
 from intellectclone.perfilador.metricas import actualizar_metricas_todas
 
@@ -31,6 +32,7 @@ class MetricasResultado(BaseModel):
     "/metricas/recalcular",
     response_model=MetricasResultado,
     summary="Recalcular métricas bibliométricas de todas las personas",
+    dependencies=[Depends(verificar_admin_key)],
 )
 async def recalcular_metricas(
     session: AsyncSession = Depends(get_db),

@@ -29,10 +29,14 @@ async function get<T>(path: string, params?: Record<string, string | number>): P
   return res.json() as Promise<T>;
 }
 
-async function post<T>(path: string, body?: unknown): Promise<T> {
+async function post<T>(
+  path: string,
+  body?: unknown,
+  extraHeaders?: Record<string, string>
+): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(extraHeaders ?? {}) },
     body: body !== undefined ? JSON.stringify(body) : undefined,
     cache: "no-store",
   });
@@ -85,18 +89,47 @@ export const api = {
   conceptosPersona: (id: string, limite = 5) =>
     get<string[]>(`/api/v1/personas/${id}/conceptos`, { limite }),
 
-  recalcularMetricas: () => post<MetricasResultado>("/api/v1/perfilador/metricas/recalcular"),
+  recalcularMetricas: (adminKey?: string) =>
+    post<MetricasResultado>(
+      "/api/v1/perfilador/metricas/recalcular",
+      undefined,
+      adminKey ? { "X-Admin-Key": adminKey } : undefined
+    ),
 
-  cosechaSniiApi: () => post<SniiApiResultado>("/api/v1/cosechas/snii-api"),
+  cosechaSniiApi: (adminKey?: string) =>
+    post<SniiApiResultado>(
+      "/api/v1/cosechas/snii-api",
+      undefined,
+      adminKey ? { "X-Admin-Key": adminKey } : undefined
+    ),
 
-  cosechaOpenAlexCompleta: () =>
-    post<CosechaDispararResponse>("/api/v1/cosechas/openalex-completa"),
+  cosechaOpenAlexCompleta: (adminKey?: string) =>
+    post<CosechaDispararResponse>(
+      "/api/v1/cosechas/openalex-completa",
+      undefined,
+      adminKey ? { "X-Admin-Key": adminKey } : undefined
+    ),
 
-  cosechaVuFindCompleta: () => post<CosechaDispararResponse>("/api/v1/cosechas/vufind-completa"),
+  cosechaVuFindCompleta: (adminKey?: string) =>
+    post<CosechaDispararResponse>(
+      "/api/v1/cosechas/vufind-completa",
+      undefined,
+      adminKey ? { "X-Admin-Key": adminKey } : undefined
+    ),
 
-  cosechaCrossrefEnrich: () => post<CosechaDispararResponse>("/api/v1/cosechas/crossref-enrich"),
+  cosechaCrossrefEnrich: (adminKey?: string) =>
+    post<CosechaDispararResponse>(
+      "/api/v1/cosechas/crossref-enrich",
+      undefined,
+      adminKey ? { "X-Admin-Key": adminKey } : undefined
+    ),
 
-  cosechaOrcidEnrich: () => post<CosechaDispararResponse>("/api/v1/cosechas/orcid-enrich"),
+  cosechaOrcidEnrich: (adminKey?: string) =>
+    post<CosechaDispararResponse>(
+      "/api/v1/cosechas/orcid-enrich",
+      undefined,
+      adminKey ? { "X-Admin-Key": adminKey } : undefined
+    ),
 
   dependencias: (params?: { limit?: number; offset?: number }) =>
     get<Paginated<Dependencia>>("/api/v1/dependencias", params as Record<string, string | number>),

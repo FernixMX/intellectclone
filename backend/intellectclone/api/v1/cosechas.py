@@ -17,6 +17,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from intellectclone.api.deps import verificar_admin_key
 from intellectclone.api.excepciones import EntidadNoEncontrada, EstadoInvalido
 from intellectclone.db import get_db
 from intellectclone.db.repositorios.cosecha import RepositorioCosecha
@@ -145,6 +146,7 @@ async def disparar_cosecha(
     "/snii-api",
     response_model=SniiApiResultadoResponse,
     summary="Cosecha SNII vía API JSON pública de produccioncientifica.uat.edu.mx",
+    dependencies=[Depends(verificar_admin_key)],
 )
 async def disparar_cosecha_snii_api(
     session: AsyncSession = Depends(get_db),
@@ -162,6 +164,7 @@ async def disparar_cosecha_snii_api(
     status_code=202,
     response_model=CosechaDispararResponse,
     summary="Dispara cosecha completa OpenAlex UAT (async Celery)",
+    dependencies=[Depends(verificar_admin_key)],
 )
 async def disparar_cosecha_openalex_completa(
     session: AsyncSession = Depends(get_db),
@@ -200,6 +203,7 @@ async def disparar_cosecha_openalex_completa(
     status_code=202,
     response_model=CosechaDispararResponse,
     summary="Dispara cosecha completa VuFind UAT (async Celery)",
+    dependencies=[Depends(verificar_admin_key)],
 )
 async def disparar_cosecha_vufind_completa(
     session: AsyncSession = Depends(get_db),
@@ -238,6 +242,7 @@ async def disparar_cosecha_vufind_completa(
     status_code=202,
     response_model=CosechaDispararResponse,
     summary="Dispara enriquecimiento Crossref (async Celery)",
+    dependencies=[Depends(verificar_admin_key)],
 )
 async def disparar_crossref_enrich(
     session: AsyncSession = Depends(get_db),
@@ -277,6 +282,7 @@ async def disparar_crossref_enrich(
     status_code=202,
     response_model=CosechaDispararResponse,
     summary="Dispara enriquecimiento ORCID (async Celery)",
+    dependencies=[Depends(verificar_admin_key)],
 )
 async def disparar_orcid_enrich(
     session: AsyncSession = Depends(get_db),

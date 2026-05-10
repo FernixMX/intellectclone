@@ -119,9 +119,90 @@ function ActionBtn({ label, loadingLabel, onClick, variant = "outline" }: Action
   );
 }
 
+// ─── Password gate ──────────────────────────────────────────────────────────
+
+function PasswordGate({ onSuccess }: { onSuccess: (key: string) => void }) {
+  const [value, setValue] = useState("");
+  const [error, setError] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!value.trim()) {
+      setError(true);
+      return;
+    }
+    setError(false);
+    onSuccess(value.trim());
+  };
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--bg-body)",
+      }}
+    >
+      <div className="card" style={{ padding: "var(--sp-8)", width: 340, textAlign: "center" }}>
+        <div style={{ fontSize: 32, marginBottom: "var(--sp-4)" }}>🔒</div>
+        <div
+          style={{
+            fontSize: 16,
+            fontWeight: 600,
+            color: "var(--text-primary)",
+            marginBottom: 4,
+          }}
+        >
+          Panel de administración
+        </div>
+        <div
+          style={{
+            fontSize: 13,
+            color: "var(--text-muted)",
+            marginBottom: "var(--sp-5)",
+          }}
+        >
+          Ingresa la clave de acceso
+        </div>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <input
+            type="password"
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              setError(false);
+            }}
+            placeholder="Clave de administrador"
+            autoFocus
+            style={{
+              padding: "9px 12px",
+              fontSize: 14,
+              border: `1px solid ${error ? "var(--red)" : "var(--border-color)"}`,
+              borderRadius: "var(--radius-md)",
+              background: "var(--bg-surface)",
+              color: "var(--text-primary)",
+              outline: "none",
+            }}
+          />
+          {error && (
+            <div style={{ fontSize: 12, color: "var(--red)", textAlign: "left" }}>
+              Ingresa una clave
+            </div>
+          )}
+          <button type="submit" className="btn btn-primary btn-sm">
+            Acceder
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 
-function CosechasTab() {
+function CosechasTab({ adminKey }: { adminKey: string }) {
   const [cosechas, setCosechas] = useState<Paginated<CosechaRead> | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -223,7 +304,7 @@ function CosechasTab() {
             label="Recalcular métricas"
             loadingLabel="Calculando…"
             onClick={async () => {
-              await api.recalcularMetricas();
+              await api.recalcularMetricas(adminKey);
             }}
           />
         </div>
@@ -235,7 +316,7 @@ function CosechasTab() {
             label="Cosecha SNII API"
             loadingLabel="Cosechando…"
             onClick={async () => {
-              const r: SniiApiResultado = await api.cosechaSniiApi();
+              const r: SniiApiResultado = await api.cosechaSniiApi(adminKey);
               void r;
             }}
             variant="primary"
@@ -249,7 +330,7 @@ function CosechasTab() {
             label="Cosecha OpenAlex completa"
             loadingLabel="Encolando…"
             onClick={async () => {
-              const r: CosechaDispararResponse = await api.cosechaOpenAlexCompleta();
+              const r: CosechaDispararResponse = await api.cosechaOpenAlexCompleta(adminKey);
               void r;
               silentRefresh();
             }}
@@ -264,7 +345,7 @@ function CosechasTab() {
             label="Cosecha VuFind completa"
             loadingLabel="Encolando…"
             onClick={async () => {
-              const r: CosechaDispararResponse = await api.cosechaVuFindCompleta();
+              const r: CosechaDispararResponse = await api.cosechaVuFindCompleta(adminKey);
               void r;
               silentRefresh();
             }}
@@ -279,7 +360,7 @@ function CosechasTab() {
             label="Enriquecer con Crossref"
             loadingLabel="Encolando…"
             onClick={async () => {
-              const r: CosechaDispararResponse = await api.cosechaCrossrefEnrich();
+              const r: CosechaDispararResponse = await api.cosechaCrossrefEnrich(adminKey);
               void r;
               silentRefresh();
             }}
@@ -293,7 +374,7 @@ function CosechasTab() {
             label="Enriquecer con ORCID"
             loadingLabel="Encolando…"
             onClick={async () => {
-              const r: CosechaDispararResponse = await api.cosechaOrcidEnrich();
+              const r: CosechaDispararResponse = await api.cosechaOrcidEnrich(adminKey);
               void r;
               silentRefresh();
             }}
@@ -413,16 +494,24 @@ function GemelosTab() {
 const TABS = ["Cosechas", "Gemelos digitales"] as const;
 type Tab = (typeof TABS)[number];
 
+const ADMIN_PROTECTED = process.env.NEXT_PUBLIC_ADMIN_PROTECTED === "true";
+
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("Cosechas");
   const [stats, setStats] = useState<EstadisticasGlobales | null>(null);
+  const [adminKey, setAdminKey] = useState<string | null>(ADMIN_PROTECTED ? null : "");
 
   useEffect(() => {
+    if (adminKey === null) return;
     api
       .estadisticasGlobales()
       .then(setStats)
       .catch(() => setStats(null));
-  }, []);
+  }, [adminKey]);
+
+  if (adminKey === null) {
+    return <PasswordGate onSuccess={setAdminKey} />;
+  }
 
   return (
     <div style={{ background: "var(--bg-body)", minHeight: "100vh" }}>
@@ -518,7 +607,7 @@ export default function AdminPage() {
         </div>
 
         {/* Tab content */}
-        {tab === "Cosechas" && <CosechasTab />}
+        {tab === "Cosechas" && <CosechasTab adminKey={adminKey} />}
         {tab === "Gemelos digitales" && <GemelosTab />}
       </div>
     </div>
