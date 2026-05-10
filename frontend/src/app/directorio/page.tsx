@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import { api } from "@/lib/api";
-import type { PersonaListItem, Paginated } from "@/types";
+import type { Dependencia, Paginated, PersonaListItem } from "@/types";
 
 const PER_PAGE = 12;
 
@@ -43,9 +43,19 @@ export default function Directorio() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [snii, setSnii] = useState("");
+  const [dependenciaId, setDependenciaId] = useState("");
+  const [area, setArea] = useState("");
   const [sort, setSort] = useState("relevancia");
   const [page, setPage] = useState(1);
   const [soloUat, setSoloUat] = useState(true);
+
+  const [dependencias, setDependencias] = useState<Dependencia[]>([]);
+  const [conceptos, setConceptos] = useState<string[]>([]);
+
+  useEffect(() => {
+    void api.dependencias({ limit: 200 }).then((r) => setDependencias(r.items));
+    void api.conceptosFrecuentes(30).then(setConceptos);
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -56,6 +66,8 @@ export default function Directorio() {
         q: search || undefined,
         nivel_snii: snii || undefined,
         solo_uat: soloUat || undefined,
+        dependencia_id: dependenciaId || undefined,
+        area: area || undefined,
       });
       setData(result);
     } catch {
@@ -63,7 +75,7 @@ export default function Directorio() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, snii, soloUat]);
+  }, [page, search, snii, soloUat, dependenciaId, area]);
 
   useEffect(() => {
     void fetchData();
@@ -71,7 +83,7 @@ export default function Directorio() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, sort]);
+  }, [search, sort, snii, soloUat, dependenciaId, area]);
 
   const items = data?.items ?? [];
   const sortedItems = [...items].sort((a, b) => {
@@ -82,6 +94,7 @@ export default function Directorio() {
 
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / PER_PAGE);
+  const hasFilters = snii !== "" || dependenciaId !== "" || area !== "";
 
   return (
     <div style={{ background: "var(--bg-body)", minHeight: "100vh" }}>
@@ -119,12 +132,54 @@ export default function Directorio() {
             </div>
           </div>
 
-          {snii !== "" && (
+          <div className="filter-section" style={{ marginTop: "var(--sp-5)" }}>
+            <div className="filter-title">Dependencia / Facultad</div>
+            <select
+              className="form-control form-select"
+              value={dependenciaId}
+              onChange={(e) => {
+                setDependenciaId(e.target.value);
+                setPage(1);
+              }}
+              style={{ width: "100%", fontSize: 13, height: 34 }}
+            >
+              <option value="">Todas las dependencias</option>
+              {dependencias.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.nombre_corto ?? d.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-section" style={{ marginTop: "var(--sp-5)" }}>
+            <div className="filter-title">Área de investigación</div>
+            <select
+              className="form-control form-select"
+              value={area}
+              onChange={(e) => {
+                setArea(e.target.value);
+                setPage(1);
+              }}
+              style={{ width: "100%", fontSize: 13, height: 34 }}
+            >
+              <option value="">Todas las áreas</option>
+              {conceptos.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {hasFilters && (
             <button
               className="btn btn-ghost btn-sm"
-              style={{ marginTop: "var(--sp-3)", color: "var(--red)" }}
+              style={{ marginTop: "var(--sp-4)", color: "var(--red)" }}
               onClick={() => {
                 setSnii("");
+                setDependenciaId("");
+                setArea("");
                 setPage(1);
               }}
             >

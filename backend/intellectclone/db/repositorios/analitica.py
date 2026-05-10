@@ -262,3 +262,20 @@ class RepositorioAnalitica:
             resultados[nombre] = int(r.scalar_one())
 
         return resultados
+
+    async def conceptos_frecuentes(self, limite: int = 20) -> list[str]:
+        """Devuelve los conceptos/topics más frecuentes en toda la BD, ordenados por frecuencia."""
+        rows = await self._session.execute(
+            sa.text(
+                """
+                SELECT unnest(conceptos) AS concepto, count(*) AS n
+                FROM paper
+                WHERE conceptos IS NOT NULL
+                GROUP BY concepto
+                ORDER BY n DESC
+                LIMIT :limite
+                """
+            ),
+            {"limite": limite},
+        )
+        return [row.concepto for row in rows]

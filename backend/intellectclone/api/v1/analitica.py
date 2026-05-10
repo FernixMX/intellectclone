@@ -116,6 +116,20 @@ async def red_coautoria(
 
 
 @router.get(  # type: ignore[misc]
+    "/conceptos-frecuentes",
+    response_model=list[str],
+    summary="Top conceptos/áreas de investigación por frecuencia en papers",
+)
+async def conceptos_frecuentes(
+    limite: int = Query(default=20, ge=1, le=100),
+    session: AsyncSession = Depends(get_db),
+) -> list[str]:
+    """Devuelve los N conceptos más frecuentes en toda la colección de papers."""
+    repo = RepositorioAnalitica(session)
+    return await repo.conceptos_frecuentes(limite=limite)
+
+
+@router.get(  # type: ignore[misc]
     "/estadisticas-globales",
     response_model=EstadisticasGlobalesResponse,
     summary="Totales globales del sistema (personas, papers, coautorias, dependencias)",

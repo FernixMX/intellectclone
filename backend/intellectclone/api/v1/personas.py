@@ -35,6 +35,9 @@ async def listar_personas(
     nivel_snii: NivelSnii | None = Query(default=None),
     tiene_gemelo_validado: bool | None = Query(default=None),
     solo_uat: bool | None = Query(default=None, description="Solo personas con dependencia UAT"),
+    area: str | None = Query(
+        default=None, description="Filtrar por concepto/área de investigación"
+    ),
     q: str | None = Query(default=None, description="Búsqueda por nombre"),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -49,6 +52,7 @@ async def listar_personas(
         nivel_snii=nivel_snii,
         tiene_gemelo_validado=tiene_gemelo_validado,
         solo_uat=solo_uat,
+        area=area,
         q=q,
         limit=limit,
         offset=offset,

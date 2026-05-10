@@ -57,6 +57,8 @@ export const api = {
     activa?: string;
     nivel_snii?: string;
     solo_uat?: boolean;
+    dependencia_id?: string;
+    area?: string;
   }) =>
     get<Paginated<PersonaListItem>>("/api/v1/personas", params as Record<string, string | number>),
 
@@ -133,4 +135,7 @@ export const api = {
 
   dependencias: (params?: { limit?: number; offset?: number }) =>
     get<Paginated<Dependencia>>("/api/v1/dependencias", params as Record<string, string | number>),
+
+  conceptosFrecuentes: (limite = 20) =>
+    get<string[]>("/api/v1/analitica/conceptos-frecuentes", { limite }),
 };

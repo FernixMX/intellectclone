@@ -27,6 +27,7 @@ class RepositorioPersona(RepositorioBase[Persona]):
         nivel_snii: NivelSnii | None = None,
         tiene_gemelo_validado: bool | None = None,
         solo_uat: bool | None = None,
+        area: str | None = None,
         q: str | None = None,
         limit: int = 20,
         offset: int = 0,
@@ -47,6 +48,16 @@ class RepositorioPersona(RepositorioBase[Persona]):
             stmt = stmt.where(Persona.nivel_snii == nivel_snii)
         if solo_uat is True:
             stmt = stmt.where(Persona.dependencia_id.is_not(None))
+        if area is not None:
+            from intellectclone.models.produccion import Coautoria, Paper
+
+            subq = (
+                select(Coautoria.persona_id)
+                .join(Paper, Paper.id == Coautoria.paper_id)
+                .where(Paper.conceptos.contains([area]))
+                .scalar_subquery()
+            )
+            stmt = stmt.where(Persona.id.in_(subq))
         if q is not None:
             pattern = f"%{q}%"
             stmt = stmt.where(
