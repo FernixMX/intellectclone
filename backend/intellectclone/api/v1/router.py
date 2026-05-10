@@ -7,6 +7,7 @@ from fastapi import APIRouter
 
 from intellectclone.api.v1 import (
     analitica,
+    auth,
     cosechas,
     cuerpos_academicos,
     dependencias,
@@ -18,6 +19,7 @@ from intellectclone.api.v1 import (
 
 router = APIRouter()
 
+router.include_router(auth.router)
 router.include_router(dependencias.router)
 router.include_router(cuerpos_academicos.router)
 router.include_router(personas.router)

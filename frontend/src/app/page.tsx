@@ -58,12 +58,12 @@ const FEATURES = [
     restricted: false,
   },
   {
-    icon: "🤖",
+    icon: "⚙️",
     bg: "var(--purple-light)",
-    title: "Simulador de escenarios",
-    desc: "Formule preguntas y obtenga respuestas agregadas de gemelos digitales de la comunidad académica.",
-    cta: "Acceder al simulador",
-    href: "/simulador",
+    title: "Panel de administración",
+    desc: "Gestiona cosechas de datos, recalcula métricas bibliométricas y supervisa el estado del sistema.",
+    cta: "Abrir panel",
+    href: "/admin",
     restricted: true,
   },
 ];
@@ -224,7 +224,7 @@ export default async function Home() {
               Acerca
             </Link>
           </div>
-          <div className="pub-footer-copy">© 2025 Universidad Autónoma de Tamaulipas</div>
+          <div className="pub-footer-copy">© 2026 Universidad Autónoma de Tamaulipas · v1.0</div>
         </footer>
       </div>
     </div>

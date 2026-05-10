@@ -146,3 +146,17 @@ export interface Dependencia {
   campus: string | null;
   activa: boolean;
 }
+
+export interface PapersPorAnio {
+  año: number;
+  total_papers: number;
+  total_citas: number;
+}
+
+export interface TopDependenciaItem {
+  dependencia_id: string;
+  nombre: string;
+  nombre_corto: string | null;
+  total_papers: number;
+  total_personas: number;
+}

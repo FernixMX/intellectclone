@@ -6,10 +6,12 @@ import type {
   MetricasResultado,
   Paginated,
   PaperListItem,
+  PapersPorAnio,
   PersonaListItem,
   PersonaRead,
   RedCoautoria,
   SniiApiResultado,
+  TopDependenciaItem,
   TopInvestigadorItem,
 } from "@/types";
 
@@ -47,7 +49,21 @@ async function post<T>(
 }
 
 export const api = {
+  login: (password: string) =>
+    post<{ access_token: string; token_type: string }>("/api/v1/auth/login", { password }),
+
   estadisticasGlobales: () => get<EstadisticasGlobales>("/api/v1/analitica/estadisticas-globales"),
+
+  papersPorAnio: () =>
+    get<{ datos: PapersPorAnio[]; total_papers_historico: number }>(
+      "/api/v1/analitica/papers-por-año"
+    ),
+
+  topDependencias: (params?: { limite?: number }) =>
+    get<{ items: TopDependenciaItem[] }>(
+      "/api/v1/analitica/top-dependencias",
+      params as Record<string, string | number>
+    ),
 
   personas: (params?: {
     limit?: number;
@@ -91,46 +107,46 @@ export const api = {
   conceptosPersona: (id: string, limite = 5) =>
     get<string[]>(`/api/v1/personas/${id}/conceptos`, { limite }),
 
-  recalcularMetricas: (adminKey?: string) =>
+  recalcularMetricas: (token?: string) =>
     post<MetricasResultado>(
       "/api/v1/perfilador/metricas/recalcular",
       undefined,
-      adminKey ? { "X-Admin-Key": adminKey } : undefined
+      token ? { Authorization: `Bearer ${token}` } : undefined
     ),
 
-  cosechaSniiApi: (adminKey?: string) =>
+  cosechaSniiApi: (token?: string) =>
     post<SniiApiResultado>(
       "/api/v1/cosechas/snii-api",
       undefined,
-      adminKey ? { "X-Admin-Key": adminKey } : undefined
+      token ? { Authorization: `Bearer ${token}` } : undefined
     ),
 
-  cosechaOpenAlexCompleta: (adminKey?: string) =>
+  cosechaOpenAlexCompleta: (token?: string) =>
     post<CosechaDispararResponse>(
       "/api/v1/cosechas/openalex-completa",
       undefined,
-      adminKey ? { "X-Admin-Key": adminKey } : undefined
+      token ? { Authorization: `Bearer ${token}` } : undefined
     ),
 
-  cosechaVuFindCompleta: (adminKey?: string) =>
+  cosechaVuFindCompleta: (token?: string) =>
     post<CosechaDispararResponse>(
       "/api/v1/cosechas/vufind-completa",
       undefined,
-      adminKey ? { "X-Admin-Key": adminKey } : undefined
+      token ? { Authorization: `Bearer ${token}` } : undefined
     ),
 
-  cosechaCrossrefEnrich: (adminKey?: string) =>
+  cosechaCrossrefEnrich: (token?: string) =>
     post<CosechaDispararResponse>(
       "/api/v1/cosechas/crossref-enrich",
       undefined,
-      adminKey ? { "X-Admin-Key": adminKey } : undefined
+      token ? { Authorization: `Bearer ${token}` } : undefined
     ),
 
-  cosechaOrcidEnrich: (adminKey?: string) =>
+  cosechaOrcidEnrich: (token?: string) =>
     post<CosechaDispararResponse>(
       "/api/v1/cosechas/orcid-enrich",
       undefined,
-      adminKey ? { "X-Admin-Key": adminKey } : undefined
+      token ? { Authorization: `Bearer ${token}` } : undefined
     ),
 
   dependencias: (params?: { limit?: number; offset?: number }) =>

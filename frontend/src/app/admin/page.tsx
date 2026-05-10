@@ -1,14 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import Header from "@/components/Header";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/stores/auth";
 import type {
   CosechaDispararResponse,
   CosechaRead,
   EstadisticasGlobales,
+  PapersPorAnio,
   Paginated,
   SniiApiResultado,
+  TopDependenciaItem,
+  TopInvestigadorItem,
 } from "@/types";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -119,20 +124,31 @@ function ActionBtn({ label, loadingLabel, onClick, variant = "outline" }: Action
   );
 }
 
-// ─── Password gate ──────────────────────────────────────────────────────────
+// ─── Login gate ──────────────────────────────────────────────────────────────
 
-function PasswordGate({ onSuccess }: { onSuccess: (key: string) => void }) {
-  const [value, setValue] = useState("");
-  const [error, setError] = useState(false);
+function LoginGate({ onSuccess }: { onSuccess: () => void }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const setToken = useAuthStore((s) => s.setToken);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!value.trim()) {
-      setError(true);
+    if (!password.trim()) {
+      setError("Ingresa la contraseña");
       return;
     }
-    setError(false);
-    onSuccess(value.trim());
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await api.login(password.trim());
+      setToken(res.access_token);
+      onSuccess();
+    } catch {
+      setError("Contraseña incorrecta");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -148,33 +164,25 @@ function PasswordGate({ onSuccess }: { onSuccess: (key: string) => void }) {
       <div className="card" style={{ padding: "var(--sp-8)", width: 340, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: "var(--sp-4)" }}>🔒</div>
         <div
-          style={{
-            fontSize: 16,
-            fontWeight: 600,
-            color: "var(--text-primary)",
-            marginBottom: 4,
-          }}
+          style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}
         >
           Panel de administración
         </div>
-        <div
-          style={{
-            fontSize: 13,
-            color: "var(--text-muted)",
-            marginBottom: "var(--sp-5)",
-          }}
-        >
-          Ingresa la clave de acceso
+        <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: "var(--sp-5)" }}>
+          Ingresa la contraseña de acceso
         </div>
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <form
+          onSubmit={(e) => void handleSubmit(e)}
+          style={{ display: "flex", flexDirection: "column", gap: 12 }}
+        >
           <input
             type="password"
-            value={value}
+            value={password}
             onChange={(e) => {
-              setValue(e.target.value);
-              setError(false);
+              setPassword(e.target.value);
+              setError(null);
             }}
-            placeholder="Clave de administrador"
+            placeholder="Contraseña"
             autoFocus
             style={{
               padding: "9px 12px",
@@ -187,12 +195,10 @@ function PasswordGate({ onSuccess }: { onSuccess: (key: string) => void }) {
             }}
           />
           {error && (
-            <div style={{ fontSize: 12, color: "var(--red)", textAlign: "left" }}>
-              Ingresa una clave
-            </div>
+            <div style={{ fontSize: 12, color: "var(--red)", textAlign: "left" }}>{error}</div>
           )}
-          <button type="submit" className="btn btn-primary btn-sm">
-            Acceder
+          <button type="submit" className="btn btn-primary btn-sm" disabled={busy}>
+            {busy ? "Accediendo…" : "Acceder"}
           </button>
         </form>
       </div>
@@ -200,9 +206,172 @@ function PasswordGate({ onSuccess }: { onSuccess: (key: string) => void }) {
   );
 }
 
-// ─── Tabs ────────────────────────────────────────────────────────────────────
+// ─── Dashboard tab ───────────────────────────────────────────────────────────
 
-function CosechasTab({ adminKey }: { adminKey: string }) {
+function DashboardTab() {
+  const [papersData, setPapersData] = useState<PapersPorAnio[]>([]);
+  const [depsData, setDepsData] = useState<TopDependenciaItem[]>([]);
+  const [invData, setInvData] = useState<TopInvestigadorItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      api
+        .papersPorAnio()
+        .then((r) => setPapersData(r.datos))
+        .catch(() => {}),
+      api
+        .topDependencias({ limite: 8 })
+        .then((r) => setDepsData(r.items))
+        .catch(() => {}),
+      api
+        .topInvestigadores({ limite: 10, orden: "papers" })
+        .then((r) => setInvData(r.items))
+        .catch(() => {}),
+    ]).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div
+        style={{ padding: "60px 0", textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}
+      >
+        Cargando datos…
+      </div>
+    );
+  }
+
+  const depsChart = depsData.map((d) => ({
+    name: d.nombre_corto ?? d.nombre.split(" ").slice(0, 2).join(" "),
+    papers: d.total_papers,
+    personas: d.total_personas,
+  }));
+
+  const invChart = invData.map((i) => ({
+    name: i.nombre_completo.split(" ").slice(-2).join(" "),
+    papers: i.n_papers_cosechados,
+    h: i.indice_h,
+  }));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
+      {/* Papers por año */}
+      <div className="card" style={{ padding: "var(--sp-5)" }}>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: "var(--text-primary)",
+            marginBottom: "var(--sp-4)",
+          }}
+        >
+          Publicaciones por año
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={papersData} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+            <XAxis dataKey="año" tick={{ fontSize: 11, fill: "var(--text-muted)" }} />
+            <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} width={40} />
+            <Tooltip
+              contentStyle={{
+                background: "var(--bg-card)",
+                border: "1px solid var(--border-color)",
+                borderRadius: 6,
+                fontSize: 12,
+              }}
+            />
+            <Bar dataKey="total_papers" name="Papers" fill="var(--blue)" radius={[3, 3, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Top dependencias + top investigadores */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-5)" }}>
+        <div className="card" style={{ padding: "var(--sp-5)" }}>
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: "var(--text-primary)",
+              marginBottom: "var(--sp-4)",
+            }}
+          >
+            Top dependencias (papers)
+          </div>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart
+              data={depsChart}
+              layout="vertical"
+              margin={{ top: 0, right: 8, bottom: 0, left: 4 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--border-color)"
+                horizontal={false}
+              />
+              <XAxis type="number" tick={{ fontSize: 11, fill: "var(--text-muted)" }} />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={90}
+                tick={{ fontSize: 10, fill: "var(--text-muted)" }}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: 6,
+                  fontSize: 12,
+                }}
+              />
+              <Bar dataKey="papers" name="Papers" fill="var(--green)" radius={[0, 3, 3, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="card" style={{ padding: "var(--sp-5)" }}>
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: "var(--text-primary)",
+              marginBottom: "var(--sp-4)",
+            }}
+          >
+            Top investigadores (papers)
+          </div>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={invChart} margin={{ top: 4, right: 8, bottom: 20, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 9, fill: "var(--text-muted)" }}
+                angle={-30}
+                textAnchor="end"
+                interval={0}
+              />
+              <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} width={36} />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: 6,
+                  fontSize: 12,
+                }}
+              />
+              <Bar dataKey="papers" name="Papers" fill="var(--purple)" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Cosechas tab ────────────────────────────────────────────────────────────
+
+function CosechasTab({ token }: { token: string }) {
   const [cosechas, setCosechas] = useState<Paginated<CosechaRead> | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -215,7 +384,6 @@ function CosechasTab({ adminKey }: { adminKey: string }) {
       .finally(() => setLoading(false));
   }, []);
 
-  // Actualización silenciosa sin spinner para polling y post-acción
   const silentRefresh = useCallback(() => {
     api
       .cosechas({ limit: 20 })
@@ -228,9 +396,8 @@ function CosechasTab({ adminKey }: { adminKey: string }) {
   }, [refresh]);
 
   const items = cosechas?.items ?? [];
-
-  // Auto-refresh cada 10 segundos mientras haya una cosecha en_curso
   const hayCosechaEnCurso = items.some((c) => c.estado === "en_curso" || c.estado === "programada");
+
   useEffect(() => {
     if (!hayCosechaEnCurso) return;
     const id = setInterval(() => {
@@ -304,7 +471,7 @@ function CosechasTab({ adminKey }: { adminKey: string }) {
             label="Recalcular métricas"
             loadingLabel="Calculando…"
             onClick={async () => {
-              await api.recalcularMetricas(adminKey);
+              await api.recalcularMetricas(token);
             }}
           />
         </div>
@@ -316,7 +483,7 @@ function CosechasTab({ adminKey }: { adminKey: string }) {
             label="Cosecha SNII API"
             loadingLabel="Cosechando…"
             onClick={async () => {
-              const r: SniiApiResultado = await api.cosechaSniiApi(adminKey);
+              const r: SniiApiResultado = await api.cosechaSniiApi(token);
               void r;
             }}
             variant="primary"
@@ -330,7 +497,7 @@ function CosechasTab({ adminKey }: { adminKey: string }) {
             label="Cosecha OpenAlex completa"
             loadingLabel="Encolando…"
             onClick={async () => {
-              const r: CosechaDispararResponse = await api.cosechaOpenAlexCompleta(adminKey);
+              const r: CosechaDispararResponse = await api.cosechaOpenAlexCompleta(token);
               void r;
               silentRefresh();
             }}
@@ -345,7 +512,7 @@ function CosechasTab({ adminKey }: { adminKey: string }) {
             label="Cosecha VuFind completa"
             loadingLabel="Encolando…"
             onClick={async () => {
-              const r: CosechaDispararResponse = await api.cosechaVuFindCompleta(adminKey);
+              const r: CosechaDispararResponse = await api.cosechaVuFindCompleta(token);
               void r;
               silentRefresh();
             }}
@@ -360,7 +527,7 @@ function CosechasTab({ adminKey }: { adminKey: string }) {
             label="Enriquecer con Crossref"
             loadingLabel="Encolando…"
             onClick={async () => {
-              const r: CosechaDispararResponse = await api.cosechaCrossrefEnrich(adminKey);
+              const r: CosechaDispararResponse = await api.cosechaCrossrefEnrich(token);
               void r;
               silentRefresh();
             }}
@@ -374,7 +541,7 @@ function CosechasTab({ adminKey }: { adminKey: string }) {
             label="Enriquecer con ORCID"
             loadingLabel="Encolando…"
             onClick={async () => {
-              const r: CosechaDispararResponse = await api.cosechaOrcidEnrich(adminKey);
+              const r: CosechaDispararResponse = await api.cosechaOrcidEnrich(token);
               void r;
               silentRefresh();
             }}
@@ -493,26 +660,39 @@ function GemelosTab() {
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
-const TABS = ["Cosechas", "Gemelos digitales"] as const;
+const TABS = ["Dashboard", "Cosechas", "Gemelos digitales"] as const;
 type Tab = (typeof TABS)[number];
 
-const ADMIN_PROTECTED = process.env.NEXT_PUBLIC_ADMIN_PROTECTED === "true";
-
 export default function AdminPage() {
-  const [tab, setTab] = useState<Tab>("Cosechas");
+  const [tab, setTab] = useState<Tab>("Dashboard");
   const [stats, setStats] = useState<EstadisticasGlobales | null>(null);
-  const [adminKey, setAdminKey] = useState<string | null>(ADMIN_PROTECTED ? null : "");
+  const [mounted, setMounted] = useState(false);
+
+  const { token, isAuthenticated, clearToken } = useAuthStore();
+  const authed = mounted && isAuthenticated();
 
   useEffect(() => {
-    if (adminKey === null) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!authed) return;
     api
       .estadisticasGlobales()
       .then(setStats)
       .catch(() => setStats(null));
-  }, [adminKey]);
+  }, [authed]);
 
-  if (adminKey === null) {
-    return <PasswordGate onSuccess={setAdminKey} />;
+  if (!mounted) return null;
+
+  if (!authed) {
+    return (
+      <LoginGate
+        onSuccess={() => {
+          /* zustand already updated */
+        }}
+      />
+    );
   }
 
   return (
@@ -526,21 +706,37 @@ export default function AdminPage() {
         }}
       >
         {/* Page title */}
-        <div style={{ marginBottom: "var(--sp-6)" }}>
-          <h1
-            style={{
-              fontSize: 22,
-              fontWeight: 700,
-              color: "var(--text-primary)",
-              margin: 0,
-              marginBottom: 4,
-            }}
+        <div
+          style={{
+            marginBottom: "var(--sp-6)",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: "var(--text-primary)",
+                margin: 0,
+                marginBottom: 4,
+              }}
+            >
+              Panel de administración
+            </h1>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+              Estado del sistema y operaciones de mantenimiento
+            </p>
+          </div>
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ color: "var(--text-muted)", marginTop: 4 }}
+            onClick={clearToken}
           >
-            Panel de administración
-          </h1>
-          <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
-            Estado del sistema y operaciones de mantenimiento
-          </p>
+            Cerrar sesión
+          </button>
         </div>
 
         {/* Stats strip */}
@@ -609,7 +805,8 @@ export default function AdminPage() {
         </div>
 
         {/* Tab content */}
-        {tab === "Cosechas" && <CosechasTab adminKey={adminKey} />}
+        {tab === "Dashboard" && <DashboardTab />}
+        {tab === "Cosechas" && <CosechasTab token={token ?? ""} />}
         {tab === "Gemelos digitales" && <GemelosTab />}
       </div>
     </div>
