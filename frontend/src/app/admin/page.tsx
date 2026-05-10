@@ -1,16 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import Header from "@/components/Header";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
@@ -312,10 +303,12 @@ function DashboardTab() {
     );
   }
 
-  // Stacked chart: bottom = externos, top = UAT
+  // Siempre renderizar ambas barras para que recharts no cachee la escala Y.
+  // En modo Solo UAT, papers_externos=0 hace que solo sea visible la barra UAT
+  // y el dominio del eje Y se ajusta a max(total_papers_uat) automáticamente.
   const papersChart = papersData.map((d) => ({
     ...d,
-    papers_externos: d.total_papers - d.total_papers_uat,
+    papers_externos: soloUat ? 0 : d.total_papers - d.total_papers_uat,
   }));
 
   const depsChart = depsData.map((d) => ({
@@ -390,25 +383,75 @@ function DashboardTab() {
         >
           Publicaciones por año
         </div>
+        {/* Leyenda manual — evita que recharts Legend interfiera con la escala */}
+        <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              fontSize: 11,
+              color: "var(--text-muted)",
+            }}
+          >
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 2,
+                background: "var(--blue)",
+                flexShrink: 0,
+              }}
+            />
+            UAT
+          </div>
+          {!soloUat && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                fontSize: 11,
+                color: "var(--text-muted)",
+              }}
+            >
+              <div
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 2,
+                  background: "#e2e8f0",
+                  flexShrink: 0,
+                }}
+              />
+              Externos
+            </div>
+          )}
+        </div>
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={papersChart} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-            <XAxis dataKey="año" tick={{ fontSize: 11, fill: "var(--text-muted)" }} />
+            <XAxis
+              dataKey="año"
+              tick={{ fontSize: 11, fill: "var(--text-muted)" }}
+              interval="preserveStartEnd"
+            />
             <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} width={40} />
             <Tooltip contentStyle={TOOLTIP_STYLE} />
-            {!soloUat && (
-              <Bar dataKey="papers_externos" name="Externos" fill="#e2e8f0" stackId="a" />
-            )}
+            <Bar
+              dataKey="papers_externos"
+              name="Externos"
+              fill="#e2e8f0"
+              stackId="a"
+              legendType="none"
+            />
             <Bar
               dataKey="total_papers_uat"
               name="UAT"
               fill="var(--blue)"
               stackId="a"
               radius={[3, 3, 0, 0]}
-            />
-            <Legend
-              iconSize={10}
-              wrapperStyle={{ fontSize: 11, paddingTop: 8, color: "var(--text-muted)" }}
+              legendType="none"
             />
           </BarChart>
         </ResponsiveContainer>

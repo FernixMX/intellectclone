@@ -32,6 +32,7 @@ class RepositorioAnalitica:
                 sa.func.coalesce(sa.func.sum(Paper.total_citas), 0).label("total_citas"),
             )
             .where(Paper.año.is_not(None))
+            .where(Paper.año >= 1990)
             .group_by(Paper.año)
             .order_by(Paper.año)
         )
@@ -49,6 +50,7 @@ class RepositorioAnalitica:
                 sa.func.count(Paper.id).label("n"),
             )
             .where(Paper.año.is_not(None))
+            .where(Paper.año >= 1990)
             .where(Paper.id.in_(uat_ids_sq))
             .group_by(Paper.año)
         )
