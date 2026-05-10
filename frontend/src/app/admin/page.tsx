@@ -206,6 +206,52 @@ function LoginGate({ onSuccess }: { onSuccess: () => void }) {
   );
 }
 
+// ─── Name helpers ────────────────────────────────────────────────────────────
+
+const _CITIES = new Set([
+  "Victoria",
+  "Tampico",
+  "Reynosa",
+  "Matamoros",
+  "Aztlán",
+  "Hermoso",
+  "Laredo",
+]);
+const _SKIP = new Set(["y", "e", "de", "del", "la", "el", "los", "las", "para", "con", "por"]);
+
+function shortDepName(nombre: string, nombreCorto: string | null): string {
+  if (nombreCorto && nombreCorto.length <= 30) return nombreCorto;
+
+  let s = nombre
+    .replace(/\s*"Dr[a]?\..+"$/, "") // strip "Dr. Nombre" honorific suffix
+    .replace(/^Facultad de\s+/i, "")
+    .replace(/^Unidad Académica Multidisciplinaria\s+/i, "UAM ")
+    .replace(/^Unidad Académica de\s+/i, "")
+    .replace(/^Unidad Académica\s+/i, "")
+    .replace(/^Instituto de\s+/i, "")
+    .replace(/^Centro de\s+/i, "")
+    .replace(/^Escuela de\s+/i, "")
+    .replace(/^División de\s+/i, "")
+    .trim();
+
+  if (s.length <= 30) return s;
+
+  const words = s.split(/\s+/);
+  const lastWord = words[words.length - 1];
+  const hasCity = _CITIES.has(lastWord);
+
+  const content: string[] = [];
+  for (const w of words) {
+    if (!_SKIP.has(w.toLowerCase()) && !_CITIES.has(w)) {
+      content.push(w);
+      if (content.length === (hasCity ? 1 : 2)) break;
+    }
+  }
+
+  if (hasCity) content.push(lastWord);
+  return content.join(" ") || s.slice(0, 25) + "…";
+}
+
 // ─── Dashboard tab ───────────────────────────────────────────────────────────
 
 function DashboardTab() {
@@ -243,7 +289,8 @@ function DashboardTab() {
   }
 
   const depsChart = depsData.map((d) => ({
-    name: d.nombre_corto ?? d.nombre.split(" ").slice(0, 2).join(" "),
+    name: shortDepName(d.nombre, d.nombre_corto),
+    fullName: d.nombre,
     papers: d.total_papers,
     personas: d.total_personas,
   }));
@@ -303,7 +350,7 @@ function DashboardTab() {
             <BarChart
               data={depsChart}
               layout="vertical"
-              margin={{ top: 0, right: 8, bottom: 0, left: 4 }}
+              margin={{ top: 0, right: 8, bottom: 0, left: 8 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -314,10 +361,13 @@ function DashboardTab() {
               <YAxis
                 type="category"
                 dataKey="name"
-                width={90}
+                width={130}
                 tick={{ fontSize: 10, fill: "var(--text-muted)" }}
               />
               <Tooltip
+                labelFormatter={(_, payload) =>
+                  (payload?.[0]?.payload as { fullName?: string } | undefined)?.fullName ?? ""
+                }
                 contentStyle={{
                   background: "var(--bg-card)",
                   border: "1px solid var(--border-color)",
